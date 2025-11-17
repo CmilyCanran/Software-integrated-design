@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir \"Spring-Boot-Web开发教程完整版\")",
+      "Bash(mv \"Spring-Boot-Web开发教程\" \"Spring-Boot-Web开发教程完整版/01-传统前后端一体开发-参考\")",
+      "Bash(mkdir -p \"Spring-Boot-Web开发教程完整版/02-前后端分离实战-服装销售系统/01-项目环境准备\")",
+      "Bash(mkdir -p \"Spring-Boot-Web开发教程完整版/02-前后端分离实战-服装销售系统/02-前端开发/01-用户认证\")",
+      "Bash(mkdir -p \"Spring-Boot-Web开发教程完整版/02-前后端分离实战-服装销售系统/02-前端开发/02-商品管理\")",
+      "Bash(dir frontendsrc)",
+      "Bash(dir \"frontend\\src\")",
+      "Bash(dir \"src\\main\\java\\com\\cmliy\\springweb\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
