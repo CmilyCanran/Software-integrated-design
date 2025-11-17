@@ -1,0 +1,18 @@
+{
+  "main": {
+    "id": "main",
+    "type": "split",
+    "children": [
+      {
+        "id": "editor",
+        "type": "leaf",
+        "state": {
+          "file": "README.md",
+          "mode": "source"
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "active": "main"
+}
