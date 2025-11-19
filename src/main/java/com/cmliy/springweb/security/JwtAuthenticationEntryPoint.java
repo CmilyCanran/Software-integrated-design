@@ -3,7 +3,7 @@ package com.cmliy.springweb.security;
 
 // import: 导入其他包中的类，以便在当前类中使用
 import com.fasterxml.jackson.databind.ObjectMapper;         // 导入Jackson JSON处理库
-import com.fasterxml.jackson.core.JsonProcessingException; // 导入Jackson JSON处理异常
+import org.springframework.beans.factory.annotation.Autowired;     // 导入Spring依赖注入注解
 import jakarta.servlet.ServletException;               // 导入Servlet异常类
 import jakarta.servlet.http.HttpServletRequest;          // 导入HTTP请求接口
 import jakarta.servlet.http.HttpServletResponse;         // 导入HTTP响应接口
@@ -33,6 +33,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint { /
     // @Autowired: Spring依赖注入注解，自动装配ObjectMapper类型的Bean
     // ObjectMapper: Jackson库的核心类，用于JSON序列化和反序列化
     // @Autowired: Spring依赖注入，如果注入失败可能需要检查Jackson依赖
+    @Autowired
     private ObjectMapper objectMapper;
 
     /**
