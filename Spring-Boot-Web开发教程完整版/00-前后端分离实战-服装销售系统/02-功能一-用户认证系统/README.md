@@ -297,6 +297,217 @@ Chrome DevTools    - 浏览器开发工具
 
 > **边学边练，循序渐进，真正掌握每个技术点！**
 
+---
+
+## 🖥️ 后端开发教程
+
+完成前端学习后，继续学习Spring Boot后端开发，实现全栈用户认证系统：
+
+> **学习目标**: 掌握Spring Boot后端用户认证系统的完整实现，包括Spring Security配置、JWT认证、用户管理等功能
+
+### 📋 **后端学习路径**
+| 章节 | 内容 | 预计时间 | 难度 | 状态 |
+|------|------|----------|------|------|
+| 11 | 项目文件结构说明 | 15分钟 | ⭐ | ⏳ |
+| 12 | Spring Security基础配置 | 45分钟 | ⭐⭐⭐ | ⏳ |
+| 13 | JWT认证机制实现 | 60分钟 | ⭐⭐⭐⭐ | ⏳ |
+| 14 | 用户管理服务开发 | 60分钟 | ⭐⭐⭐ | ⏳ |
+| 15 | 认证API控制器实现 | 60分钟 | ⭐⭐⭐ | ⏳ |
+
+**后端总计学习时间：约4小时**
+
+### 🎯 **后端功能需求**
+
+#### 业务需求
+- 用户注册和登录功能
+- JWT令牌认证机制
+- 用户信息管理
+- 权限控制和安全防护
+- 密码加密和验证
+
+#### 技术需求
+- Spring Security安全框架
+- JWT令牌认证
+- MySQL数据库集成
+- RESTful API设计
+- 密码加密存储
+
+### 🏗️ **后端架构设计**
+
+#### 系统架构图
+
+```mermaid
+graph TD
+    A[前端Vue应用] --> B[Controller层]
+    B --> C[Service层]
+    C --> D[Repository层]
+    D --> E[MySQL数据库]
+
+    B --> F[JWT认证过滤器]
+    F --> G[Spring Security]
+    G --> H[用户认证服务]
+
+    I[JWT工具类] --> F
+    J[密码加密工具] --> C
+
+    style A fill:#e3f2fd
+    style B fill:#bbdefb
+    style C fill:#90caf9
+    style D fill:#64b5f6
+    style E fill:#42a5f5
+    style F fill:#ffa726
+    style G fill:#ff7043
+    style H fill:#f44336
+    style I fill:#9c27b0
+    style J fill:#4caf50
+```
+
+#### 项目结构
+
+```
+src/main/java/com/cmliy/springweb/
+├── config/                    # 配置类
+│   ├── SecurityConfig.java    # Spring Security配置
+│   ├── JwtConfig.java         # JWT配置
+│   └── DatabaseConfig.java    # 数据库配置
+├── controller/                # 控制器层
+│   ├── AuthController.java    # 认证控制器
+│   └── UserController.java    # 用户控制器
+├── service/                   # 服务层
+│   ├── AuthService.java       # 认证服务
+│   ├── UserService.java       # 用户服务
+│   └── JwtAuthService.java    # JWT认证服务
+├── repository/                # 数据访问层
+│   ├── UserRepository.java    # 用户仓库
+│   └── RoleRepository.java    # 角色仓库
+├── model/                     # 实体模型
+│   ├── User.java             # 用户实体
+│   └── Role.java             # 角色实体
+├── dto/                       # 数据传输对象
+│   ├── LoginRequest.java     # 登录请求
+│   ├── RegisterRequest.java  # 注册请求
+│   └── AuthResponse.java     # 认证响应
+├── security/                  # 安全相关
+│   ├── JwtAuthenticationFilter.java  # JWT认证过滤器
+│   └── CustomUserDetailsService.java # 自定义用户详情服务
+├── exception/                 # 异常处理
+│   ├── GlobalExceptionHandler.java   # 全局异常处理器
+│   └── BusinessException.java          # 业务异常
+└── util/                      # 工具类
+    ├── JwtUtil.java          # JWT工具类
+    └── PasswordUtil.java     # 密码工具类
+```
+
+### 🚀 **后端学习入口**
+
+#### 📁 第11章：项目文件结构说明
+**文档**: [11-项目文件结构说明.md](11-项目文件结构说明.md)
+- **学习时间**: 15分钟 | **难度**: ⭐
+- **学习内容**:
+  - Spring Boot项目目录结构
+  - 各层代码组织方式
+  - 配置文件位置说明
+  - 测试文件结构
+
+#### 🛡️ 第12章：Spring Security基础配置
+**文档**: [12-Spring Security基础配置.md](12-Spring Security基础配置.md)
+- **学习时间**: 45分钟 | **难度**: ⭐⭐⭐
+- **学习内容**:
+  - Spring Security安全框架配置
+  - 密码编码器配置
+  - 自定义用户详情服务
+  - HTTP安全策略设置
+
+#### 🔑 第13章：JWT认证机制实现
+**文档**: [13-JWT认证机制实现.md](13-JWT认证机制实现.md)
+- **学习时间**: 60分钟 | **难度**: ⭐⭐⭐⭐
+- **学习内容**:
+  - JWT令牌生成和解析
+  - JWT认证过滤器开发
+  - 令牌刷新机制
+  - 无状态认证实现
+
+#### 👤 第14章：用户管理服务开发
+**文档**: [14-用户管理服务开发.md](14-用户管理服务开发.md)
+- **学习时间**: 60分钟 | **难度**: ⭐⭐⭐
+- **学习内容**:
+  - 用户实体模型设计
+  - Repository数据访问层
+  - 业务服务层实现
+  - 数据验证和事务管理
+
+#### 🌐 第15章：认证API控制器实现
+**文档**: [15-认证API控制器实现.md](15-认证API控制器实现.md)
+- **学习时间**: 60分钟 | **难度**: ⭐⭐⭐
+- **学习内容**:
+  - RESTful API接口设计
+  - 数据传输对象(DTO)
+  - 统一响应格式
+  - 异常处理机制
+
+### 🗄️ **数据库准备**
+
+#### 数据库配置
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/clothes_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+  jwt:
+    secret: mySecretKey123456789012345678901234567890
+    expiration: 86400000  # 24小时（毫秒）
+```
+
+#### 数据库表结构
+系统将自动创建：
+- `users` - 用户表
+- `roles` - 角色表（预留）
+- `user_roles` - 用户角色关联表（预留）
+
+### 🛠️ **开发环境要求**
+
+- **JDK**: 17+
+- **Spring Boot**: 3.x
+- **MySQL**: 8.0+
+- **Maven**: 3.6+
+- **IDE**: IntelliJ IDEA 或 Eclipse
+
+### 🎯 **前后端整合成果**
+
+完成前后端学习后，你将拥有：
+- 🎨 完整的Vue 3前端界面
+- 🛡️ 企业级Spring Boot后端API
+- 🔐 JWT无状态认证系统
+- 🌐 RESTful API接口
+- 📊 全栈用户认证功能
+- 🔧 统一的异常处理机制
+- 📊 完整的测试覆盖
+
+### 🎓 **技能掌握度**
+
+| 技能点 | 前端掌握度 | 后端掌握度 | 应用场景 |
+|--------|------------|------------|----------|
+| Vue 3 + Composition API | ⭐⭐⭐⭐⭐ | - | 现代前端开发 |
+| Spring Security | - | ⭐⭐⭐⭐⭐ | 企业级安全框架 |
+| JWT认证 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 无状态认证 |
+| RESTful API | ⭐⭐⭐ | ⭐⭐⭐⭐ | 前后端分离 |
+| 状态管理 | ⭐⭐⭐⭐ | - | 复杂应用状态 |
+| 数据库集成 | - | ⭐⭐⭐⭐ | 数据持久化 |
+
+---
+
 如果在学习过程中遇到任何问题，随时向AI提问，获得即时帮助和指导。
 
 **祝您学习愉快！** 🎯✨
