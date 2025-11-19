@@ -8,7 +8,10 @@
       "Bash(mkdir -p \"Spring-Boot-Web开发教程完整版/02-前后端分离实战-服装销售系统/02-前端开发/02-商品管理\")",
       "Bash(dir frontendsrc)",
       "Bash(dir \"frontend\\src\")",
-      "Bash(dir \"src\\main\\java\\com\\cmliy\\springweb\")"
+      "Bash(dir \"src\\main\\java\\com\\cmliy\\springweb\")",
+      "Bash(mvn dependency:tree)",
+      "Bash(mvn spring-boot:run)",
+      "Bash(curl -X GET http://localhost:8080/api/public/health)"
     ],
     "deny": [],
     "ask": []
