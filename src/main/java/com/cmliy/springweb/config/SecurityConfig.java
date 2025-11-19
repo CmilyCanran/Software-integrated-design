@@ -245,6 +245,7 @@ public class SecurityConfig {  // public class: 定义公共类，其他类可�
                         // 📄 公开访问的端点
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
 
                         // 🔧 管理员端点
                         .requestMatchers("/admin/**").hasRole("ADMIN")
