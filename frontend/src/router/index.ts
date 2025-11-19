@@ -61,6 +61,18 @@ const router = createRouter({
         guest: true,
         title: '注册'
       } as RouteMeta
+    },
+
+    // 组件测试页面路由（隐藏页面，只能手动访问）
+    {
+      path: '/component-test',
+      name: 'component-test',
+      component: () => import('../views/ComponentTest.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '组件测试',
+        hidden: true  // 标记为隐藏页面，不在导航中显示
+      } as RouteMeta
     }
   ] as RouteRecordRaw[]
 })
