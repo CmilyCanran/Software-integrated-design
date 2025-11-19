@@ -32,12 +32,6 @@
                     </div>
                 </el-form-item>
             </el-form>
-
-            <el-divider>测试账号</el-divider>
-            <div class="test-accounts">
-                <el-tag type="info">管理员: admin / 123456</el-tag>
-                <el-tag type="success">普通用户: user / 123456</el-tag>
-            </div>
         </div>
     </div>
 </template>
@@ -87,17 +81,19 @@ const handleLogin = async () => {
         console.log('🔍 response.data:', response.data)
 
         // 🔍 验证数据结构
-        if (!response.data || !response.data.token || !response.data.user) {
+        // 因为request.js响应拦截器已经提取了data部分，
+        // 所以response直接就是包含token和user的对象
+        if (!response || !response.token || !response.user) {
             console.error('❌ 数据结构错误:', {
-                hasToken: !!response.data?.token,
-                hasUser: !!response.data?.user,
-                fullData: response.data
+                hasToken: !!response?.token,
+                hasUser: !!response?.user,
+                fullData: response
             })
             ElMessage.error('登录数据格式错误，请联系管理员')
             return
         }
 
-        authStore.login(response.data)
+        authStore.login(response)
 
         // 🔍 验证store状态
         console.log('🔍 登录后store状态:', {
@@ -172,11 +168,5 @@ const goToRegister = () => {
 .register-link {
     text-align: center;
     color: #666;
-}
-
-.test-accounts {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
 }
 </style>

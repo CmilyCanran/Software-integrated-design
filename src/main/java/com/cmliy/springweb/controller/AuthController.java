@@ -181,18 +181,16 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             Optional<User> userOpt = userRepository.findByUsername(username);
             User user = userOpt.orElse(null); // 如果用户存在则获取，否则为null
 
-            // 📊 第七步：构建响应数据
-            // HashMap<String, Object>: 创建响应数据容器
-            Map<String, Object> response = new HashMap<>(); // 创建HashMap实例存储响应数据
-            response.put("status", 200);                    // 设置HTTP状态码
-            response.put("message", "登录成功");              // 设置成功消息
-            response.put("token", token);                    // 设置JWT令牌
-            response.put("tokenType", "Bearer");              // 设置令牌类型（JWT标准）
-            response.put("expiresIn", jwtUtil.getExpiration()); // 设置令牌过期时间（毫秒）
+            // 📊 第七步：构建符合前端期望的响应数据
+            // 前端request.js期望格式: {code: 200, data: {...}, message: "成功消息"}
+            Map<String, Object> responseData = new HashMap<>(); // 创建实际数据容器
+            responseData.put("token", token);                    // 设置JWT令牌
+            responseData.put("tokenType", "Bearer");              // 设置令牌类型（JWT标准）
+            responseData.put("expiresIn", jwtUtil.getExpiration()); // 设置令牌过期时间（毫秒）
 
-            // 👤 第八步：添加用户基本信息
+            // 👤 第八步：添加用户基本信息到data中
             if (user != null) { // 检查用户对象是否存在
-                response.put("user", Map.of(  // 创建用户信息Map
+                responseData.put("user", Map.of(  // 创建用户信息Map
                     "id", user.getId(),           // 用户ID
                     "username", user.getUsername(), // 用户名
                     "email", user.getEmail(),       // 邮箱
@@ -200,20 +198,25 @@ public class AuthController {  // public class: 定义公共类，其他类可�
                 ));
             }
 
-            // ⏰ 第九步：添加时间戳
-            response.put("timestamp", LocalDateTime.now().toString()); // 设置当前时间
+            // ⏰ 第九步：添加时间戳到data中
+            responseData.put("timestamp", LocalDateTime.now().toString()); // 设置当前时间
 
-            // 📤 第十步：返回成功响应
+            // 📤 第十步：构建标准响应格式
+            Map<String, Object> response = new HashMap<>(); // 创建响应容器
+            response.put("code", 200);                       // 业务状态码：200表示成功
+            response.put("message", "登录成功");              // 设置成功消息
+            response.put("data", responseData);              // 设置实际数据
+
+            // 📤 第十一步：返回成功响应
             // ResponseEntity.ok(): 创建HTTP状态码为200(OK)的响应
             return ResponseEntity.ok(response); // 返回包含令牌和用户信息的成功响应
 
         } catch (Exception e) { // 捕获认证异常
-            // 🚨 异常处理：构建错误响应
+            // 🚨 异常处理：构建符合前端期望的错误响应
             Map<String, Object> errorResponse = new HashMap<>(); // 创建错误响应容器
-            errorResponse.put("status", 401);                    // 设置HTTP状态码401（未授权）
-            errorResponse.put("error", "Unauthorized");           // 设置错误类型
+            errorResponse.put("code", 401);                       // 业务状态码：401表示认证失败
             errorResponse.put("message", "用户名或密码错误");        // 设置错误消息
-            errorResponse.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
+            errorResponse.put("data", null);                       // 错误时无数据
 
             // 📤 返回错误响应
             // ResponseEntity.status(): 创建指定状态码的响应
@@ -301,24 +304,26 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             // 会自动生成INSERT SQL语句并执行
             userRepository.save(user);
 
-            // 📊 第八步：构建成功响应
-            Map<String, Object> response = new HashMap<>(); // 创建响应数据容器
-            response.put("status", 201);                     // 设置HTTP状态码201（资源创建成功）
-            response.put("message", "注册成功");               // 设置成功消息
-            response.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
+            // 📊 第八步：构建符合前端期望的成功响应
+            Map<String, Object> responseData = new HashMap<>(); // 创建实际数据容器
+            responseData.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
+
+            Map<String, Object> response = new HashMap<>(); // 创建响应容器
+            response.put("code", 200);                       // 业务状态码：200表示成功
+            response.put("message", "注册成功");              // 设置成功消息
+            response.put("data", responseData);              // 设置实际数据
 
             // 📤 第九步：返回创建成功响应
             // ResponseEntity.status(): 创建指定状态码的响应
             // 201 Created: HTTP状态码，表示资源成功创建
             return ResponseEntity.status(201).body(response);
 
-        } catch (Exception e) { // 捕获注册过程中的异常
-            // 🚨 异常处理：构建服务器错误响应
+        } catch (Exception e) { // 捕捉注册过程中的异常
+            // 🚨 异常处理：构建符合前端期望的服务器错误响应
             Map<String, Object> errorResponse = new HashMap<>(); // 创建错误响应容器
-            errorResponse.put("status", 500);                    // 设置HTTP状态码500（服务器错误）
-            errorResponse.put("error", "Internal Server Error"); // 设置错误类型
+            errorResponse.put("code", 500);                       // 业务状态码：500表示服务器错误
             errorResponse.put("message", "注册失败: " + e.getMessage()); // 设置详细错误消息
-            errorResponse.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
+            errorResponse.put("data", null);                       // 错误时无数据
 
             // 📤 返回服务器错误响应
             return ResponseEntity.status(500).body(errorResponse);
