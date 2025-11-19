@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 // ============================================================================
@@ -74,6 +75,18 @@ const router = createRouter({
       } as RouteMeta
     },
 
+    // 商品详情页面路由（动态ID参数）
+    {
+      path: '/products/:id',
+      name: 'product-detail',
+      component: () => import('../views/ProductDetail.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '商品详情'
+      } as RouteMeta
+    },
+
+    
     // 组件测试页面路由（隐藏页面，只能手动访问）
     {
       path: '/component-test',
@@ -104,6 +117,18 @@ router.beforeEach((to, from, next) => {
   if (to.meta.guest && authStore.isLoggedIn) {
     next('/dashboard')
     return
+  }
+
+  // 第三层权限检查：角色权限控制
+  if (to.meta.roles && authStore.isLoggedIn) {
+    const userRole = authStore.user?.role
+    const requiredRoles = to.meta.roles as string[]
+
+    if (!userRole || !requiredRoles.includes(userRole)) {
+      ElMessage.error('您没有权限访问此页面')
+      next('/dashboard')
+      return
+    }
   }
 
   // 权限检查通过：允许访问

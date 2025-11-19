@@ -430,3 +430,4 @@ mvn test -Dtest=ClassName
 - ✅ 实践代码并验证功能
 - ✅ 总结学习心得和体会
 - 用户身份分为 普通用户：USER 商家：SHOPER 管理员：ADMIN
+- 不要过度生成，只专注于核心的功能
