@@ -63,6 +63,17 @@ const router = createRouter({
       } as RouteMeta
     },
 
+    // 商品列表页面路由
+    {
+      path: '/products',
+      name: 'products',
+      component: () => import('../views/ProductList.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '商品列表'
+      } as RouteMeta
+    },
+
     // 组件测试页面路由（隐藏页面，只能手动访问）
     {
       path: '/component-test',

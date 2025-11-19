@@ -63,16 +63,36 @@
                 <h3>快速操作</h3>
               </template>
               <div class="quick-actions">
-                <el-button type="primary" size="large" icon="Plus">
+                <el-button
+                  type="primary"
+                  size="large"
+                  icon="Plus"
+                  @click="handleAddProduct"
+                >
                   添加商品
                 </el-button>
-                <el-button type="success" size="large" icon="ShoppingCart">
+                <el-button
+                  type="success"
+                  size="large"
+                  icon="ShoppingCart"
+                  @click="handleViewProducts"
+                >
+                  查看商品
+                </el-button>
+                <el-button
+                  type="info"
+                  size="large"
+                  icon="Document"
+                  @click="handleViewOrders"
+                >
                   查看订单
                 </el-button>
-                <el-button type="info" size="large" icon="User">
-                  用户管理
-                </el-button>
-                <el-button type="warning" size="large" icon="Setting">
+                <el-button
+                  type="warning"
+                  size="large"
+                  icon="Setting"
+                  @click="handleSettings"
+                >
                   系统设置
                 </el-button>
               </div>
@@ -132,6 +152,46 @@ const authStore = useAuthStore()
  */
 const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
+}
+
+// ============================================================================
+// 🚀 快速操作处理函数
+// ============================================================================
+
+/**
+ * 处理添加商品操作
+ * 跳转到商品添加页面
+ */
+const handleAddProduct = () => {
+  // TODO: 跳转到商品添加页面
+  console.log('添加商品')
+}
+
+/**
+ * 处理查看商品操作
+ * 跳转到商品列表页面
+ */
+const handleViewProducts = () => {
+  // TODO: 跳转到商品列表页面
+  console.log('查看商品')
+}
+
+/**
+ * 处理查看订单操作
+ * 跳转到订单页面
+ */
+const handleViewOrders = () => {
+  // TODO: 跳转到订单页面
+  console.log('查看订单')
+}
+
+/**
+ * 处理系统设置操作
+ * 跳转到系统设置页面
+ */
+const handleSettings = () => {
+  // TODO: 跳转到系统设置页面
+  console.log('系统设置')
 }
 </script>
 
