@@ -130,51 +130,17 @@
         v-else-if="viewMode === 'list' && filteredProducts.length > 0"
         class="products-list"
       >
-        <div
+        <ProductListItem
           v-for="product in filteredProducts"
           :key="product.id"
-          class="product-list-item"
-          @click="handleProductClick(product)"
-        >
-          <div class="product-image">
-            <img
-              :src="product.image || '/placeholder-product.png'"
-              :alt="product.name"
-            />
-            <StatusTag :status="product.isAvailable ? 'available' : 'unavailable'" />
-          </div>
-          <div class="product-info">
-            <h3>{{ product.name }}</h3>
-            <p class="description">{{ product.description }}</p>
-            <div class="product-meta">
-              <PriceDisplay
-                :price="product.price"
-                size="medium"
-              />
-              <StockIndicator
-                :stock-quantity="product.stockQuantity"
-                :show-count="true"
-              />
-            </div>
-          </div>
-          <div class="product-actions">
-            <el-button
-              type="primary"
-              size="small"
-              @click.stop="handleViewDetails(product)"
-            >
-              查看详情
-            </el-button>
-            <el-button
-              v-if="authStore.canManageProducts"
-              type="default"
-              size="small"
-              @click.stop="handleEditProduct(product)"
-            >
-              编辑
-            </el-button>
-          </div>
-        </div>
+          :product="product"
+          :show-edit-button="authStore.canManageProducts"
+          :show-delete-button="authStore.canManageProducts"
+          @click="handleProductClick"
+          @view-details="handleViewDetails"
+          @edit="handleEditProduct"
+          @delete="handleDeleteProduct"
+        />
       </div>
 
       <!-- 空状态 -->
@@ -221,6 +187,7 @@ import { Grid, List, Close } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import SearchBox from '@/components/SearchBox.vue'
 import ProductCard from '@/components/ProductCard.vue'
+import ProductListItem from '@/components/ProductListItem.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import StatusTag from '@/components/StatusTag.vue'
 import PriceDisplay from '@/components/PriceDisplay.vue'
@@ -403,32 +370,6 @@ const handleEditProduct = (product: Product): void => {
   router.push(`/products/${product.id}/edit`)
 }
 
-const handleDeleteProduct = async (product: Product): void => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除商品"${product.name}"吗？`,
-      '确认删除',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-
-    // TODO: 调用删除API
-    ElMessage.success('商品删除成功')
-
-    // 从本地数据中移除
-    const index = products.value.findIndex(p => p.id === product.id)
-    if (index > -1) {
-      products.value.splice(index, 1)
-      totalProducts.value--
-    }
-  } catch {
-    // 用户取消删除
-  }
-}
-
 const handleAddToCart = (product: Product): void => {
   if (product.stockQuantity === 0) {
     ElMessage.warning('商品库存不足')
@@ -436,6 +377,7 @@ const handleAddToCart = (product: Product): void => {
   }
   ElMessage.success(`"${product.name}" 已加入购物车`)
 }
+
 
 const clearCategoryFilter = (): void => {
   selectedCategory.value = ''
