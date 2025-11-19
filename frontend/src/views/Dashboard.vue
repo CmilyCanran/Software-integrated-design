@@ -1,37 +1,10 @@
 <template>
   <div class="dashboard-container">
     <el-container>
-      <el-header>
-        <div class="header-content">
-          <h2>服装销售系统</h2>
-          <div class="user-info">
-            <el-dropdown @command="handleCommand">
-              <span class="user-dropdown">
-                <el-avatar :size="32" icon="User" />
-                <span class="username">{{ authStore.username }}</span>
-                <el-icon><ArrowDown /></el-icon>
-              </span>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="profile">个人资料</el-dropdown-item>
-                  <el-dropdown-item command="settings">设置</el-dropdown-item>
-                  <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
-        </div>
-      </el-header>
+      <!-- 使用可复用的AppHeader组件 -->
+      <AppHeader title="服装销售系统" />
 
       <el-main>
-        <div class="welcome-section">
-          <h1>欢迎回来，{{ authStore.username }}！</h1>
-          <p class="user-role">
-            <el-tag :type="authStore.isAdmin ? 'danger' : 'success'">
-              {{ authStore.isAdmin ? '管理员' : '普通用户' }}
-            </el-tag>
-          </p>
-        </div>
 
         <el-row :gutter="20" class="stats-row">
           <el-col :span="6">
@@ -125,42 +98,40 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import dayjs from 'dayjs'
+// ============================================================================
+// 📦 组件导入
+// ============================================================================
 
-const router = useRouter()
+import AppHeader from '@/components/AppHeader.vue'      // 导入可复用的头部组件
+import { useAuthStore } from '@/stores/auth'            // 导入认证状态管理
+import dayjs from 'dayjs'                                // 导入日期处理库
+
+// ============================================================================
+// 🎯 响应式数据
+// ============================================================================
+
+/**
+ * 🔐 认证状态管理
+ *
+ * 从Pinia store中获取用户认证信息，用于显示用户名和角色信息
+ */
 const authStore = useAuthStore()
 
+// ============================================================================
+// 🛠️ 工具方法
+// ============================================================================
+
+/**
+ * 📅 日期格式化方法
+ *
+ * 将日期对象格式化为易读的字符串格式
+ * 使用dayjs库进行日期处理，提供更好的浏览器兼容性
+ *
+ * @param {Date} date - 要格式化的日期对象
+ * @returns {string} 格式化后的日期字符串 (YYYY-MM-DD HH:mm:ss)
+ */
 const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
-}
-
-const handleCommand = async (command) => {
-  switch (command) {
-    case 'profile':
-      ElMessage.info('个人资料功能开发中...')
-      break
-    case 'settings':
-      ElMessage.info('设置功能开发中...')
-      break
-    case 'logout':
-      try {
-        await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
-
-        authStore.logout()
-        ElMessage.success('已退出登录')
-        router.push('/login')
-      } catch {
-        // 用户取消
-      }
-      break
-  }
 }
 </script>
 
@@ -170,61 +141,8 @@ const handleCommand = async (command) => {
   background-color: #f5f5f5;
 }
 
-.el-header {
-  background-color: white;
-  border-bottom: 1px solid #e6e6e6;
-  height: 60px;
-  display: flex;
-  align-items: center;
-}
-
-.header-content {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-content h2 {
-  margin: 0;
-  color: #333;
-}
-
-.user-dropdown {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: background-color 0.3s;
-}
-
-.user-dropdown:hover {
-  background-color: #f5f5f5;
-}
-
-.username {
-  font-size: 14px;
-  color: #333;
-}
-
 .el-main {
-  padding: 20px;
-}
-
-.welcome-section {
-  margin-bottom: 30px;
-}
-
-.welcome-section h1 {
-  margin: 0 0 10px 0;
-  color: #333;
-  font-size: 28px;
-}
-
-.user-role {
-  margin: 0;
+  padding: 80px 20px 20px 20px;
 }
 
 .stats-row {
