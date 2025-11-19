@@ -36,26 +36,76 @@ import java.io.IOException;                             // 导入Java IO异常�
 @Component // @Component注解：声明这是一个Spring组件，Spring会自动管理其生命周期
 public class JwtAuthenticationFilter extends OncePerRequestFilter { // extends: 继承父类，获得父类的功能
 
-    // @Autowired: Spring依赖注入注解，自动装配JwtUtil类型的Bean
-    @Autowired // 自动注入：Spring容器会自动查找并注入JwtUtil实例
-    private JwtUtil jwtUtil; // jwtUtil: JWT工具类，用于令牌的解析和验证
-
-    // @Autowired: Spring依赖注入注解，自动装配UserDetailsService类型的Bean
-    @Autowired // 自动注入：Spring容器会自动查找并注入UserDetailsService实例
-    private UserDetailsService userDetailsService; // userDetailsService: 用户详情服务，用于加载用户信息
+    // ===== 依赖注入的字段 =====
+    // 使用final字段和构造函数注入，这是Spring Boot推荐的最佳实践
+    // 优势：1. 保证不可变性 2. 支持单元测试 3. 避免字段注入的潜在问题
 
     /**
-     * 🔍 过滤器核心逻辑
+     * 🎫 JWT工具类
      *
-     * 这是过滤器的主要方法，每个HTTP请求都会经过此方法。
-     * 方法负责从请求中提取JWT令牌，验证令牌，并设置认证信息。
+     * 负责JWT令牌的生成、解析和验证。
+     * 在过滤器中用于解析用户请求中的JWT令牌。
      *
-     * @Override: 注解表示这个方法重写了父类的方法
-     * @param request: HTTP请求对象，包含请求信息和JWT令牌
-     * @param response: HTTP响应对象，用于设置响应信息
-     * @param filterChain: 过滤器链，用于继续传递请求到下一个过滤器
-     * @throws ServletException: 当处理请求时可能发生Servlet异常
-     * @throws IOException: 当处理请求时可能发生IO异常
+     * final关键字：表示这个字段一旦初始化就不能再修改，确保线程安全和不可变性
+     */
+    private final JwtUtil jwtUtil; // jwtUtil: JWT工具类，用于令牌的解析和验证
+
+    /**
+     * 👤 用户详情服务
+     *
+     * 自定义的用户详情服务，从数据库加载用户信息。
+     * 在JWT验证成功后，用于加载完整的用户详情信息。
+     */
+    private final UserDetailsService userDetailsService; // userDetailsService: 用户详情服务，用于加载用户信息
+
+    /**
+     * 🏗️ 构造函数注入
+     *
+     * 使用构造函数进行依赖注入是Spring Boot推荐的最佳实践。
+     * Spring容器会自动调用这个构造函数并传入所需的Bean实例。
+     *
+     * 构造函数注入的优势：
+     * 1. 不可变性：依赖对象在构造后无法修改
+     * 2. 测试友好：单元测试时可以轻松传入Mock对象
+     * 3. 明确依赖：所有依赖关系在构造函数中一目了然
+     * 4. 避免空指针：保证依赖对象在对象创建时就已经初始化
+     *
+     * 在过滤器中使用构造函数注入特别重要，因为过滤器是单例的，在多线程环境下运行
+     *
+     * @param jwtUtil JWT工具类实例，用于令牌的解析和验证
+     * @param userDetailsService 用户详情服务，用于加载用户信息
+     */
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+        // this关键字：引用当前对象的字段，区分同名的参数和字段
+        this.jwtUtil = jwtUtil; // 将传入的JWT工具类赋值给当前对象的字段
+        this.userDetailsService = userDetailsService; // 将传入的用户详情服务赋值给当前对象的字段
+    }
+
+    /**
+     * 🔍 过滤器核心处理逻辑
+     *
+     * 这是过滤器的主要方法，每个HTTP请求都会经过此方法（除了shouldNotFilter返回true的请求）。
+     * 方法负责从请求中提取JWT令牌，验证令牌，并设置Spring Security认证上下文。
+     *
+     * Servlet过滤器机制说明：
+     * 1. 过滤器链：请求依次经过多个过滤器
+     * 2. 每个过滤器都可以修改请求/响应
+     * 3. 最后一个过滤器调用目标控制器
+     * 4. 响应按相反顺序经过过滤器链返回
+     *
+     * JWT认证流程：
+     * 1. 提取Authorization请求头中的JWT令牌
+     * 2. 验证令牌的格式和签名
+     * 3. 从令牌中提取用户信息
+     * 4. 加载用户详情并验证权限
+     * 5. 设置Spring Security认证上下文
+     *
+     * @Override: 注解表示这个方法重写了父类的方法，确保方法签名正确
+     * @param request: HttpServletRequest对象，包含HTTP请求的所有信息
+     * @param response: HttpServletResponse对象，用于构建HTTP响应
+     * @param filterChain: FilterChain对象，用于将请求传递给下一个过滤器
+     * @throws ServletException: 当处理请求时可能发生的Servlet相关异常
+     * @throws IOException: 当处理请求时可能发生的IO相关异常
      */
     @Override // 重写注解：确保正确重写了父类方法
     protected void doFilterInternal(HttpServletRequest request,        // HTTP请求：客户端发送的请求信息
@@ -63,30 +113,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // extends: 
                                   FilterChain filterChain)          // 过滤器链：用于继续传递请求
             throws ServletException, IOException { // 可能抛出的异常类型
 
-        // 🔍 从请求头中获取Authorization
-        // request.getHeader(): 从HTTP请求头中获取指定名称的值
+        // 🔍 第一步：从请求头获取Authorization头
+        // request.getHeader(): HTTPServletRequest的方法，获取指定名称的请求头
+        // Authorization: HTTP标准请求头，用于传递认证信息
         final String authorizationHeader = request.getHeader("Authorization"); // 获取Authorization请求头
 
-        String username = null; // username: 从JWT中提取的用户名，初始化为null
-        String jwt = null;      // jwt: 提取的JWT令牌字符串，初始化为null
+        String username = null; // username变量：存储从JWT中提取的用户名，初始化为null
+        String jwt = null;      // jwt变量：存储提取的JWT令牌字符串，初始化为null
 
-        // 🎯 检查Authorization头格式
-        // if条件：检查Authorization头是否存在且以"Bearer "开头
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) { // Bearer是JWT的标准前缀
-            jwt = authorizationHeader.substring(7); // 移除"Bearer "前缀（7个字符），获取纯JWT令牌
+        // 🎯 第二步：检查并提取JWT令牌
+        // JWT标准格式：Authorization: Bearer <jwt_token>
+        // Bearer前缀：OAuth 2.0和JWT的标准约定，共7个字符（包含空格）
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) { // 检查请求头是否存在且以Bearer开头
+            jwt = authorizationHeader.substring(7); // 移除"Bearer "前缀，获取纯JWT令牌字符串
+            // .substring(7): 从索引7开始截取字符串，跳过"Bearer "
 
-            try { // try-catch: 捕获JWT解析过程中可能出现的异常
-                // 📤 从JWT中提取用户名
-                // jwtUtil.extractUsername(): 调用JWT工具类方法从令牌中提取用户名
+            try { // try-catch: 捕获JWT解析过程中可能出现的各种异常
+                // 📤 第三步：从JWT中提取用户名
+                // jwtUtil.extractUsername(): JWT工具类的方法，解析JWT载荷中的subject声明
                 username = jwtUtil.extractUsername(jwt); // 从JWT令牌中解析出用户名
-            } catch (Exception e) { // 捕获所有可能的异常（令牌格式错误、过期等）
-                // System.err.println(): 向标准错误输出打印错误信息
-                System.err.println("无法从JWT令牌中提取用户名: " + e.getMessage()); // 打印错误日志
+            } catch (Exception e) { // 捕获所有可能的JWT解析异常
+                // 常见异常：令牌格式错误、签名无效、令牌过期等
+                // System.err.println(): Java标准错误输出流，用于打印错误信息
+                System.err.println("无法从JWT令牌中提取用户名: " + e.getMessage()); // 打印详细错误信息
+                // 在生产环境中，应该使用日志框架（如SLF4J）而不是System.err
             }
         }
 
-        // 🔐 如果用户名不为空且当前没有认证
-        // SecurityContextHolder.getContext(): 获取当前线程的安全上下文
+        // 🔐 第四步：验证用户名和认证状态
+        // SecurityContextHolder.getContext(): 获取当前线程的Spring Security安全上下文
         // .getAuthentication(): 获取当前认证信息，如果未认证则返回null
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) { // 条件：有用户名且未认证
             // 👤 加载用户详情
