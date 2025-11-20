@@ -3,19 +3,25 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:mysql://localhost:3306/clothes_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
+    url: jdbc:postgresql://localhost:5432/clothes_db
+    username: postgres
     password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+      show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
 
 server:
   port: 8080
@@ -26,3 +32,19 @@ logging:
   level:
     com.cmliy.springweb: DEBUG
     org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# 图片存储配置
+image:
+  storage:
+    upload-dir: ./uploads/images
+    base-url: http://localhost:8080/api/images
+    max-file-size: 5242880  # 5MB
+    allowed-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+    generate-thumbnail: true
+    thumbnail-width: 300
+    thumbnail-height: 300
