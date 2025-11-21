@@ -69,6 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
   }
 
+  
   /**
    * 设置加载状态方法
    * @param status - 加载状态值
