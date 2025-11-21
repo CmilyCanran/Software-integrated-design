@@ -2,6 +2,7 @@
 package com.cmliy.springweb.security;
 
 // import: 导入其他包中的类，以便在当前类中使用
+import com.cmliy.springweb.common.ApiResponse;          // 导入统一API响应包装类
 import com.fasterxml.jackson.databind.ObjectMapper;         // 导入Jackson JSON处理库
 import org.springframework.beans.factory.annotation.Autowired;     // 导入Spring依赖注入注解
 import jakarta.servlet.ServletException;               // 导入Servlet异常类
@@ -62,25 +63,24 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint { /
         response.setContentType(MediaType.APPLICATION_JSON_VALUE); // 设置响应内容类型为JSON
         response.setCharacterEncoding("UTF-8"); // 设置响应字符编码为UTF-8，支持中文
 
-        // 📝 构建错误响应
-        // HashMap<String, Object>: 创建一个Map来存储响应数据，键为String类型，值为Object类型
-        Map<String, Object> body = new HashMap<>(); // 创建响应数据容器
-        body.put("status", HttpServletResponse.SC_UNAUTHORIZED);  // 设置状态码字段
-        body.put("error", "Unauthorized");                           // 设置错误类型字段
-        body.put("message", "认证失败，请先登录");                   // 设置错误消息字段
-        body.put("path", request.getServletPath());                 // 设置请求路径字段，方便前端定位
-        body.put("timestamp", LocalDateTime.now().toString());       // 设置时间戳字段，记录错误发生时间
+        // 📝 构建统一API响应
+        Map<String, Object> errorData = new HashMap<>();
+        errorData.put("path", request.getServletPath());
+        errorData.put("timestamp", LocalDateTime.now().toString());
+
+        ApiResponse<Map<String, Object>> apiResponse = ApiResponse.error("认证失败，请先登录", 401);
+        apiResponse.setData(errorData);
 
         // 📤 写入响应
         try {
             // objectMapper.writeValue(): 将Java对象转换为JSON字符串并写入输出流
             // response.getOutputStream(): 获取HTTP响应的输出流，用于向客户端发送数据
-            String json = objectMapper.writeValueAsString(body); // 先转换为JSON字符串
+            String json = objectMapper.writeValueAsString(apiResponse); // 先转换为JSON字符串
             response.getWriter().write(json); // 使用Writer而不是OutputStream
         } catch (Exception e) {
             // 🚨 如果JSON序列化失败，提供备用响应
-            response.getWriter().write("{\"error\":\"Serialization failed\",\"message\":\"" +
-                authException.getMessage() + "\"}");
+            response.getWriter().write("{\"success\":false,\"message\":\"" +
+                authException.getMessage() + "\",\"code\":401}");
         }
     }
 }
