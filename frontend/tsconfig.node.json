@@ -10,9 +10,11 @@
   "compilerOptions": {
     "composite": true,
     "noEmit": true,
+    "forceConsistentCasingInFileNames": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node"]
+    "types": ["node"],
+    "lib": ["es2022", "DOM.Iterable"]
   }
 }

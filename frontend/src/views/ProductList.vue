@@ -1,8 +1,8 @@
 <template>
+  <Header page-title="商品列表" />
   <div class="product-list">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h1>商品列表</h1>
       <div class="header-actions">
         <el-button
           v-if="authStore.canManageProducts"
@@ -118,10 +118,12 @@
           :can-edit="authStore.canManageProducts"
           :can-delete="authStore.canManageProducts"
           :show-actions="authStore.canManageProducts"
+          :show-quick-actions="!authStore.canManageProducts"
+          :quick-actions="authStore.canManageProducts ? undefined : customerQuickActions"
           @click="handleProductClick"
           @edit="handleEditProduct"
-          @delete="handleDeleteProduct"
           @add-to-cart="handleAddToCart"
+          @quick-view="handleQuickView"
         />
       </div>
 
@@ -139,7 +141,6 @@
           @click="handleProductClick"
           @view-details="handleViewDetails"
           @edit="handleEditProduct"
-          @delete="handleDeleteProduct"
         />
       </div>
 
@@ -182,17 +183,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Grid, List, Close } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import SearchBox from '@/components/SearchBox.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import ProductListItem from '@/components/ProductListItem.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
-import StatusTag from '@/components/StatusTag.vue'
-import PriceDisplay from '@/components/PriceDisplay.vue'
-import StockIndicator from '@/components/StockIndicator.vue'
-import type { Product } from '@/types'
+import type { Product } from '@/types/product'
+import Header from '@/components/Header.vue'
 
 // 响应式数据
 const router = useRouter()
@@ -230,8 +229,8 @@ const filteredProducts = computed<Product[]>(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(product =>
-      product.name.toLowerCase().includes(query) ||
-      product.description.toLowerCase().includes(query)
+      product.productName.toLowerCase().includes(query) ||
+      product.description?.toLowerCase().includes(query)
     )
   }
 
@@ -243,7 +242,7 @@ const filteredProducts = computed<Product[]>(() => {
       case 'price-desc':
         return b.price - a.price
       case 'sales':
-        return (b as any).sales - (a as any).sales
+        return b.salesCount - a.salesCount
       case 'stock':
         return b.stockQuantity - a.stockQuantity
       case 'createdAt':
@@ -255,79 +254,138 @@ const filteredProducts = computed<Product[]>(() => {
   return result
 })
 
+// 客户模式的快速操作配置
+const customerQuickActions = [
+  {
+    icon: 'View',
+    type: 'primary' as const,
+    event: 'quick-view',
+    tooltip: '快速预览'
+  },
+  {
+    icon: 'ShoppingCart',
+    type: 'danger' as const,
+    event: 'add-to-cart',
+    tooltip: '加入购物车',
+    condition: (product: Product) => product.stockQuantity > 0
+  }
+]
+
 // 模拟商品数据
 const mockProducts: Product[] = [
   {
     id: 1,
-    name: '时尚运动鞋 - 2024新款',
+    productName: '时尚运动鞋 - 2024新款',
     description: '轻便透气，适合跑步和日常穿着，采用最新科技材料制作',
     price: 299.99,
+    salesCount: 15,
+    discount: 0,
     stockQuantity: 15,
     isAvailable: true,
+    creatorId: 1,
+    category: '鞋类',
+    brand: '运动品牌',
+    tags: ['新品', '热销'],
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
-    image: '/shoe1.jpg',
-    userId: 1
+    images: [
+      { id: 1, productId: 1, imageUrl: '/shoe1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 2,
-    name: '纯棉T恤',
+    productName: '纯棉T恤',
     description: '100%纯棉材质，舒适透气，多色可选',
     price: 59.99,
+    salesCount: 50,
+    discount: 10,
     stockQuantity: 50,
     isAvailable: true,
+    creatorId: 1,
+    category: '服装',
+    brand: '休闲品牌',
+    tags: ['基础款', '舒适'],
     createdAt: '2024-01-10T15:30:00Z',
     updatedAt: '2024-01-10T15:30:00Z',
-    image: '/tshirt1.jpg',
-    userId: 1
+    images: [
+      { id: 2, productId: 2, imageUrl: '/tshirt1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 3,
-    name: '商务双肩包',
+    productName: '商务双肩包',
     description: '大容量设计，防水面料，适合商务和旅行使用',
     price: 199.99,
+    salesCount: 25,
+    discount: 5,
     stockQuantity: 0,
     isAvailable: false,
+    creatorId: 1,
+    category: '箱包',
+    brand: '商务品牌',
+    tags: ['防水', '大容量'],
     createdAt: '2024-01-05T09:20:00Z',
     updatedAt: '2024-01-05T09:20:00Z',
-    image: '/backpack1.jpg',
-    userId: 1
+    images: [
+      { id: 3, productId: 3, imageUrl: '/backpack1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 4,
-    name: '智能手表',
+    productName: '智能手表',
     description: '多功能运动监测，心率监测，消息提醒，长续航',
     price: 899.99,
+    salesCount: 8,
+    discount: 0,
     stockQuantity: 8,
     isAvailable: true,
+    creatorId: 1,
+    category: '配饰',
+    brand: '科技品牌',
+    tags: ['智能', '健康'],
     createdAt: '2024-01-20T14:15:00Z',
     updatedAt: '2024-01-20T14:15:00Z',
-    image: '/watch1.jpg',
-    userId: 1
+    images: [
+      { id: 4, productId: 4, imageUrl: '/watch1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 5,
-    name: '连衣裙',
+    productName: '连衣裙',
     description: '优雅设计，舒适面料，适合多种场合穿着',
     price: 159.99,
+    salesCount: 25,
+    discount: 15,
     stockQuantity: 25,
     isAvailable: true,
+    creatorId: 1,
+    category: '服装',
+    brand: '时尚品牌',
+    tags: ['优雅', '百搭'],
     createdAt: '2024-01-18T11:00:00Z',
     updatedAt: '2024-01-18T11:00:00Z',
-    image: '/dress1.jpg',
-    userId: 1
+    images: [
+      { id: 5, productId: 5, imageUrl: '/dress1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 6,
-    name: '无线耳机',
+    productName: '无线耳机',
     description: '蓝牙5.0连接，降噪功能，长续航时间',
     price: 299.99,
+    salesCount: 12,
+    discount: 20,
     stockQuantity: 12,
     isAvailable: true,
+    creatorId: 1,
+    category: '配饰',
+    brand: '音频品牌',
+    tags: ['降噪', '无线'],
     createdAt: '2024-01-22T16:30:00Z',
     updatedAt: '2024-01-22T16:30:00Z',
-    image: '/headphone1.jpg',
-    userId: 1
+    images: [
+      { id: 6, productId: 6, imageUrl: '/headphone1.jpg', isMain: true, orderIndex: 1 }
+    ]
   }
 ]
 
@@ -337,8 +395,8 @@ const handleSearch = (query: string): void => {
   currentPage.value = 1
 }
 
-const handleSearchInput = (query: string): void => {
-  // 实时搜索处理
+const handleSearchInput = (_query: string): void => {
+  // 实时搜索处理 - 暂时留空，为将来功能预留
 }
 
 const handleSortChange = (): void => {
@@ -375,7 +433,11 @@ const handleAddToCart = (product: Product): void => {
     ElMessage.warning('商品库存不足')
     return
   }
-  ElMessage.success(`"${product.name}" 已加入购物车`)
+  ElMessage.success(`"${product.productName}" 已加入购物车`)
+}
+
+const handleQuickView = (product: Product): void => {
+  ElMessage.info(`快速预览商品: ${product.productName}`)
 }
 
 
@@ -557,7 +619,9 @@ watch(searchQuery, () => {
   color: #606266;
   line-height: 1.5;
   display: -webkit-box;
+  display: box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

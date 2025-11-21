@@ -6,8 +6,8 @@
     <!-- 商品图片 -->
     <div class="product-image">
       <img
-        :src="product.image || defaultImage"
-        :alt="product.name"
+        :src="product.images?.find(img => img.isMain)?.imageUrl || defaultImage"
+        :alt="product.productName"
         @error="handleImageError"
       />
       <!-- 商品状态标签 -->
@@ -16,7 +16,7 @@
 
     <!-- 商品信息 -->
     <div class="product-info">
-      <h3>{{ product.name }}</h3>
+      <h3>{{ product.productName }}</h3>
       <p class="description">{{ product.description }}</p>
 
       <!-- 价格和库存信息 -->
@@ -68,7 +68,7 @@ import { ref } from 'vue'
 import StatusTag from './StatusTag.vue'
 import PriceDisplay from './PriceDisplay.vue'
 import StockIndicator from './StockIndicator.vue'
-import type { Product } from '@/types'
+import type { Product } from '@/types/product'
 
 // 定义props接口
 interface Props {

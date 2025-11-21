@@ -66,7 +66,6 @@ import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import {
   HomeFilled,
-  Bell,
   User,
   ArrowDown,
   House,
@@ -84,6 +83,11 @@ const props = withDefaults(defineProps<Props>(), {
   pageTitle: '',
   notificationCount: 0
 })
+
+// 显式引用 props 以满足 TypeScript 检查
+// 这些值在模板中被使用
+const pageTitle = props.pageTitle
+const notificationCount = props.notificationCount
 
 // 状态管理
 const router = useRouter()

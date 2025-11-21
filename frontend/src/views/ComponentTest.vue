@@ -177,7 +177,7 @@ import StockIndicator from '@/components/StockIndicator.vue'
 import SearchBox from '@/components/SearchBox.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import ProductCard from '@/components/ProductCard.vue'
-import type { Product } from '@/types'
+import type { Product } from '@/types/product'
 
 // 响应式数据
 const currentPage = ref<number>(1)
@@ -203,51 +203,67 @@ const searchSuggestions = ref<string[]>([
 const testProducts = ref<Product[]>([
   {
     id: 1,
-    name: '时尚运动鞋 - 2024新款',
+    productName: '时尚运动鞋 - 2024新款',
     description: '轻便透气，适合跑步和日常穿着，采用最新科技材料制作',
     price: 299.99,
+    salesCount: 15,
+    discount: 0,
     stockQuantity: 15,
     isAvailable: true,
+    creatorId: 1,
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
-    image: '/shoe1.jpg',
-    userId: 1
+    images: [
+      { id: 1, productId: 1, imageUrl: '/shoe1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 2,
-    name: '纯棉T恤',
+    productName: '纯棉T恤',
     description: '100%纯棉材质，舒适透气，多色可选',
     price: 59.99,
+    salesCount: 50,
+    discount: 10,
     stockQuantity: 50,
     isAvailable: true,
+    creatorId: 1,
     createdAt: '2024-01-10T15:30:00Z',
     updatedAt: '2024-01-10T15:30:00Z',
-    image: '/tshirt1.jpg',
-    userId: 1
+    images: [
+      { id: 2, productId: 2, imageUrl: '/tshirt1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 3,
-    name: '商务双肩包',
+    productName: '商务双肩包',
     description: '大容量设计，防水面料，适合商务和旅行使用',
     price: 199.99,
+    salesCount: 25,
+    discount: 5,
     stockQuantity: 0,
     isAvailable: false,
+    creatorId: 1,
     createdAt: '2024-01-05T09:20:00Z',
     updatedAt: '2024-01-05T09:20:00Z',
-    image: '/backpack1.jpg',
-    userId: 1
+    images: [
+      { id: 3, productId: 3, imageUrl: '/backpack1.jpg', isMain: true, orderIndex: 1 }
+    ]
   },
   {
     id: 4,
-    name: '智能手表',
+    productName: '智能手表',
     description: '多功能运动监测，心率监测，消息提醒，长续航',
     price: 899.99,
+    salesCount: 8,
+    discount: 0,
     stockQuantity: 8,
     isAvailable: true,
+    creatorId: 1,
     createdAt: '2024-01-20T14:15:00Z',
     updatedAt: '2024-01-20T14:15:00Z',
-    image: '/watch1.jpg',
-    userId: 1
+    images: [
+      { id: 4, productId: 4, imageUrl: '/watch1.jpg', isMain: true, orderIndex: 1 }
+    ]
   }
 ])
 
@@ -298,19 +314,19 @@ const handlePageSizeChange = (size: number): void => {
 
 // 商品卡片相关事件
 const handleProductClick = (product: Product): void => {
-  addLog('商品点击', product.name)
+  addLog('商品点击', product.productName)
 }
 
 const handleProductEdit = (product: Product): void => {
-  addLog('编辑商品', product.name)
+  addLog('编辑商品', product.productName)
 }
 
 const handleProductDelete = (product: Product): void => {
-  addLog('删除商品', product.name)
+  addLog('删除商品', product.productName)
 }
 
 const handleAddToCart = (product: Product): void => {
-  addLog('加入购物车', product.name)
+  addLog('加入购物车', product.productName)
 }
 </script>
 
