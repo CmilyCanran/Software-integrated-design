@@ -1,18 +1,16 @@
 <template>
   <div class="dashboard-container">
+    <Header page-title="仪表板" />
     <el-container>
-      <!-- 使用可复用的AppHeader组件 -->
-      <AppHeader title="服装销售系统" />
-
       <el-main>
-
+        <!-- 统计卡片 -->
         <el-row :gutter="20" class="stats-row">
           <el-col :span="6">
             <el-card class="stats-card">
               <div class="stats-content">
                 <el-icon class="stats-icon"><User /></el-icon>
                 <div class="stats-info">
-                  <h3>用户总数</h3>
+                  <h3>总用户数</h3>
                   <p class="stats-number">1,234</p>
                 </div>
               </div>
@@ -56,49 +54,63 @@
           </el-col>
         </el-row>
 
+        <!-- 根据角色显示不同的快速操作 -->
         <el-row :gutter="20" class="content-row">
-          <el-col :span="16">
+          <!-- 商家用户的快速操作 -->
+          <el-col :span="16" v-if="isMerchant">
             <el-card>
               <template #header>
-                <h3>快速操作</h3>
+                <h3>🏪 商家快速操作</h3>
               </template>
               <div class="quick-actions">
-                <el-button
-                  type="primary"
-                  size="large"
-                  icon="Plus"
-                  @click="handleAddProduct"
-                >
-                  添加商品
+                <el-button type="primary" size="large" @click="goToProductManagement">
+                  <el-icon><Plus /></el-icon>
+                  商品管理
                 </el-button>
-                <el-button
-                  type="success"
-                  size="large"
-                  icon="ShoppingCart"
-                  @click="handleViewProducts"
-                >
+                <el-button type="success" size="large" @click="goToProducts">
+                  <el-icon><ShoppingCart /></el-icon>
                   查看商品
                 </el-button>
-                <el-button
-                  type="info"
-                  size="large"
-                  icon="Document"
-                  @click="handleViewOrders"
-                >
-                  查看订单
+                <el-button type="info" size="large" @click="handleViewOrders">
+                  <el-icon><Document /></el-icon>
+                  订单管理
                 </el-button>
-                <el-button
-                  type="warning"
-                  size="large"
-                  icon="Setting"
-                  @click="handleSettings"
-                >
-                  系统设置
+                <el-button type="warning" size="large" @click="handleViewStats">
+                  <el-icon><DataAnalysis /></el-icon>
+                  数据统计
                 </el-button>
               </div>
             </el-card>
           </el-col>
 
+          <!-- 普通用户的快速操作 -->
+          <el-col :span="16" v-else>
+            <el-card>
+              <template #header>
+                <h3>🛍️ 用户快速操作</h3>
+              </template>
+              <div class="quick-actions">
+                <el-button type="primary" size="large" @click="goToProducts">
+                  <el-icon><ShoppingCart /></el-icon>
+                  浏览商品
+                </el-button>
+                <el-button type="success" size="large" @click="handleViewOrders">
+                  <el-icon><Document /></el-icon>
+                  我的订单
+                </el-button>
+                <el-button type="info" size="large" @click="handleViewFavorites">
+                  <el-icon><Star /></el-icon>
+                  我的收藏
+                </el-button>
+                <el-button type="warning" size="large" @click="handleSettings">
+                  <el-icon><Setting /></el-icon>
+                  个人设置
+                </el-button>
+              </div>
+            </el-card>
+          </el-col>
+
+          <!-- 系统信息 -->
           <el-col :span="8">
             <el-card>
               <template #header>
@@ -118,80 +130,59 @@
 </template>
 
 <script setup lang="ts">
-// ============================================================================
-// 📦 组件导入
-// ============================================================================
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { ElMessage } from 'element-plus'
+import {
+  User, ShoppingCart, Document, Money, Plus, Setting,
+  DataAnalysis, Star
+} from '@element-plus/icons-vue'
+import Header from '@/components/Header.vue'
+import dayjs from 'dayjs'
 
-import AppHeader from '@/components/AppHeader.vue'      // 导入可复用的头部组件
-import { useAuthStore } from '@/stores/auth'            // 导入认证状态管理
-import dayjs from 'dayjs'                                // 导入日期处理库
-
-// ============================================================================
-// 🎯 响应式数据
-// ============================================================================
-
-/**
- * 🔐 认证状态管理
- *
- * 从Pinia store中获取用户认证信息，用于显示用户名和角色信息
- */
+// 状态管理
 const authStore = useAuthStore()
+const router = useRouter()
 
-// ============================================================================
-// 🛠️ 工具方法
-// ============================================================================
+// 计算属性
+const isMerchant = computed(() => {
+  return authStore.userInfo?.role === 'SHOPER' || authStore.userInfo?.role === 'ADMIN'
+})
 
-/**
- * 📅 日期格式化方法
- *
- * 将日期对象格式化为易读的字符串格式
- * 使用dayjs库进行日期处理，提供更好的浏览器兼容性
- *
- * @param {Date} date - 要格式化的日期对象
- * @returns {string} 格式化后的日期字符串 (YYYY-MM-DD HH:mm:ss)
- */
-const formatDate = (date) => {
+// 工具方法
+const formatDate = (date: Date) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
 }
 
-// ============================================================================
-// 🚀 快速操作处理函数
-// ============================================================================
-
-/**
- * 处理添加商品操作
- * 跳转到商品添加页面
- */
-const handleAddProduct = () => {
-  // TODO: 跳转到商品添加页面
-  console.log('添加商品')
+// 商家专用方法
+const goToProductManagement = () => {
+  router.push('/merchant/products')
 }
 
-/**
- * 处理查看商品操作
- * 跳转到商品列表页面
- */
-const handleViewProducts = () => {
-  // TODO: 跳转到商品列表页面
-  console.log('查看商品')
+// 通用方法
+const goToProducts = () => {
+  if (isMerchant.value) {
+    router.push('/merchant/products')
+  } else {
+    router.push('/products')
+  }
 }
 
-/**
- * 处理查看订单操作
- * 跳转到订单页面
- */
 const handleViewOrders = () => {
-  // TODO: 跳转到订单页面
-  console.log('查看订单')
+  ElMessage.info('订单功能开发中...')
 }
 
-/**
- * 处理系统设置操作
- * 跳转到系统设置页面
- */
+const handleViewStats = () => {
+  ElMessage.info('数据统计功能开发中...')
+}
+
+const handleViewFavorites = () => {
+  ElMessage.info('收藏功能开发中...')
+}
+
 const handleSettings = () => {
-  // TODO: 跳转到系统设置页面
-  console.log('系统设置')
+  ElMessage.info('设置功能开发中...')
 }
 </script>
 
@@ -201,8 +192,29 @@ const handleSettings = () => {
   background-color: #f5f5f5;
 }
 
+.simple-header {
+  background-color: #fff;
+  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: 60px;
+}
+
+.simple-header h2 {
+  margin: 0;
+  color: #303133;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .el-main {
-  padding: 80px 20px 20px 20px;
+  padding: 20px;
 }
 
 .stats-row {
@@ -217,6 +229,7 @@ const handleSettings = () => {
   display: flex;
   align-items: center;
   gap: 16px;
+  height: 100%;
 }
 
 .stats-icon {
@@ -250,5 +263,22 @@ const handleSettings = () => {
 .system-info p {
   margin: 8px 0;
   color: #666;
+}
+
+@media (max-width: 768px) {
+  .simple-header {
+    flex-direction: column;
+    height: auto;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .quick-actions {
+    flex-direction: column;
+  }
+
+  .stats-row {
+    display: none;
+  }
 }
 </style>

@@ -86,7 +86,19 @@ const router = createRouter({
       } as RouteMeta
     },
 
-    
+    // 商家商品管理页面路由（商家专用）
+    {
+      path: '/merchant/products',
+      name: 'merchant-products',
+      component: () => import('../views/merchant/ProductManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: ['SHOPER', 'ADMIN'],
+        title: '商品管理'
+      } as RouteMeta
+    },
+
+
     // 组件测试页面路由（隐藏页面，只能手动访问）
     {
       path: '/component-test',
@@ -121,7 +133,7 @@ router.beforeEach((to, from, next) => {
 
   // 第三层权限检查：角色权限控制
   if (to.meta.roles && authStore.isLoggedIn) {
-    const userRole = authStore.user?.role
+    const userRole = authStore.userInfo?.role
     const requiredRoles = to.meta.roles as string[]
 
     if (!userRole || !requiredRoles.includes(userRole)) {
