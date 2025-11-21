@@ -6,10 +6,13 @@
   >
     <!-- 商品图片 -->
     <div class="product-image">
-      <img
+      <ImageLoader
         :src="productImage"
         :alt="product.productName"
-        @error="handleImageError"
+        :placeholder="defaultImage"
+        :fallback="defaultImage"
+        class="product-image-loader"
+        @click="handleImageClick"
       />
 
       <!-- 商品状态标签 -->
@@ -126,6 +129,7 @@ import {
   Setting
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import ImageLoader from './ImageLoader.vue'
 import StatusTag from './StatusTag.vue'
 import PriceDisplay from './PriceDisplay.vue'
 import StockIndicator from './StockIndicator.vue'
@@ -193,7 +197,7 @@ const props = withDefaults(defineProps<Props>(), {
   lowStockThreshold: 10,
   canEdit: false,
   canDelete: false,
-  defaultImage: '/placeholder-product.png'
+  defaultImage: '/images/placeholder-product.png'
 })
 
 // 默认快速操作配置
@@ -249,7 +253,12 @@ const productImage = computed<string>(() => {
   // 优先使用主图片
   if (props.product.images && props.product.images.length > 0) {
     const mainImage = props.product.images.find(img => img.isMain)
-    return mainImage?.imageUrl || props.product.images[0].imageUrl || props.defaultImage
+    if (mainImage?.imageUrl) {
+      return mainImage.imageUrl
+    }
+    if (props.product.images[0]?.imageUrl) {
+      return props.product.images[0].imageUrl
+    }
   }
 
   // 如果没有images数组，尝试直接从image字段获取（向后兼容）
@@ -273,21 +282,6 @@ const handleNameClick = (): void => {
   }
 }
 
-const handleQuickView = (): void => {
-  emit('quick-view', props.product)
-}
-
-const handleAddToCart = (): void => {
-  if (!props.product) return
-
-  // 检查库存
-  if (props.product.stockQuantity === 0) {
-    ElMessage.warning('商品库存不足')
-    return
-  }
-
-  emit('add-to-cart', props.product)
-}
 
 // 通用快速操作处理方法
 const handleQuickAction = (action: QuickAction): void => {
@@ -316,9 +310,11 @@ const handleDelete = (): void => {
   emit('delete', props.product)
 }
 
-const handleImageError = (event: Event): void => {
-  const img = event.target as HTMLImageElement
-  img.src = props.defaultImage
+const handleImageClick = (): void => {
+  // 如果卡片可点击，触发卡片点击事件
+  if (props.clickable) {
+    handleCardClick()
+  }
 }
 
 // 暴露方法给父组件
@@ -353,14 +349,12 @@ defineExpose({
   overflow: hidden;
 }
 
-.product-image img {
+.product-image-loader {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
 }
 
-.product-card.hoverable:hover .product-image img {
+.product-card.hoverable:hover .product-image .image-loader-image {
   transform: scale(1.05);
 }
 
@@ -401,6 +395,7 @@ defineExpose({
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: 44.8px;
@@ -423,6 +418,7 @@ defineExpose({
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: 42px;

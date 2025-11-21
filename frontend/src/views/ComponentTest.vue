@@ -214,7 +214,7 @@ const testProducts = ref<Product[]>([
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
     images: [
-      { id: 1, productId: 1, imageUrl: '/shoe1.jpg', isMain: true, orderIndex: 1 }
+      { id: 1, productId: 1, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
     ]
   },
   {
@@ -230,7 +230,7 @@ const testProducts = ref<Product[]>([
     createdAt: '2024-01-10T15:30:00Z',
     updatedAt: '2024-01-10T15:30:00Z',
     images: [
-      { id: 2, productId: 2, imageUrl: '/tshirt1.jpg', isMain: true, orderIndex: 1 }
+      { id: 2, productId: 2, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
     ]
   },
   {
@@ -246,7 +246,7 @@ const testProducts = ref<Product[]>([
     createdAt: '2024-01-05T09:20:00Z',
     updatedAt: '2024-01-05T09:20:00Z',
     images: [
-      { id: 3, productId: 3, imageUrl: '/backpack1.jpg', isMain: true, orderIndex: 1 }
+      { id: 3, productId: 3, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
     ]
   },
   {
@@ -262,7 +262,7 @@ const testProducts = ref<Product[]>([
     createdAt: '2024-01-20T14:15:00Z',
     updatedAt: '2024-01-20T14:15:00Z',
     images: [
-      { id: 4, productId: 4, imageUrl: '/watch1.jpg', isMain: true, orderIndex: 1 }
+      { id: 4, productId: 4, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
     ]
   }
 ])
