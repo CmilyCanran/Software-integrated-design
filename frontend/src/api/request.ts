@@ -50,14 +50,26 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   // 响应成功拦截
   (response: AxiosResponse<ApiResponse>) => {
-    const { code, data, message } = response.data
+    const responseData = response.data
 
-    if (code === 200) {
+    // 检查新格式 (success 字段)
+    if (responseData.hasOwnProperty('success')) {
+      if (responseData.success) {
+        console.log(`✅ 请求成功: ${response.config.url}`)
+        return responseData.data
+      } else {
+        ElMessage.error(responseData.message || '请求失败')
+        return Promise.reject(new Error(responseData.message))
+      }
+    }
+
+    // 兼容旧格式 (code 字段)
+    if (responseData.code === 200) {
       console.log(`✅ 请求成功: ${response.config.url}`)
-      return data
+      return responseData.data
     } else {
-      ElMessage.error(message || '请求失败')
-      return Promise.reject(new Error(message))
+      ElMessage.error(responseData.message || '请求失败')
+      return Promise.reject(new Error(responseData.message))
     }
   },
   // 响应失败拦截

@@ -2,6 +2,7 @@
 package com.cmliy.springweb.controller;
 
 // import: 导入其他包中的类，以便在当前类中使用
+import com.cmliy.springweb.common.ApiResponse;  // 导入统一API响应包装类
 import org.springframework.http.ResponseEntity;  // 导入Spring HTTP响应实体类，用于构建HTTP响应
 import org.springframework.web.bind.annotation.GetMapping;  // 导入Spring Web GET请求映射注解
 import org.springframework.web.bind.annotation.RequestMapping;  // 导入Spring Web请求映射注解
@@ -36,22 +37,25 @@ public class PublicController {  // public class: 定义公共类，其他类可
      *              "/health": 这个方法处理 /api/public/health 路径的请求
      *
      * @param: 无参数，因为这是一个简单的GET请求
-     * @return: ResponseEntity<Map<String, Object>> - 包含状态信息的HTTP响应
+     * @return: ResponseEntity<ApiResponse<Map<String, Object>>> - 包含状态信息的HTTP响应
      */
     @GetMapping("/health")  // @GetMapping注解：声明这是一个处理GET请求的方法
-    public ResponseEntity<Map<String, Object>> health() {  // public方法：公开访问，返回HTTP响应实体
+    public ResponseEntity<ApiResponse<Map<String, Object>>> health() {  // public方法：公开访问，返回HTTP响应实体
 
         // 🗂️ 创建响应数据容器
         // HashMap<String, Object>: 创建一个Map来存储响应数据，键为String类型，值为Object类型
         // Map: Java集合框架中的接口，用于存储键值对（key-value pairs）
-        Map<String, Object> response = new HashMap<>();  // 创建HashMap实例，用于存储响应数据
+        Map<String, Object> healthData = new HashMap<>();  // 创建HashMap实例，用于存储响应数据
 
         // 📊 填充响应数据
         // .put(key, value): Map接口的方法，向Map中添加键值对
-        response.put("status", "UP");                    // 设置应用状态：UP表示正常运行
-        response.put("timestamp", LocalDateTime.now().toString());  // 设置当前时间戳
-        response.put("application", "SpringWeb");         // 设置应用名称
-        response.put("version", "1.0.0");                // 设置应用版本号
+        healthData.put("status", "UP");                    // 设置应用状态：UP表示正常运行
+        healthData.put("timestamp", LocalDateTime.now().toString());  // 设置当前时间戳
+        healthData.put("application", "SpringWeb");         // 设置应用名称
+        healthData.put("version", "1.0.0");                // 设置应用版本号
+
+        // 📤 构建标准响应格式
+        ApiResponse<Map<String, Object>> response = ApiResponse.success(healthData, "应用正常运行");
 
         // 📤 返回HTTP响应
         // ResponseEntity.ok(): 静态方法，创建HTTP状态码为200(OK)的响应
