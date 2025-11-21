@@ -194,8 +194,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // extends: 
 
         // 🎯 公开端点列表
         // return: 直接返回布尔值结果，多个条件用||（或）连接
-        return path.startsWith("/api/auth/") ||      // 认证相关API（登录、注册等）
-               path.startsWith("/api/public/") ||    // 公开API
+        return path.startsWith("/auth/") ||      // 认证相关API（登录、注册等）
+               path.startsWith("/public/") ||    // 公开API
                path.equals("/actuator/health") ||    // 健康检查端点
                path.startsWith("/swagger-ui/") ||    // Swagger UI文档
                path.startsWith("/v3/api-docs/");      // API文档

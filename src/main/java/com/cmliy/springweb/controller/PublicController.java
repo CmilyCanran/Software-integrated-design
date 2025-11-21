@@ -16,7 +16,7 @@ import java.util.Map;           // 导入Java Map接口，定义键值对集合�
  * 🌐 公开访问控制器
  *
  * 这个类处理不需要认证的公开API请求。
- * 所有在 /api/public 路径下的请求都可以被任何人访问，
+ * 所有在 /public 路径下的请求都可以被任何人访问，
  * 不需要登录或提供JWT令牌。
  *
  * @RestController: Spring框架注解，标记这是一个REST API控制器，
@@ -24,7 +24,7 @@ import java.util.Map;           // 导入Java Map接口，定义键值对集合�
  *                  同时表明这个类中的所有方法都返回JSON数据。
  */
 @RestController // @RestController注解：声明这是一个REST控制器类
-@RequestMapping("/api/public")  // @RequestMapping注解：为整个控制器设置基础路径
+@RequestMapping("/public")  // @RequestMapping注解：为整个控制器设置基础路径
 public class PublicController {  // public class: 定义公共类，其他类可以访问
 
     /**
@@ -34,7 +34,7 @@ public class PublicController {  // public class: 定义公共类，其他类可
      * 通常用于负载均衡器健康检查或监控系统。
      *
      * @GetMapping: Spring Web注解，将HTTP GET请求映射到这个方法
-     *              "/health": 这个方法处理 /api/public/health 路径的请求
+     *              "/health": 这个方法处理 /public/health 路径的请求
      *
      * @param: 无参数，因为这是一个简单的GET请求
      * @return: ResponseEntity<ApiResponse<Map<String, Object>>> - 包含状态信息的HTTP响应

@@ -48,8 +48,8 @@ const authStore = useAuthStore()
 const loginFormRef = ref()
 
 const loginForm = reactive({
-    username: '',
-    password: ''
+    username: 'user',
+    password: '123456'
 })
 
 const loginRules = {
