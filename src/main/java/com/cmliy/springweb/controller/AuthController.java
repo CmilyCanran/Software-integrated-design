@@ -5,6 +5,7 @@ package com.cmliy.springweb.controller;
 import com.cmliy.springweb.model.User;                      // 导入用户实体类
 import com.cmliy.springweb.repository.UserRepository;       // 导入用户数据访问层接口
 import com.cmliy.springweb.util.JwtUtil;                    // 导入JWT工具类
+import com.cmliy.springweb.common.ApiResponse;
 import com.cmliy.springweb.security.CustomUserDetailsService; // 导入自定义用户详情服务
 import org.springframework.beans.factory.annotation.Autowired; // 导入Spring依赖注入注解
 import org.springframework.http.ResponseEntity;               // 导入Spring HTTP响应实体类
@@ -136,10 +137,10 @@ public class AuthController {  // public class: 定义公共类，其他类可�
      *              "/login": 这个方法处理 /auth/login 路径的请求
      *
      * @param loginRequest Map<String, String> 包含用户名和密码的请求体
-     * @return ResponseEntity<Map<String, Object>> 包含JWT令牌和用户信息的HTTP响应
+     * @return ResponseEntity<ApiResponse<Map<String, Object>>> 包含JWT令牌和用户信息的HTTP响应
      */
     @PostMapping("/login") // @PostMapping注解：声明这是一个处理POST请求的方法
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) { // public方法：公开访问，返回HTTP响应实体
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody Map<String, String> loginRequest) { // public方法：公开访问，返回HTTP响应实体
         try { // try-catch: 捕获认证过程中可能出现的异常
 
             // 📥 第一步：解析请求参数
@@ -202,10 +203,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             responseData.put("timestamp", LocalDateTime.now().toString()); // 设置当前时间
 
             // 📤 第十步：构建标准响应格式
-            Map<String, Object> response = new HashMap<>(); // 创建响应容器
-            response.put("code", 200);                       // 业务状态码：200表示成功
-            response.put("message", "登录成功");              // 设置成功消息
-            response.put("data", responseData);              // 设置实际数据
+            ApiResponse<Map<String, Object>> response = ApiResponse.success(responseData, "登录成功");
 
             // 📤 第十一步：返回成功响应
             // ResponseEntity.ok(): 创建HTTP状态码为200(OK)的响应
@@ -213,10 +211,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
 
         } catch (Exception e) { // 捕获认证异常
             // 🚨 异常处理：构建符合前端期望的错误响应
-            Map<String, Object> errorResponse = new HashMap<>(); // 创建错误响应容器
-            errorResponse.put("code", 401);                       // 业务状态码：401表示认证失败
-            errorResponse.put("message", "用户名或密码错误");        // 设置错误消息
-            errorResponse.put("data", null);                       // 错误时无数据
+            ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("用户名或密码错误", 401);
 
             // 📤 返回错误响应
             // ResponseEntity.status(): 创建指定状态码的响应
@@ -243,10 +238,10 @@ public class AuthController {  // public class: 定义公共类，其他类可�
      * - 新账户默认启用状态
      *
      * @param registerRequest Map<String, String> 包含注册信息的请求体
-     * @return ResponseEntity<Map<String, Object>> 注册结果响应
+     * @return ResponseEntity<ApiResponse<Map<String, Object>>> 注册结果响应
      */
     @PostMapping("/register") // @PostMapping注解：声明这是一个处理POST请求的方法
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> registerRequest) { // public方法：公开访问，返回HTTP响应实体
+    public ResponseEntity<ApiResponse<Map<String, Object>>> register(@RequestBody Map<String, String> registerRequest) { // public方法：公开访问，返回HTTP响应实体
         try { // try-catch: 捕获注册过程中可能出现的异常
 
             // 📥 第一步：解析注册信息
@@ -258,11 +253,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             // userRepository.existsByUsername(): 检查用户名是否存在的自定义方法
             if (userRepository.existsByUsername(username)) { // 如果用户名已存在
                 // 🚨 构建用户名重复错误响应
-                Map<String, Object> errorResponse = new HashMap<>(); // 创建错误响应容器
-                errorResponse.put("status", 400);                    // 设置HTTP状态码400（客户端错误）
-                errorResponse.put("error", "Bad Request");           // 设置错误类型
-                errorResponse.put("message", "用户名已存在");          // 设置错误消息
-                errorResponse.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
+                ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("用户名已存在", 400);
 
                 // 📤 返回客户端错误响应
                 // ResponseEntity.badRequest(): 创建HTTP状态码为400的响应
@@ -273,11 +264,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             // userRepository.existsByEmail(): 检查邮箱是否存在的自定义方法
             if (userRepository.existsByEmail(email)) { // 如果邮箱已存在
                 // 🚨 构建邮箱重复错误响应
-                Map<String, Object> errorResponse = new HashMap<>(); // 创建错误响应容器
-                errorResponse.put("status", 400);                    // 设置HTTP状态码400
-                errorResponse.put("error", "Bad Request");           // 设置错误类型
-                errorResponse.put("message", "邮箱已存在");            // 设置错误消息
-                errorResponse.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
+                ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("邮箱已存在", 400);
 
                 // 📤 返回客户端错误响应
                 return ResponseEntity.badRequest().body(errorResponse);
@@ -308,10 +295,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             Map<String, Object> responseData = new HashMap<>(); // 创建实际数据容器
             responseData.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
 
-            Map<String, Object> response = new HashMap<>(); // 创建响应容器
-            response.put("code", 200);                       // 业务状态码：200表示成功
-            response.put("message", "注册成功");              // 设置成功消息
-            response.put("data", responseData);              // 设置实际数据
+            ApiResponse<Map<String, Object>> response = ApiResponse.success(responseData, "注册成功");
 
             // 📤 第九步：返回创建成功响应
             // ResponseEntity.status(): 创建指定状态码的响应
@@ -320,10 +304,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
 
         } catch (Exception e) { // 捕捉注册过程中的异常
             // 🚨 异常处理：构建符合前端期望的服务器错误响应
-            Map<String, Object> errorResponse = new HashMap<>(); // 创建错误响应容器
-            errorResponse.put("code", 500);                       // 业务状态码：500表示服务器错误
-            errorResponse.put("message", "注册失败: " + e.getMessage()); // 设置详细错误消息
-            errorResponse.put("data", null);                       // 错误时无数据
+            ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("注册失败: " + e.getMessage(), 500);
 
             // 📤 返回服务器错误响应
             return ResponseEntity.status(500).body(errorResponse);
