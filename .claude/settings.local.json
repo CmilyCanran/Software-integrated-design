@@ -11,7 +11,12 @@
       "Bash(dir \"src\\main\\java\\com\\cmliy\\springweb\")",
       "Bash(mvn dependency:tree)",
       "Bash(mvn spring-boot:run)",
-      "Bash(curl -X GET http://localhost:8080/api/public/health)"
+      "Bash(curl -X GET http://localhost:8080/api/public/health)",
+      "Bash(curl -X POST http://localhost:8080/auth/login -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"test\"\",\"\"password\"\":\"\"test\"\"}\")",
+      "Bash(curl -X POST http://localhost:8080/auth/login -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"test\"\",\"\"password\"\":\"\"test\"\"}\" -v)",
+      "Bash(curl -X GET http://localhost:8080/api/public/health -v)",
+      "Bash(curl -X GET http://localhost:8080/public/health -v)",
+      "Bash(mkdir -p \"D:\\Code\\Learn\\Java\\Spring\\SpringWeb\\frontend\\API文档\\TODO\\task\")"
     ],
     "deny": [],
     "ask": []
