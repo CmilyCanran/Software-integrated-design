@@ -5,10 +5,12 @@
   >
     <!-- 商品图片 -->
     <div class="product-image">
-      <img
+      <ImageLoader
         :src="product.images?.find(img => img.isMain)?.imageUrl || defaultImage"
         :alt="product.productName"
-        @error="handleImageError"
+        :placeholder="defaultImage"
+        :fallback="defaultImage"
+        class="product-image-loader"
       />
       <!-- 商品状态标签 -->
       <StatusTag :status="product.isAvailable ? 'available' : 'unavailable'" />
@@ -65,6 +67,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import ImageLoader from './ImageLoader.vue'
 import StatusTag from './StatusTag.vue'
 import PriceDisplay from './PriceDisplay.vue'
 import StockIndicator from './StockIndicator.vue'
@@ -97,7 +100,7 @@ const props = withDefaults(defineProps<Props>(), {
   showStockCount: true,
   showEditButton: false,
   showDeleteButton: false,
-  defaultImage: '/placeholder-product.png',
+  defaultImage: '/images/placeholder-product.png',
   clickable: true
 })
 
@@ -123,10 +126,7 @@ const handleDelete = (): void => {
   emit('delete', props.product)
 }
 
-const handleImageError = (event: Event): void => {
-  const img = event.target as HTMLImageElement
-  img.src = props.defaultImage
-}
+// ImageLoader组件会自动处理图片错误
 
 // 暴露方法给父组件
 defineExpose({
@@ -162,10 +162,9 @@ defineExpose({
   flex-shrink: 0;
 }
 
-.product-image img {
+.product-image-loader {
   width: 100%;
   height: 100%;
-  object-fit: cover;
   border-radius: 6px;
 }
 

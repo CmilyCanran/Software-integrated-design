@@ -21,6 +21,7 @@ export interface Product {
   category?: string
   tags?: string[]
   brand?: string
+  originalPrice?: number
 }
 
 // 商品图片接口

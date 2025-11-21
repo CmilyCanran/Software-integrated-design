@@ -41,13 +41,13 @@
         <div class="product-images">
           <!-- 主图片展示 -->
           <div class="main-image-container">
-            <img
-              :src="currentImage || '/placeholder-product.png'"
+            <ImageLoader
+              :src="currentImage"
               :alt="product.productName"
+              :placeholder="'/images/placeholder-product.png'"
+              :fallback="'/images/placeholder-product.png'"
               class="main-image"
-              @error="handleImageError"
-              @mousemove="handleImageZoom"
-              @mouseleave="handleImageZoomLeave"
+              @click="handleImageClick"
             />
             <!-- 放大镜效果 -->
             <div
@@ -65,10 +65,13 @@
               :class="['thumbnail-item', { active: currentImageIndex === index }]"
               @click="selectImage(index)"
             >
-              <img
+              <ImageLoader
                 :src="image"
                 :alt="`${product.productName} 图片${index + 1}`"
-                @error="handleThumbnailError(index)"
+                :placeholder="'/images/placeholder-product.png'"
+                :fallback="'/images/placeholder-product.png'"
+                class="thumbnail-image"
+                @click="selectImage(index)"
               />
             </div>
           </div>
@@ -321,9 +324,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, ShoppingCart } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { ShoppingCart } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
+import ImageLoader from '@/components/ImageLoader.vue'
 import PriceDisplay from '@/components/PriceDisplay.vue'
 import StockIndicator from '@/components/StockIndicator.vue'
 import type { Product } from '@/types/product'
@@ -370,8 +374,6 @@ const reviews = ref([
 ])
 
 // 计算属性
-const productId = computed<string>(() => route.params.id as string)
-
 const currentImage = computed<string>(() => {
   return productImages.value[currentImageIndex.value] || ''
 })
@@ -398,7 +400,7 @@ const zoomLensStyle = computed(() => ({
 // 模拟商品数据
 const mockProduct: Product = {
   id: 1,
-  name: '时尚运动鞋 - 2024新款',
+  productName: '时尚运动鞋 - 2024新款',
   description: '这款运动鞋采用最新科技材料制作，轻便透气，适合跑步和日常穿着。鞋底采用耐磨橡胶，提供良好的抓地力。鞋面采用网眼设计，确保足部透气舒适。',
   price: 299.99,
   originalPrice: 399.99,
@@ -406,20 +408,31 @@ const mockProduct: Product = {
   isAvailable: true,
   createdAt: '2024-01-15T10:00:00Z',
   updatedAt: '2024-01-15T10:00:00Z',
-  image: '/shoe1.jpg',
-  userId: 1,
   brand: '运动品牌',
-  category: '运动鞋'
+  category: '运动鞋',
+  salesCount: 128,
+  discount: 0.25,
+  creatorId: 1,
+  images: [
+    {
+      id: 1,
+      productId: 1,
+      imageUrl: '/images/placeholder-product.png',
+      isMain: true,
+      alt: '时尚运动鞋主图',
+      orderIndex: 0
+    }
+  ]
 }
 
 // 初始化商品图片
 const initProductImages = () => {
   if (product.value) {
     productImages.value = [
-      product.value.image || '/placeholder-product.png',
-      '/shoe1-2.jpg',
-      '/shoe1-3.jpg',
-      '/shoe1-4.jpg'
+      product.value.images?.[0]?.imageUrl || '/images/placeholder-product.png',
+      '/images/placeholder-product.png',
+      '/images/placeholder-product.png',
+      '/images/placeholder-product.png'
     ]
   }
 }
@@ -444,7 +457,8 @@ const initProductSpecs = () => {
 
   // 默认选择
   if (productColors.value.length > 0) {
-    selectedColor.value = productColors.value[0].value
+    const firstColor = productColors.value[0]
+    selectedColor.value = firstColor.value
   }
   if (productSizes.value.length > 0) {
     const availableSize = productSizes.value.find(size => size.available)
@@ -459,28 +473,10 @@ const selectImage = (index: number) => {
   currentImageIndex.value = index
 }
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.src = '/placeholder-product.png'
+const handleImageClick = () => {
+  showZoom.value = !showZoom.value
 }
 
-const handleThumbnailError = (index: number) => {
-  productImages.value[index] = '/placeholder-product.png'
-}
-
-// 图片放大镜功能
-const handleImageZoom = (event: MouseEvent) => {
-  const rect = event.currentTarget.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
-
-  zoomPosition.value = { x, y }
-  showZoom.value = true
-}
-
-const handleImageZoomLeave = () => {
-  showZoom.value = false
-}
 
 // 规格选择函数
 const selectColor = (color: string) => {
@@ -626,7 +622,6 @@ watch(() => route.params.id, () => {
 .main-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .zoom-lens {
@@ -664,10 +659,9 @@ watch(() => route.params.id, () => {
   border-color: #409eff;
 }
 
-.thumbnail-item img {
+.thumbnail-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 /* 商品信息区域 */
