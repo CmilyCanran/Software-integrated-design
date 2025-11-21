@@ -43,7 +43,7 @@
           <div class="main-image-container">
             <img
               :src="currentImage || '/placeholder-product.png'"
-              :alt="product.name"
+              :alt="product.productName"
               class="main-image"
               @error="handleImageError"
               @mousemove="handleImageZoom"
@@ -67,7 +67,7 @@
             >
               <img
                 :src="image"
-                :alt="`${product.name} 图片${index + 1}`"
+                :alt="`${product.productName} 图片${index + 1}`"
                 @error="handleThumbnailError(index)"
               />
             </div>
@@ -77,7 +77,7 @@
         <!-- 右侧商品信息 -->
         <div class="product-info">
           <!-- 商品标题 -->
-          <h1 class="product-title">{{ product.name }}</h1>
+          <h1 class="product-title">{{ product.productName }}</h1>
 
           <!-- 价格和库存 -->
           <div class="price-stock-section">
@@ -240,7 +240,7 @@
           <el-tab-pane label="规格参数" name="specs">
             <div class="tab-content">
               <el-descriptions :column="2" border>
-                <el-descriptions-item label="商品名称">{{ product.name }}</el-descriptions-item>
+                <el-descriptions-item label="商品名称">{{ product.productName }}</el-descriptions-item>
                 <el-descriptions-item label="品牌">{{ product.brand || '自营' }}</el-descriptions-item>
                 <el-descriptions-item label="分类">{{ product.category || '服装' }}</el-descriptions-item>
                 <el-descriptions-item label="材质">优质面料</el-descriptions-item>
@@ -326,7 +326,7 @@ import { ArrowLeft, ShoppingCart } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import PriceDisplay from '@/components/PriceDisplay.vue'
 import StockIndicator from '@/components/StockIndicator.vue'
-import type { Product } from '@/types'
+import type { Product } from '@/types/product'
 
 // 路由相关
 const route = useRoute()

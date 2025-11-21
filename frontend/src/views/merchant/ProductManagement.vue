@@ -130,6 +130,8 @@
               :product="product"
               :can-edit="true"
               :can-delete="true"
+              :show-quick-actions="false"
+              :quick-actions="merchantQuickActions"
               @click="viewProductDetail(product)"
               @edit="openEditDialog(product)"
               @delete="confirmDelete(product)"
@@ -308,6 +310,22 @@ const mockStats = computed(() => ({
 }))
 
 const totalProducts = computed(() => mockProducts.value.length)
+
+// 商家模式的快速操作配置
+const merchantQuickActions: import('@/components/ProductCard.vue').QuickAction[] = [
+  {
+    icon: 'Edit',
+    type: 'primary' as const,
+    event: 'edit',
+    tooltip: '编辑商品'
+  },
+  {
+    icon: 'Delete',
+    type: 'danger' as const,
+    event: 'delete',
+    tooltip: '删除商品'
+  }
+]
 
 // 日期格式化
 const formatDate = (date: string) => {
