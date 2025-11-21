@@ -212,41 +212,33 @@ public class PasswordChangeRequest {
 ```java
 package com.cmliy.springweb.dto;
 
-import com.cmliy.springweb.model.User;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.time.LocalDateTime;
 
 /**
- * 🔐 认证响应DTO
+ * 🔐 登录响应DTO
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthResponse {
+public class LoginResponseDTO {
 
-    private String accessToken;
-    private String refreshToken;
+    private String token;
     private String tokenType;
     private Long expiresIn;
     private UserDTO user;
+    private String timestamp;
 
     // 🏗️ 构造函数
-    public AuthResponse() {}
+    public LoginResponseDTO() {}
 
-    public AuthResponse(String accessToken, String refreshToken, String tokenType, Long expiresIn, User user) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
+    public LoginResponseDTO(String token, String tokenType, Long expiresIn, UserDTO user, String timestamp) {
+        this.token = token;
         this.tokenType = tokenType;
         this.expiresIn = expiresIn;
-        this.user = new UserDTO(user);
+        this.user = user;
+        this.timestamp = timestamp;
     }
 
     // Getter和Setter
-    public String getAccessToken() { return accessToken; }
-    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
-
-    public String getRefreshToken() { return refreshToken; }
-    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
 
     public String getTokenType() { return tokenType; }
     public void setTokenType(String tokenType) { this.tokenType = tokenType; }
@@ -256,43 +248,29 @@ public class AuthResponse {
 
     public UserDTO getUser() { return user; }
     public void setUser(UserDTO user) { this.user = user; }
+
+    public String getTimestamp() { return timestamp; }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
 }
 
 /**
  * 👤 用户DTO
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO {
 
     private Long id;
     private String username;
     private String email;
     private String role;
-    private Boolean enabled;
-    private String fullName;
-    private String phone;
-    private String avatarUrl;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime lastLoginTime;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
 
     // 🏗️ 构造函数
     public UserDTO() {}
 
-    public UserDTO(User user) {
-        this.id = user.getId();
-        this.username = user.getUsername();
-        this.email = user.getEmail();
-        this.role = user.getRole();
-        this.enabled = user.getEnabled();
-        this.fullName = user.getFullName();
-        this.phone = user.getPhone();
-        this.avatarUrl = user.getAvatarUrl();
-        this.lastLoginTime = user.getLastLoginTime();
-        this.createdAt = user.getCreatedAt();
+    public UserDTO(Long id, String username, String email, String role) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.role = role;
     }
 
     // Getter和Setter
@@ -307,66 +285,117 @@ public class UserDTO {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
-
-    public Boolean getEnabled() { return enabled; }
-    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
-
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-
-    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
-    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
 
 /**
- * 📊 用户统计DTO
+ * 📝 注册响应DTO
  */
-public class UserStatistics {
+public class RegisterResponseDTO {
 
-    private Long totalUsers;
-    private Long enabledUsers;
-    private Long adminUsers;
-    private Long regularUsers;
-    private Long recentlyActiveUsers;
+    private String timestamp;
 
     // 🏗️ 构造函数
-    public UserStatistics() {}
+    public RegisterResponseDTO() {}
 
-    public UserStatistics(Long totalUsers, Long enabledUsers, Long adminUsers, Long regularUsers, Long recentlyActiveUsers) {
-        this.totalUsers = totalUsers;
-        this.enabledUsers = enabledUsers;
-        this.adminUsers = adminUsers;
-        this.regularUsers = regularUsers;
-        this.recentlyActiveUsers = recentlyActiveUsers;
+    public RegisterResponseDTO(String timestamp) {
+        this.timestamp = timestamp;
     }
 
     // Getter和Setter
-    public Long getTotalUsers() { return totalUsers; }
-    public void setTotalUsers(Long totalUsers) { this.totalUsers = totalUsers; }
+    public String getTimestamp() { return timestamp; }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+}
 
-    public Long getEnabledUsers() { return enabledUsers; }
-    public void setEnabledUsers(Long enabledUsers) { this.enabledUsers = enabledUsers; }
+/**
+ * 💊 健康检查响应DTO
+ */
+public class HealthResponseDTO {
 
-    public Long getAdminUsers() { return adminUsers; }
-    public void setAdminUsers(Long adminUsers) { this.adminUsers = adminUsers; }
+    private String status;
+    private String timestamp;
+    private String application;
+    private String version;
 
-    public Long getRegularUsers() { return regularUsers; }
-    public void setRegularUsers(Long regularUsers) { this.regularUsers = regularUsers; }
+    // 🏗️ 构造函数
+    public HealthResponseDTO() {}
 
-    public Long getRecentlyActiveUsers() { return recentlyActiveUsers; }
-    public void setRecentlyActiveUsers(Long recentlyActiveUsers) { this.recentlyActiveUsers = recentlyActiveUsers; }
+    public HealthResponseDTO(String status, String timestamp, String application, String version) {
+        this.status = status;
+        this.timestamp = timestamp;
+        this.application = application;
+        this.version = version;
+    }
+
+    // Getter和Setter
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getTimestamp() { return timestamp; }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+
+    public String getApplication() { return application; }
+    public void setApplication(String application) { this.application = application; }
+
+    public String getVersion() { return version; }
+    public void setVersion(String version) { this.version = version; }
 }
 ```
 
+### 3️⃣ 统一响应格式
+
+```java
+package com.cmliy.springweb.common;
+
+import java.time.LocalDateTime;
+
+/**
+ * 📦 统一API响应包装类
+ *
+ * 所有API响应都应使用此包装类，确保响应格式一致
+ */
+public class ApiResponse<T> {
+
+    private int code;
+    private T data;
+    private String message;
+    private String timestamp;
+
+    // 🏗️ 构造函数
+    public ApiResponse() {}
+
+    public ApiResponse(int code, T data, String message) {
+        this.code = code;
+        this.data = data;
+        this.message = message;
+        this.timestamp = LocalDateTime.now().toString();
+    }
+
+    // 🎯 成功响应工厂方法
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return new ApiResponse<>(200, data, message);
+    }
+
+    // ❌ 错误响应工厂方法
+    public static <T> ApiResponse<T> error(String message, int code) {
+        return new ApiResponse<>(code, null, message);
+    }
+
+    // Getter和Setter
+    public int getCode() { return code; }
+    public void setCode(int code) { this.code = code; }
+
+    public T getData() { return data; }
+    public void setData(T data) { this.data = data; }
+
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+
+    public String getTimestamp() { return timestamp; }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+}
+```
+
+> 💡 **重要说明**：当前系统使用`ApiResponse<T>`作为统一响应包装类，所有API响应都应通过`ApiResponse.success()`或`ApiResponse.error()`方法创建，而不是直接返回原始数据。前端通过`code`字段判断请求状态，通过`data`字段获取实际数据。
 ---
 
 ## 🛠️ API控制器实现

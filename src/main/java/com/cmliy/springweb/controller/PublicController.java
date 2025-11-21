@@ -3,14 +3,13 @@ package com.cmliy.springweb.controller;
 
 // import: 导入其他包中的类，以便在当前类中使用
 import com.cmliy.springweb.common.ApiResponse;  // 导入统一API响应包装类
+import com.cmliy.springweb.dto.HealthResponseDTO; // 导入健康检查响应DTO
 import org.springframework.http.ResponseEntity;  // 导入Spring HTTP响应实体类，用于构建HTTP响应
 import org.springframework.web.bind.annotation.GetMapping;  // 导入Spring Web GET请求映射注解
 import org.springframework.web.bind.annotation.RequestMapping;  // 导入Spring Web请求映射注解
 import org.springframework.web.bind.annotation.RestController;  // 导入Spring Web REST控制器注解
 
 import java.time.LocalDateTime;  // 导入Java 8日期时间类，用于获取当前时间
-import java.util.HashMap;        // 导入Java Map接口实现，用于存储键值对数据
-import java.util.Map;           // 导入Java Map接口，定义键值对集合的规范
 
 /**
  * 🌐 公开访问控制器
@@ -37,25 +36,21 @@ public class PublicController {  // public class: 定义公共类，其他类可
      *              "/health": 这个方法处理 /public/health 路径的请求
      *
      * @param: 无参数，因为这是一个简单的GET请求
-     * @return: ResponseEntity<ApiResponse<Map<String, Object>>> - 包含状态信息的HTTP响应
+     * @return: ResponseEntity<ApiResponse<HealthResponseDTO>> - 包含状态信息的HTTP响应
      */
     @GetMapping("/health")  // @GetMapping注解：声明这是一个处理GET请求的方法
-    public ResponseEntity<ApiResponse<Map<String, Object>>> health() {  // public方法：公开访问，返回HTTP响应实体
+    public ResponseEntity<ApiResponse<HealthResponseDTO>> health() {  // public方法：公开访问，返回HTTP响应实体
 
-        // 🗂️ 创建响应数据容器
-        // HashMap<String, Object>: 创建一个Map来存储响应数据，键为String类型，值为Object类型
-        // Map: Java集合框架中的接口，用于存储键值对（key-value pairs）
-        Map<String, Object> healthData = new HashMap<>();  // 创建HashMap实例，用于存储响应数据
-
-        // 📊 填充响应数据
-        // .put(key, value): Map接口的方法，向Map中添加键值对
-        healthData.put("status", "UP");                    // 设置应用状态：UP表示正常运行
-        healthData.put("timestamp", LocalDateTime.now().toString());  // 设置当前时间戳
-        healthData.put("application", "SpringWeb");         // 设置应用名称
-        healthData.put("version", "1.0.0");                // 设置应用版本号
+        // 📊 创建HealthResponseDTO对象
+        HealthResponseDTO healthResponseDTO = new HealthResponseDTO(
+            "UP",
+            LocalDateTime.now().toString(),
+            "SpringWeb",
+            "1.0.0"
+        );
 
         // 📤 构建标准响应格式
-        ApiResponse<Map<String, Object>> response = ApiResponse.success(healthData, "应用正常运行");
+        ApiResponse<HealthResponseDTO> response = ApiResponse.success(healthResponseDTO, "应用正常运行");
 
         // 📤 返回HTTP响应
         // ResponseEntity.ok(): 静态方法，创建HTTP状态码为200(OK)的响应

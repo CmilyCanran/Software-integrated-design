@@ -7,6 +7,9 @@ import com.cmliy.springweb.repository.UserRepository;       // 导入用户数�
 import com.cmliy.springweb.util.JwtUtil;                    // 导入JWT工具类
 import com.cmliy.springweb.common.ApiResponse;
 import com.cmliy.springweb.security.CustomUserDetailsService; // 导入自定义用户详情服务
+import com.cmliy.springweb.dto.LoginResponseDTO;            // 导入登录响应DTO
+import com.cmliy.springweb.dto.RegisterResponseDTO;         // 导入注册响应DTO
+import com.cmliy.springweb.dto.UserDTO;                     // 导入用户信息DTO
 import org.springframework.beans.factory.annotation.Autowired; // 导入Spring依赖注入注解
 import org.springframework.http.ResponseEntity;               // 导入Spring HTTP响应实体类
 import org.springframework.security.authentication.AuthenticationManager; // 导入Spring Security认证管理器
@@ -21,8 +24,7 @@ import org.springframework.web.bind.annotation.RestController; // 导入Spring W
 import org.springframework.web.bind.annotation.RequestMapping; // 导入Spring Web请求映射注解
 
 import java.time.LocalDateTime;  // 导入Java 8日期时间类，用于获取当前时间
-import java.util.HashMap;        // 导入Java Map接口实现，用于存储键值对数据
-import java.util.Map;           // 导入Java Map接口，定义键值对集合的规范
+import java.util.Map;           // 导入Java Map接口，用于处理请求参数
 import java.util.Optional;      // 导入Java 8 Optional容器类，避免空指针异常
 
 /**
@@ -137,10 +139,10 @@ public class AuthController {  // public class: 定义公共类，其他类可�
      *              "/login": 这个方法处理 /auth/login 路径的请求
      *
      * @param loginRequest Map<String, String> 包含用户名和密码的请求体
-     * @return ResponseEntity<ApiResponse<Map<String, Object>>> 包含JWT令牌和用户信息的HTTP响应
+     * @return ResponseEntity<ApiResponse<LoginResponseDTO>> 包含JWT令牌和用户信息的HTTP响应
      */
     @PostMapping("/login") // @PostMapping注解：声明这是一个处理POST请求的方法
-    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody Map<String, String> loginRequest) { // public方法：公开访问，返回HTTP响应实体
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody Map<String, String> loginRequest) { // public方法：公开访问，返回HTTP响应实体
         try { // try-catch: 捕获认证过程中可能出现的异常
 
             // 📥 第一步：解析请求参数
@@ -182,36 +184,36 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             Optional<User> userOpt = userRepository.findByUsername(username);
             User user = userOpt.orElse(null); // 如果用户存在则获取，否则为null
 
-            // 📊 第七步：构建符合前端期望的响应数据
-            // 前端request.js期望格式: {code: 200, data: {...}, message: "成功消息"}
-            Map<String, Object> responseData = new HashMap<>(); // 创建实际数据容器
-            responseData.put("token", token);                    // 设置JWT令牌
-            responseData.put("tokenType", "Bearer");              // 设置令牌类型（JWT标准）
-            responseData.put("expiresIn", jwtUtil.getExpiration()); // 设置令牌过期时间（毫秒）
-
-            // 👤 第八步：添加用户基本信息到data中
-            if (user != null) { // 检查用户对象是否存在
-                responseData.put("user", Map.of(  // 创建用户信息Map
-                    "id", user.getId(),           // 用户ID
-                    "username", user.getUsername(), // 用户名
-                    "email", user.getEmail(),       // 邮箱
-                    "role", user.getRole()         // 用户角色
-                ));
+            // 👤 第七步：创建UserDTO对象
+            UserDTO userDTO = null;
+            if (user != null) {
+                userDTO = new UserDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getRole()
+                );
             }
 
-            // ⏰ 第九步：添加时间戳到data中
-            responseData.put("timestamp", LocalDateTime.now().toString()); // 设置当前时间
+            // 📊 第八步：创建LoginResponseDTO对象
+            LoginResponseDTO loginResponseDTO = new LoginResponseDTO(
+                token,
+                "Bearer",
+                jwtUtil.getExpiration(),
+                userDTO,
+                LocalDateTime.now().toString()
+            );
 
-            // 📤 第十步：构建标准响应格式
-            ApiResponse<Map<String, Object>> response = ApiResponse.success(responseData, "登录成功");
+            // 📤 第九步：构建标准响应格式
+            ApiResponse<LoginResponseDTO> response = ApiResponse.success(loginResponseDTO, "登录成功");
 
-            // 📤 第十一步：返回成功响应
+            // 📤 第十步：返回成功响应
             // ResponseEntity.ok(): 创建HTTP状态码为200(OK)的响应
             return ResponseEntity.ok(response); // 返回包含令牌和用户信息的成功响应
 
         } catch (Exception e) { // 捕获认证异常
             // 🚨 异常处理：构建符合前端期望的错误响应
-            ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("用户名或密码错误", 401);
+            ApiResponse<LoginResponseDTO> errorResponse = ApiResponse.error("用户名或密码错误", 401);
 
             // 📤 返回错误响应
             // ResponseEntity.status(): 创建指定状态码的响应
@@ -238,10 +240,10 @@ public class AuthController {  // public class: 定义公共类，其他类可�
      * - 新账户默认启用状态
      *
      * @param registerRequest Map<String, String> 包含注册信息的请求体
-     * @return ResponseEntity<ApiResponse<Map<String, Object>>> 注册结果响应
+     * @return ResponseEntity<ApiResponse<RegisterResponseDTO>> 注册结果响应
      */
     @PostMapping("/register") // @PostMapping注解：声明这是一个处理POST请求的方法
-    public ResponseEntity<ApiResponse<Map<String, Object>>> register(@RequestBody Map<String, String> registerRequest) { // public方法：公开访问，返回HTTP响应实体
+    public ResponseEntity<ApiResponse<RegisterResponseDTO>> register(@RequestBody Map<String, String> registerRequest) { // public方法：公开访问，返回HTTP响应实体
         try { // try-catch: 捕获注册过程中可能出现的异常
 
             // 📥 第一步：解析注册信息
@@ -253,7 +255,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             // userRepository.existsByUsername(): 检查用户名是否存在的自定义方法
             if (userRepository.existsByUsername(username)) { // 如果用户名已存在
                 // 🚨 构建用户名重复错误响应
-                ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("用户名已存在", 400);
+                ApiResponse<RegisterResponseDTO> errorResponse = ApiResponse.error("用户名已存在", 400);
 
                 // 📤 返回客户端错误响应
                 // ResponseEntity.badRequest(): 创建HTTP状态码为400的响应
@@ -264,7 +266,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             // userRepository.existsByEmail(): 检查邮箱是否存在的自定义方法
             if (userRepository.existsByEmail(email)) { // 如果邮箱已存在
                 // 🚨 构建邮箱重复错误响应
-                ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("邮箱已存在", 400);
+                ApiResponse<RegisterResponseDTO> errorResponse = ApiResponse.error("邮箱已存在", 400);
 
                 // 📤 返回客户端错误响应
                 return ResponseEntity.badRequest().body(errorResponse);
@@ -291,20 +293,22 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             // 会自动生成INSERT SQL语句并执行
             userRepository.save(user);
 
-            // 📊 第八步：构建符合前端期望的成功响应
-            Map<String, Object> responseData = new HashMap<>(); // 创建实际数据容器
-            responseData.put("timestamp", LocalDateTime.now().toString()); // 设置时间戳
+            // 📊 第八步：创建RegisterResponseDTO对象
+            RegisterResponseDTO registerResponseDTO = new RegisterResponseDTO(
+                LocalDateTime.now().toString()
+            );
 
-            ApiResponse<Map<String, Object>> response = ApiResponse.success(responseData, "注册成功");
+            // 📤 第九步：构建标准响应格式
+            ApiResponse<RegisterResponseDTO> response = ApiResponse.success(registerResponseDTO, "注册成功");
 
-            // 📤 第九步：返回创建成功响应
+            // 📤 第十步：返回创建成功响应
             // ResponseEntity.status(): 创建指定状态码的响应
             // 201 Created: HTTP状态码，表示资源成功创建
             return ResponseEntity.status(201).body(response);
 
         } catch (Exception e) { // 捕捉注册过程中的异常
             // 🚨 异常处理：构建符合前端期望的服务器错误响应
-            ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error("注册失败: " + e.getMessage(), 500);
+            ApiResponse<RegisterResponseDTO> errorResponse = ApiResponse.error("注册失败: " + e.getMessage(), 500);
 
             // 📤 返回服务器错误响应
             return ResponseEntity.status(500).body(errorResponse);
