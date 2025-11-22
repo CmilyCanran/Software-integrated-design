@@ -308,7 +308,7 @@ const beforeImageUpload = (file: File) => {
 // 图片上传成功处理
 // 注意：uploadFile 和 uploadFileList 参数是 Element Plus Upload 组件回调函数的标准参数
 // 虽然当前实现中未使用这些参数，但需要保留以符合组件API规范
-const handleImageSuccess = (response: any, uploadFile: any, uploadFileList: any[]) => {
+const handleImageSuccess = (response: any, _uploadFile: any, _uploadFileList: any[]) => {
   // 只使用response参数记录上传成功的响应
   // uploadFile: 当前上传的文件对象
   // uploadFileList: 当前的文件列表
@@ -319,7 +319,7 @@ const handleImageSuccess = (response: any, uploadFile: any, uploadFileList: any[
 // 图片上传失败处理
 // 注意：uploadFile 和 uploadFileList 参数是 Element Plus Upload 组件回调函数的标准参数
 // 虽然当前实现中未使用这些参数，但需要保留以符合组件API规范
-const handleImageError = (error: any, uploadFile: any, uploadFileList: any[]) => {
+const handleImageError = (error: any, _uploadFile: any, _uploadFileList: any[]) => {
   // 只使用error参数记录错误信息
   // uploadFile: 上传失败的文件对象
   // uploadFileList: 当前的文件列表

@@ -30,6 +30,16 @@ export interface Product {
   // 扩展字段（根据后端数据结构）
   images?: ProductImage[]
   originalPrice?: number
+  // 后端DTO新增字段
+  mainImageUrl?: string
+  imageUrls?: string[]
+  specifications?: { [key: string]: any }
+  category?: string
+  brand?: string
+  color?: string
+  size?: string
+  extendedAttributes?: { [key: string]: any }
+  tags?: string[]
 }
 
 // 商品图片接口
@@ -52,6 +62,17 @@ export interface ProductCreateRequest {
   isAvailable: boolean
   images?: File[]
   productData?: ProductData
+  // 后端DTO新增字段
+  mainImageUrl?: string
+  imageUrls?: string[]
+  specifications?: { [key: string]: any }
+  category?: string
+  brand?: string
+  color?: string
+  size?: string
+  extendedAttributes?: { [key: string]: any }
+  tags?: string[]
+  originalPrice?: number
 }
 
 // 商品更新请求接口
@@ -80,9 +101,10 @@ export interface ProductQueryParams {
   maxStock?: number
   isAvailable?: boolean
   creatorId?: number
+  hasStock?: boolean
 
   // 搜索参数
-  query?: string
+  keyword?: string
 
   // 排序参数
   sortBy?: 'price' | 'salesCount' | 'createdAt' | 'updatedAt' | 'stockQuantity'
