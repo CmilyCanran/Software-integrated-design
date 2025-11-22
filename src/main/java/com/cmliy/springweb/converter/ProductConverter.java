@@ -1,0 +1,397 @@
+package com.cmliy.springweb.converter;
+
+import com.cmliy.springweb.dto.ProductResponseDTO;
+import com.cmliy.springweb.dto.ProductDetailDTO;
+import com.cmliy.springweb.dto.ProductSummaryDTO;
+import com.cmliy.springweb.dto.ProductListItemDTO;
+import com.cmliy.springweb.dto.ProductCreateRequestDTO;
+import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
+import com.cmliy.springweb.model.Product;
+import com.cmliy.springweb.model.User;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * 🔄 商品转换器 - Product Converter
+ *
+ * 负责Product实体与各种DTO之间的转换
+ * 统一管理商品数据的映射逻辑，确保数据一致性
+ *
+ * @author Claude
+ * @since 2025-11-22
+ */
+@Component
+public class ProductConverter {
+
+    /**
+     * 🔄 Product实体转ProductResponseDTO
+     *
+     * @param product 商品实体
+     * @return ProductResponseDTO
+     */
+    public ProductResponseDTO toResponseDTO(Product product) {
+        if (product == null) {
+            return null;
+        }
+
+        ProductResponseDTO dto = new ProductResponseDTO();
+        dto.setId(product.getId());
+        dto.setProductName(product.getProductName());
+        dto.setDescription(product.getDescription());
+        dto.setPrice(product.getPrice());
+        dto.setSalesCount(product.getSalesCount());
+        dto.setDiscount(product.getDiscount());
+        dto.setStockQuantity(product.getStockQuantity());
+        dto.setIsAvailable(product.getIsAvailable());
+
+        // 创建者信息
+        if (product.getCreator() != null) {
+            dto.setCreatorId(product.getCreator().getId());
+            dto.setCreatorUsername(product.getCreator().getUsername());
+        }
+
+        // 图片信息
+        dto.setMainImageUrl(product.getMainImage());
+        dto.setImageUrls(product.getImageUrls());
+
+        // 规格信息
+        dto.setSpecifications(product.getAllSpecifications());
+        dto.setCategory(product.getCategory());
+        dto.setBrand(product.getBrand());
+        dto.setColor(product.getColor());
+        dto.setSize(product.getSize());
+
+        // 格式化价格
+        dto.setFormattedPrice(product.getFormattedPrice());
+        dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
+        dto.setStockStatus(product.getStockStatus());
+
+        // 时间戳
+        dto.setCreatedAt(product.getCreatedAt());
+        dto.setUpdatedAt(product.getUpdatedAt());
+
+        return dto;
+    }
+
+    /**
+     * 🔄 Product实体转ProductDetailDTO
+     *
+     * @param product 商品实体
+     * @return ProductDetailDTO
+     */
+    public ProductDetailDTO toDetailDTO(Product product) {
+        if (product == null) {
+            return null;
+        }
+
+        ProductDetailDTO dto = new ProductDetailDTO();
+        dto.setId(product.getId());
+        dto.setProductName(product.getProductName());
+        dto.setDescription(product.getDescription());
+        dto.setPrice(product.getPrice());
+        dto.setSalesCount(product.getSalesCount());
+        dto.setDiscount(product.getDiscount());
+        dto.setStockQuantity(product.getStockQuantity());
+        dto.setIsAvailable(product.getIsAvailable());
+
+        // 创建者信息
+        if (product.getCreator() != null) {
+            dto.setCreatorId(product.getCreator().getId());
+            dto.setCreatorUsername(product.getCreator().getUsername());
+        }
+
+        // 详细图片信息
+        dto.setMainImageUrl(product.getMainImage());
+        dto.setImageUrls(product.getImageUrls());
+        dto.setThumbnails(product.getThumbnails());
+        dto.setTotalImages(product.getTotalImages());
+
+        // 详细规格信息
+        dto.setSpecifications(product.getAllSpecifications());
+        dto.setCategory(product.getCategory());
+        dto.setBrand(product.getBrand());
+        dto.setColor(product.getColor());
+        dto.setSize(product.getSize());
+
+        // 扩展属性
+        dto.setExtendedAttributes(product.getAllExtendedAttributes());
+
+        // 价格信息
+        dto.setFormattedPrice(product.getFormattedPrice());
+        dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
+        dto.setDiscountDisplay(product.getDiscountDisplay());
+        dto.setDiscountAmount(product.getDiscountAmount());
+        dto.setStockStatus(product.getStockStatus());
+
+        // 变体信息
+        dto.setVariants(getVariantsFromProductData(product));
+
+        // 时间戳
+        dto.setCreatedAt(product.getCreatedAt());
+        dto.setUpdatedAt(product.getUpdatedAt());
+
+        return dto;
+    }
+
+    /**
+     * 🔄 Product实体转ProductSummaryDTO
+     *
+     * @param product 商品实体
+     * @return ProductSummaryDTO
+     */
+    public ProductSummaryDTO toSummaryDTO(Product product) {
+        if (product == null) {
+            return null;
+        }
+
+        ProductSummaryDTO dto = new ProductSummaryDTO();
+        dto.setId(product.getId());
+        dto.setProductName(product.getProductName());
+        dto.setPrice(product.getPrice());
+        dto.setSalesCount(product.getSalesCount());
+        dto.setDiscount(product.getDiscount());
+        dto.setMainImageUrl(product.getMainImage());
+        dto.setCategory(product.getCategory());
+        dto.setBrand(product.getBrand());
+        dto.setFormattedPrice(product.getFormattedPrice());
+        dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
+        dto.setStockStatus(product.getStockStatus());
+
+        return dto;
+    }
+
+    /**
+     * 🔄 Product实体转ProductListItemDTO
+     *
+     * @param product 商品实体
+     * @return ProductListItemDTO
+     */
+    public ProductListItemDTO toListItemDTO(Product product) {
+        if (product == null) {
+            return null;
+        }
+
+        ProductListItemDTO dto = new ProductListItemDTO();
+        dto.setId(product.getId());
+        dto.setProductName(product.getProductName());
+        dto.setPrice(product.getPrice());
+        dto.setDiscount(product.getDiscount());
+        dto.setSalesCount(product.getSalesCount());
+        dto.setMainImageUrl(product.getMainImage());
+        dto.setCategory(product.getCategory());
+        dto.setFormattedPrice(product.getFormattedPrice());
+        dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
+        dto.setStockStatus(product.getStockStatus());
+        dto.setIsAvailable(product.getIsAvailable());
+
+        return dto;
+    }
+
+    /**
+     * 🔄 ProductCreateRequestDTO转Product实体
+     *
+     * @param requestDTO 创建请求DTO
+     * @param creator 创建者用户
+     * @return Product实体
+     */
+    public Product toEntity(ProductCreateRequestDTO requestDTO, User creator) {
+        if (requestDTO == null) {
+            return null;
+        }
+
+        Product product = new Product();
+        product.setProductName(requestDTO.getProductName());
+        product.setDescription(requestDTO.getDescription());
+        product.setPrice(requestDTO.getPrice());
+        product.setStockQuantity(requestDTO.getStockQuantity());
+        product.setIsAvailable(requestDTO.getIsAvailable() != null ? requestDTO.getIsAvailable() : false);
+        product.setDiscount(requestDTO.getDiscount() != null ? requestDTO.getDiscount() : java.math.BigDecimal.ZERO);
+        product.setCreator(creator);
+
+        // 设置主图片
+        if (requestDTO.getMainImageUrl() != null && !requestDTO.getMainImageUrl().trim().isEmpty()) {
+            product.setMainImage(requestDTO.getMainImageUrl());
+        }
+
+        // 设置图片列表
+        if (requestDTO.getImageUrls() != null && !requestDTO.getImageUrls().isEmpty()) {
+            product.setImageUrls(requestDTO.getImageUrls());
+        }
+
+        // 设置规格信息
+        if (requestDTO.getSpecifications() != null && !requestDTO.getSpecifications().isEmpty()) {
+            requestDTO.getSpecifications().forEach(product::addSpecification);
+        }
+
+        // 设置扩展属性
+        if (requestDTO.getExtendedAttributes() != null && !requestDTO.getExtendedAttributes().isEmpty()) {
+            requestDTO.getExtendedAttributes().forEach(product::addExtendedAttribute);
+        }
+
+        // 设置分类、品牌、颜色、尺寸
+        if (requestDTO.getCategory() != null) {
+            product.addSpecification("category", requestDTO.getCategory());
+        }
+        if (requestDTO.getBrand() != null) {
+            product.addSpecification("brand", requestDTO.getBrand());
+        }
+        if (requestDTO.getColor() != null) {
+            product.addSpecification("color", requestDTO.getColor());
+        }
+        if (requestDTO.getSize() != null) {
+            product.addSpecification("size", requestDTO.getSize());
+        }
+
+        return product;
+    }
+
+    /**
+     * 🔄 更新Product实体
+     *
+     * @param product 现有商品实体
+     * @param requestDTO 更新请求DTO
+     * @return 更新后的Product实体
+     */
+    public Product updateEntity(Product product, ProductUpdateRequestDTO requestDTO) {
+        if (product == null || requestDTO == null) {
+            return product;
+        }
+
+        // 更新基本信息
+        if (requestDTO.getProductName() != null) {
+            product.setProductName(requestDTO.getProductName());
+        }
+        if (requestDTO.getDescription() != null) {
+            product.setDescription(requestDTO.getDescription());
+        }
+        if (requestDTO.getPrice() != null) {
+            product.setPrice(requestDTO.getPrice());
+        }
+        if (requestDTO.getStockQuantity() != null) {
+            product.setStockQuantity(requestDTO.getStockQuantity());
+        }
+        if (requestDTO.getIsAvailable() != null) {
+            product.setIsAvailable(requestDTO.getIsAvailable());
+        }
+        if (requestDTO.getDiscount() != null) {
+            product.setDiscount(requestDTO.getDiscount());
+        }
+
+        // 更新主图片
+        if (requestDTO.getMainImageUrl() != null) {
+            product.setMainImage(requestDTO.getMainImageUrl());
+        }
+
+        // 更新图片列表
+        if (requestDTO.getImageUrls() != null) {
+            product.setImageUrls(requestDTO.getImageUrls());
+        }
+
+        // 更新规格信息
+        if (requestDTO.getSpecifications() != null) {
+            // 清除现有规格并设置新规格
+            clearSpecifications(product);
+            requestDTO.getSpecifications().forEach(product::addSpecification);
+        }
+
+        // 更新扩展属性
+        if (requestDTO.getExtendedAttributes() != null) {
+            clearExtendedAttributes(product);
+            requestDTO.getExtendedAttributes().forEach(product::addExtendedAttribute);
+        }
+
+        // 更新分类、品牌、颜色、尺寸
+        updateBasicSpecifications(product, requestDTO);
+
+        return product;
+    }
+
+    /**
+     * 🔄 批量转换Product实体列表为ProductResponseDTO列表
+     *
+     * @param products 商品实体列表
+     * @return ProductResponseDTO列表
+     */
+    public List<ProductResponseDTO> toResponseDTOList(List<Product> products) {
+        if (products == null || products.isEmpty()) {
+            return List.of();
+        }
+        return products.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 🔄 批量转换Product实体列表为ProductListItemDTO列表
+     *
+     * @param products 商品实体列表
+     * @return ProductListItemDTO列表
+     */
+    public List<ProductListItemDTO> toListItemDTOList(List<Product> products) {
+        if (products == null || products.isEmpty()) {
+            return List.of();
+        }
+        return products.stream()
+                .map(this::toListItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ==================== 🔧 私有辅助方法 ====================
+
+    /**
+     * 📋 从Product数据中获取变体列表
+     */
+    @SuppressWarnings("unchecked")
+    private List<String> getVariantsFromProductData(Product product) {
+        try {
+            Object variantsObj = product.getExtendedAttribute("variants");
+            if (variantsObj instanceof List) {
+                return (List<String>) variantsObj;
+            }
+        } catch (Exception e) {
+            // 忽略异常，返回空列表
+        }
+        return List.of();
+    }
+
+    /**
+     * 🗑️ 清除商品的所有规格
+     */
+    private void clearSpecifications(Product product) {
+        Map<String, Object> productData = product.getProductData();
+        if (productData != null) {
+            productData.remove("specifications");
+        }
+    }
+
+    /**
+     * 🗑️ 清除商品的所有扩展属性
+     */
+    private void clearExtendedAttributes(Product product) {
+        Map<String, Object> productData = product.getProductData();
+        if (productData != null) {
+            productData.remove("extended_attributes");
+        }
+    }
+
+    /**
+     * 🔄 更新基本规格信息
+     */
+    private void updateBasicSpecifications(Product product, ProductUpdateRequestDTO requestDTO) {
+        if (requestDTO.getCategory() != null) {
+            product.addSpecification("category", requestDTO.getCategory());
+        }
+        if (requestDTO.getBrand() != null) {
+            product.addSpecification("brand", requestDTO.getBrand());
+        }
+        if (requestDTO.getColor() != null) {
+            product.addSpecification("color", requestDTO.getColor());
+        }
+        if (requestDTO.getSize() != null) {
+            product.addSpecification("size", requestDTO.getSize());
+        }
+    }
+}
