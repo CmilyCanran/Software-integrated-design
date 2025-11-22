@@ -2,7 +2,7 @@
 // HTTP请求封装文件 (TypeScript版本) - 基于axios的统一API请求处理
 // ============================================================================
 
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import type { ApiResponse } from '@/types'
@@ -23,7 +23,7 @@ const request: AxiosInstance = axios.create({
 // ============================================================================
 request.interceptors.request.use(
   // 请求成功拦截
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const authStore = useAuthStore()
 
     // 自动添加认证头
@@ -52,19 +52,8 @@ request.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     const responseData = response.data
 
-    // 检查新格式 (success 字段)
-    if (responseData.hasOwnProperty('success')) {
-      if (responseData.success) {
-        console.log(`✅ 请求成功: ${response.config.url}`)
-        return responseData.data
-      } else {
-        ElMessage.error(responseData.message || '请求失败')
-        return Promise.reject(new Error(responseData.message))
-      }
-    }
-
-    // 兼容旧格式 (code 字段)
-    if (responseData.code === 200) {
+    // 处理统一格式 (success 字段)
+    if (responseData.success) {
       console.log(`✅ 请求成功: ${response.config.url}`)
       return responseData.data
     } else {
