@@ -2,6 +2,17 @@
 // 商品相关TypeScript类型定义
 // ============================================================================
 
+// 商品规格接口
+export interface ProductSpecifications {
+  [key: string]: string[]
+}
+
+// 商品数据接口
+export interface ProductData {
+  specifications?: ProductSpecifications
+  [key: string]: any
+}
+
 // 基础商品接口
 export interface Product {
   id: number
@@ -13,14 +24,11 @@ export interface Product {
   stockQuantity: number
   isAvailable: boolean
   creatorId: number
-  productData?: Record<string, any>
+  productData?: ProductData
   createdAt: string
   updatedAt: string
   // 扩展字段（根据后端数据结构）
   images?: ProductImage[]
-  category?: string
-  tags?: string[]
-  brand?: string
   originalPrice?: number
 }
 
@@ -42,10 +50,8 @@ export interface ProductCreateRequest {
   discount?: number
   stockQuantity: number
   isAvailable: boolean
-  category?: string
-  tags?: string[]
-  brand?: string
   images?: File[]
+  productData?: ProductData
 }
 
 // 商品更新请求接口
@@ -57,9 +63,6 @@ export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
   discount?: number
   stockQuantity?: number
   isAvailable?: boolean
-  category?: string
-  tags?: string[]
-  brand?: string
 }
 
 // 商品查询参数接口
@@ -71,8 +74,6 @@ export interface ProductQueryParams {
   order?: 'asc' | 'desc'
 
   // 筛选参数
-  category?: string
-  brand?: string
   minPrice?: number
   maxPrice?: number
   minStock?: number
@@ -82,7 +83,6 @@ export interface ProductQueryParams {
 
   // 搜索参数
   query?: string
-  tags?: string[]
 
   // 排序参数
   sortBy?: 'price' | 'salesCount' | 'createdAt' | 'updatedAt' | 'stockQuantity'
@@ -110,14 +110,6 @@ export interface ProductStats {
   averagePrice: number
   lowStockCount: number
   outOfStockCount: number
-  topCategories: Array<{
-    category: string
-    count: number
-  }>
-  topBrands: Array<{
-    brand: string
-    count: number
-  }>
   salesTrend: Array<{
     date: string
     sales: number
@@ -179,18 +171,4 @@ export interface ProductSortOption {
   key: string
   label: string
   value: string
-}
-
-// 商品分类选项
-export interface ProductCategoryOption {
-  value: string
-  label: string
-  count: number
-}
-
-// 商品品牌选项
-export interface ProductBrandOption {
-  value: string
-  label: string
-  count: number
 }

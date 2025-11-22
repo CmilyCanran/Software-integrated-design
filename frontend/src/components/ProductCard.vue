@@ -83,6 +83,21 @@
         />
       </div>
 
+      <!-- 商品规格 -->
+      <div
+        v-if="hasSpecifications && showSpecifications"
+        class="product-specifications"
+      >
+        <div
+          v-for="(values, attributeName) in productSpecifications"
+          :key="attributeName"
+          class="spec-item"
+        >
+          <span class="spec-name">{{ attributeName }}:</span>
+          <span class="spec-values">{{ formatSpecificationValues(values) }}</span>
+        </div>
+      </div>
+
       <!-- 操作按钮 -->
       <div
         v-if="showActions"
@@ -155,6 +170,7 @@ interface Props {
   quickActions?: QuickAction[]      // 自定义快速操作按钮配置
   showActions?: boolean             // 是否显示操作按钮
   showStockCount?: boolean          // 是否显示库存数量
+  showSpecifications?: boolean       // 是否显示规格信息
   priceSize?: 'small' | 'medium' | 'large'  // 价格显示大小
   lowStockThreshold?: number        // 低库存阈值
   canEdit?: boolean                 // 是否可编辑
@@ -193,6 +209,7 @@ const props = withDefaults(defineProps<Props>(), {
   quickActions: undefined,
   showActions: false,
   showStockCount: false,
+  showSpecifications: true,
   priceSize: 'medium',
   lowStockThreshold: 10,
   canEdit: false,
@@ -268,6 +285,28 @@ const productImage = computed<string>(() => {
 
   return props.defaultImage
 })
+
+// 计算属性：商品规格
+const productSpecifications = computed(() => {
+  const specs = props.product.productData?.specifications
+  if (!specs || typeof specs !== 'object') return {}
+  return specs
+})
+
+// 计算属性：是否有规格
+const hasSpecifications = computed(() => {
+  return Object.keys(productSpecifications.value).length > 0
+})
+
+// 格式化规格值显示
+const formatSpecificationValues = (values: unknown): string => {
+  // 类型守卫：确保values是字符串数组
+  if (!Array.isArray(values)) return ''
+  const stringValues = values.filter((item): item is string => typeof item === 'string')
+  if (stringValues.length === 0) return ''
+  // 只显示前两个值，如果超过则显示省略号
+  return stringValues.slice(0, 2).join(', ') + (stringValues.length > 2 ? '...' : '')
+};
 
 // 事件处理函数
 const handleCardClick = (): void => {
@@ -431,6 +470,29 @@ defineExpose({
   margin-bottom: 12px;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.product-specifications {
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.spec-item {
+  display: flex;
+  margin-bottom: 4px;
+  color: #606266;
+}
+
+.spec-name {
+  font-weight: 500;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.spec-values {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .product-actions {

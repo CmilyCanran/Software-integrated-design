@@ -8,8 +8,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 // 定义props接口
 interface Props {
   price: number                      // 当前价格
@@ -23,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   currency: '¥'
 })
 
-// 计算属性：格式化价格
+// 格式化价格函数
 const formatPrice = (price: number): string => {
   return price.toFixed(2)
 }

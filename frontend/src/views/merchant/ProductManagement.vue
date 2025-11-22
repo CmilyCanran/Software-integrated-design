@@ -223,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useProductStore } from '@/stores/product'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Grid, DataAnalysis, ShoppingCart, Money } from '@element-plus/icons-vue'
@@ -265,6 +265,13 @@ const mockProducts = ref<Product[]>([
     category: '服装',
     brand: '时尚品牌',
     tags: ['新品', '热销'],
+    productData: {
+      specifications: {
+        '颜色': ['白色', '黑色', '灰色'],
+        '尺寸': ['S', 'M', 'L', 'XL'],
+        '材质': ['纯棉']
+      }
+    },
     createdAt: '2024-01-15T10:30:00Z',
     updatedAt: '2024-01-15T10:30:00Z'
   },
@@ -281,6 +288,13 @@ const mockProducts = ref<Product[]>([
     category: '鞋类',
     brand: '运动品牌',
     tags: ['推荐', '限时特价'],
+    productData: {
+      specifications: {
+        '颜色': ['黑色', '白色', '蓝色'],
+        '尺寸': ['36', '37', '38', '39', '40', '41', '42', '43'],
+        '材质': ['合成革', '网面']
+      }
+    },
     createdAt: '2024-01-14T15:20:00Z',
     updatedAt: '2024-01-14T15:20:00Z'
   },
@@ -297,6 +311,13 @@ const mockProducts = ref<Product[]>([
     category: '箱包',
     brand: '箱包品牌',
     tags: ['热销'],
+    productData: {
+      specifications: {
+        '颜色': ['黑色', '灰色', '蓝色'],
+        '尺寸': ['40L', '50L'],
+        '材质': ['防水尼龙']
+      }
+    },
     createdAt: '2024-01-13T09:15:00Z',
     updatedAt: '2024-01-13T09:15:00Z'
   }
@@ -325,13 +346,13 @@ interface QuickAction {
 const merchantQuickActions: QuickAction[] = [
   {
     icon: 'Edit',
-    type: 'primary' as const,
+    type: 'primary',
     event: 'edit',
     tooltip: '编辑商品'
   },
   {
     icon: 'Delete',
-    type: 'danger' as const,
+    type: 'danger',
     event: 'delete',
     tooltip: '删除商品'
   }
@@ -451,22 +472,57 @@ const handleFormSave = async (formData: ProductCreateRequest | ProductUpdateRequ
       // 编辑模式
       const index = mockProducts.value.findIndex(p => p.id === editingProduct.value!.id)
       if (index !== -1) {
-        mockProducts.value[index] = {
-          ...mockProducts.value[index],
-          ...formData,
-          updatedAt: new Date().toISOString()
+        const existingProduct = mockProducts.value[index]
+        if (existingProduct) {
+          mockProducts.value[index] = {
+            ...existingProduct,
+            ...formData,
+            id: editingProduct.value!.id, // 确保id存在
+            productName: (formData as ProductUpdateRequest).productName ?? existingProduct.productName,
+            price: (formData as ProductUpdateRequest).price ?? existingProduct.price,
+            stockQuantity: (formData as ProductUpdateRequest).stockQuantity ?? existingProduct.stockQuantity,
+            isAvailable: (formData as ProductUpdateRequest).isAvailable ?? existingProduct.isAvailable,
+            discount: (formData as ProductUpdateRequest).discount ?? existingProduct.discount,
+            salesCount: existingProduct.salesCount,
+            creatorId: existingProduct.creatorId,
+            createdAt: existingProduct.createdAt,
+            updatedAt: new Date().toISOString(),
+            // 确保 images 字段类型正确：如果是 File[] 则转换为 undefined，因为编辑时不需要处理 File[]
+            images: Array.isArray(formData.images) ? undefined : existingProduct.images,
+            // 确保其他必需字段存在
+            description: (formData as ProductUpdateRequest).description ?? existingProduct.description,
+            category: (formData as ProductUpdateRequest).category ?? existingProduct.category,
+            brand: (formData as ProductUpdateRequest).brand ?? existingProduct.brand,
+            tags: (formData as ProductUpdateRequest).tags ?? existingProduct.tags,
+            productData: (formData as ProductUpdateRequest).productData ?? existingProduct.productData,
+            originalPrice: (formData as ProductUpdateRequest).originalPrice ?? existingProduct.originalPrice
+          }
+          ElMessage.success('商品更新成功')
         }
-        ElMessage.success('商品更新成功')
       }
     } else {
       // 创建模式
+      const createData = formData as ProductCreateRequest
       const newProduct: Product = {
         id: mockProducts.value.length + 1,
-        ...formData as ProductCreateRequest,
-        creatorId: 1,
+        productName: createData.productName,
+        description: createData.description,
+        price: createData.price,
         salesCount: 0,
+        discount: createData.discount ?? 0, // 确保discount有值
+        stockQuantity: createData.stockQuantity,
+        isAvailable: createData.isAvailable,
+        creatorId: 1,
+        productData: createData.productData,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        // 创建时，File[] 不应该赋值给 ProductImage[]，暂时设为 undefined
+        images: undefined,
+        // 确保其他字段有默认值
+        category: createData.category,
+        tags: createData.tags,
+        brand: createData.brand,
+        originalPrice: createData.originalPrice
       }
       mockProducts.value.unshift(newProduct)
       ElMessage.success('商品创建成功')

@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import StatusTag from '@/components/StatusTag.vue'
 import PriceDisplay from '@/components/PriceDisplay.vue'
 import StockIndicator from '@/components/StockIndicator.vue'

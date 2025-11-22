@@ -7,7 +7,6 @@ import { ref, computed } from 'vue'
 import type {
   Product,
   ProductQueryParams,
-  PaginatedResponse,
   ProductStats,
   ProductCreateRequest,
   ProductUpdateRequest

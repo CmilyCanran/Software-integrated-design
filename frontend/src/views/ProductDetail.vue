@@ -102,47 +102,25 @@
             />
           </div>
 
-          <!-- 规格选择 -->
-          <div class="spec-section">
-            <!-- 颜色选择 -->
+          <!-- 动态规格选择 -->
+          <div
+            v-if="Object.keys(dynamicAttributes).length > 0"
+            class="spec-section"
+          >
             <div
-              v-if="productColors && productColors.length > 0"
+              v-for="(values, attributeName) in dynamicAttributes"
+              :key="attributeName"
               class="spec-group"
             >
-              <h4>颜色</h4>
+              <h4>{{ attributeName }}</h4>
               <div class="spec-options">
                 <div
-                  v-for="(color, index) in productColors"
+                  v-for="(value, index) in values"
                   :key="index"
-                  :class="['spec-option', 'color-option', { active: selectedColor === color.value }]"
-                  :style="{ backgroundColor: color.value }"
-                  @click="selectColor(color.value)"
+                  :class="['spec-option', { active: selectedAttributes[attributeName] === value }]"
+                  @click="selectAttribute(attributeName, value)"
                 >
-                  <span class="color-name">{{ color.name }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 尺寸选择 -->
-            <div
-              v-if="productSizes && productSizes.length > 0"
-              class="spec-group"
-            >
-              <h4>尺寸</h4>
-              <div class="spec-options">
-                <div
-                  v-for="size in productSizes"
-                  :key="size.value"
-                  :class="['spec-option', { active: selectedSize === size.value, disabled: !size.available }]"
-                  @click="selectSize(size.value, size.available)"
-                >
-                  {{ size.label }}
-                  <span
-                    v-if="!size.available"
-                    class="out-of-stock"
-                  >
-                    缺货
-                  </span>
+                  {{ value }}
                 </div>
               </div>
             </div>
@@ -192,113 +170,9 @@
             </div>
           </div>
 
-          <!-- 商品属性 -->
-          <div class="attributes-section">
-            <h4>商品属性</h4>
-            <div class="attributes-list">
-              <div class="attribute-item">
-                <span class="attribute-label">品牌：</span>
-                <span class="attribute-value">{{ product.brand || '自营' }}</span>
-              </div>
-              <div class="attribute-item">
-                <span class="attribute-label">分类：</span>
-                <span class="attribute-value">{{ product.category || '服装' }}</span>
-              </div>
-              <div class="attribute-item">
-                <span class="attribute-label">上架时间：</span>
-                <span class="attribute-value">{{ formatDate(product.createdAt) }}</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      <!-- 商品详情标签页 -->
-      <div class="detail-tabs">
-        <el-tabs v-model="activeTab">
-          <!-- 商品详情 -->
-          <el-tab-pane label="商品详情" name="detail">
-            <div class="tab-content">
-              <div class="detail-description">
-                <h3>产品特点</h3>
-                <ul>
-                  <li>优质面料，舒适透气</li>
-                  <li>精湛工艺，品质保证</li>
-                  <li>时尚设计，潮流百搭</li>
-                  <li>多种规格，满足需求</li>
-                </ul>
-
-                <h3>洗护说明</h3>
-                <ul>
-                  <li>建议手洗，冷水洗涤</li>
-                  <li>不可漂白，不可烘干</li>
-                  <li>阴凉处晾干</li>
-                  <li>低温熨烫</li>
-                </ul>
-              </div>
-            </div>
-          </el-tab-pane>
-
-          <!-- 规格参数 -->
-          <el-tab-pane label="规格参数" name="specs">
-            <div class="tab-content">
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="商品名称">{{ product.productName }}</el-descriptions-item>
-                <el-descriptions-item label="品牌">{{ product.brand || '自营' }}</el-descriptions-item>
-                <el-descriptions-item label="分类">{{ product.category || '服装' }}</el-descriptions-item>
-                <el-descriptions-item label="材质">优质面料</el-descriptions-item>
-                <el-descriptions-item label="产地">中国</el-descriptions-item>
-                <el-descriptions-item label="包装">精美包装</el-descriptions-item>
-              </el-descriptions>
-            </div>
-          </el-tab-pane>
-
-          <!-- 用户评价 -->
-          <el-tab-pane label="用户评价" name="reviews">
-            <div class="tab-content">
-              <div class="reviews-section">
-                <div class="reviews-summary">
-                  <div class="rating-overview">
-                    <div class="rating-score">4.8</div>
-                    <div class="rating-stars">
-                      <el-rate
-                        v-model="averageRating"
-                        disabled
-                        show-score
-                        text-color="#ff9900"
-                        score-template="{value}"
-                      />
-                    </div>
-                    <div class="rating-count">共 128 条评价</div>
-                  </div>
-                </div>
-
-                <div class="reviews-list">
-                  <!-- 评价列表 -->
-                  <div
-                    v-for="review in reviews"
-                    :key="review.id"
-                    class="review-item"
-                  >
-                    <div class="review-header">
-                      <span class="reviewer">{{ review.user }}</span>
-                      <el-rate
-                        :model-value="review.rating"
-                        disabled
-                        size="small"
-                      />
-                      <span class="review-date">{{ review.date }}</span>
-                    </div>
-                    <div class="review-content">
-                      {{ review.content }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
-      </div>
     </div>
 
     <!-- 错误状态 -->
@@ -326,7 +200,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ShoppingCart } from '@element-plus/icons-vue'
-import dayjs from 'dayjs'
 import ImageLoader from '@/components/ImageLoader.vue'
 import PriceDisplay from '@/components/PriceDisplay.vue'
 import StockIndicator from '@/components/StockIndicator.vue'
@@ -340,9 +213,7 @@ const router = useRouter()
 const loading = ref<boolean>(true)
 const product = ref<Product | null>(null)
 const quantity = ref<number>(1)
-const selectedColor = ref<string>('')
-const selectedSize = ref<string>('')
-const activeTab = ref<string>('detail')
+const selectedAttributes = ref<Record<string, string>>({})
 const addingToCart = ref<boolean>(false)
 const showZoom = ref<boolean>(false)
 const zoomPosition = ref({ x: 0, y: 0 })
@@ -351,27 +222,20 @@ const zoomPosition = ref({ x: 0, y: 0 })
 const currentImageIndex = ref<number>(0)
 const productImages = ref<string[]>([])
 
-// 商品规格数据
-const productColors = ref<Array<{ value: string; name: string }>>([])
-const productSizes = ref<Array<{ value: string; label: string; available: boolean }>>([])
+// 动态属性计算属性
+const dynamicAttributes = computed(() => {
+  const specs = product.value?.productData?.specifications
+  if (!specs || typeof specs !== 'object') return {}
 
-// 评价数据
-const reviews = ref([
-  {
-    id: 1,
-    user: '张三',
-    rating: 5,
-    content: '质量很好，穿着舒适，推荐购买！',
-    date: '2024-01-15'
-  },
-  {
-    id: 2,
-    user: '李四',
-    rating: 4,
-    content: '整体不错，就是稍微有点小',
-    date: '2024-01-14'
-  }
-])
+  const validAttributes: Record<string, string[]> = {}
+  Object.entries(specs).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      validAttributes[key] = value
+    }
+  })
+  return validAttributes
+})
+
 
 // 计算属性
 const currentImage = computed<string>(() => {
@@ -386,7 +250,6 @@ const currentStock = computed<number>(() => {
   return product.value?.stockQuantity || 0
 })
 
-const averageRating = computed<number>(() => 4.8)
 
 const canAddToCart = computed<boolean>(() => {
   return !!(product.value && currentStock.value > 0 && !addingToCart.value)
@@ -413,6 +276,14 @@ const mockProduct: Product = {
   salesCount: 128,
   discount: 0.25,
   creatorId: 1,
+  productData: {
+    specifications: {
+      '颜色': ['红色', '蓝色', '黑色', '白色'],
+      '尺寸': ['S', 'M', 'L', 'XL'],
+      '材质': ['运动鞋专用材料', '透气网面'],
+      '款式': ['运动款', '休闲款']
+    }
+  },
   images: [
     {
       id: 1,
@@ -437,36 +308,6 @@ const initProductImages = () => {
   }
 }
 
-// 初始化商品规格
-const initProductSpecs = () => {
-  // 颜色规格
-  productColors.value = [
-    { value: '#000000', name: '黑色' },
-    { value: '#ffffff', name: '白色' },
-    { value: '#ff0000', name: '红色' },
-    { value: '#0000ff', name: '蓝色' }
-  ]
-
-  // 尺寸规格
-  productSizes.value = [
-    { value: 'S', label: 'S', available: true },
-    { value: 'M', label: 'M', available: true },
-    { value: 'L', label: 'L', available: false },
-    { value: 'XL', label: 'XL', available: true }
-  ]
-
-  // 默认选择
-  if (productColors.value.length > 0) {
-    const firstColor = productColors.value[0]
-    selectedColor.value = firstColor.value
-  }
-  if (productSizes.value.length > 0) {
-    const availableSize = productSizes.value.find(size => size.available)
-    if (availableSize) {
-      selectedSize.value = availableSize.value
-    }
-  }
-}
 
 // 图片处理函数
 const selectImage = (index: number) => {
@@ -478,17 +319,9 @@ const handleImageClick = () => {
 }
 
 
-// 规格选择函数
-const selectColor = (color: string) => {
-  selectedColor.value = color
-}
-
-const selectSize = (size: string, available: boolean) => {
-  if (available) {
-    selectedSize.value = size
-  } else {
-    ElMessage.warning('该尺寸暂时缺货')
-  }
+// 通用属性选择处理
+const selectAttribute = (attributeName: string, value: string) => {
+  selectedAttributes.value[attributeName] = value
 }
 
 // 业务操作函数
@@ -522,10 +355,7 @@ const handleBack = () => {
   router.back()
 }
 
-// 工具函数
-const formatDate = (dateString: string) => {
-  return dayjs(dateString).format('YYYY-MM-DD')
-}
+// 移除未使用的formatDate函数，已通过模板中的日期过滤器处理
 
 // 加载商品数据
 const loadProduct = async () => {
@@ -538,9 +368,11 @@ const loadProduct = async () => {
     // 使用模拟数据
     product.value = mockProduct
 
-    // 初始化图片和规格
+    // 初始化图片
     initProductImages()
-    initProductSpecs()
+
+    // 清空属性选择
+    selectedAttributes.value = {}
   } catch (error) {
     ElMessage.error('加载商品信息失败')
     console.error('Load product error:', error)
@@ -745,28 +577,7 @@ watch(() => route.params.id, () => {
   cursor: not-allowed;
 }
 
-.color-option {
-  min-width: 60px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
 
-.color-name {
-  color: #fff;
-  font-size: 12px;
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.out-of-stock {
-  font-size: 10px;
-  color: #909399;
-  font-weight: 500;
-  margin-left: 4px;
-}
 
 /* 数量选择 */
 .quantity-section h4 {
@@ -861,68 +672,6 @@ watch(() => route.params.id, () => {
   line-height: 1.6;
 }
 
-/* 评价区域 */
-.reviews-summary {
-  margin-bottom: 24px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.rating-overview {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.rating-score {
-  font-size: 32px;
-  font-weight: 600;
-  color: #ff9900;
-}
-
-.rating-stars {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.rating-count {
-  font-size: 12px;
-  color: #909399;
-}
-
-.review-item {
-  padding: 16px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.review-item:last-child {
-  border-bottom: none;
-}
-
-.review-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.reviewer {
-  font-weight: 500;
-  color: #303133;
-}
-
-.review-date {
-  font-size: 12px;
-  color: #909399;
-  margin-left: auto;
-}
-
-.review-content {
-  color: #606266;
-  line-height: 1.6;
-}
 
 /* 响应式设计 */
 @media (max-width: 768px) {

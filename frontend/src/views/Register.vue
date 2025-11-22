@@ -95,7 +95,7 @@ const registerForm = reactive({
   confirmPassword: ''
 })
 
-const validateConfirmPassword = (rule: any, value: string, callback: any) => {
+const validateConfirmPassword = (_rule: any, value: string, callback: any) => {
   if (value !== registerForm.password) {
     callback(new Error('两次输入的密码不一致'))
   } else {
@@ -130,7 +130,7 @@ const handleRegister = async () => {
 
     authStore.setLoading(true)
 
-    const response = await authAPI.register(registerForm)
+    await authAPI.register(registerForm)
 
     ElMessage.success('注册成功，请登录')
     router.push('/login')

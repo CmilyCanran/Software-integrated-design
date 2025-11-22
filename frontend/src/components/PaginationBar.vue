@@ -94,17 +94,6 @@ const totalPages = computed<number>(() => {
   return Math.ceil(props.total / props.pageSize)
 })
 
-// 计算属性：实际布局
-const actualLayout = computed<string>(() => {
-  let layout = props.layout
-
-  // 如果不显示跳转，从布局中移除jumper
-  if (!props.showJumper) {
-    layout = layout.replace(', jumper', '')
-  }
-
-  return layout
-})
 
 // 处理每页条数变化
 const handleSizeChange = (size: number): void => {
