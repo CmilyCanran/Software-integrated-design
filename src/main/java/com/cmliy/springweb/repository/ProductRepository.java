@@ -5,12 +5,14 @@ import com.cmliy.springweb.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -24,7 +26,7 @@ import java.util.Optional;
  * @since 2025-01-20
  */
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
     /**
      * 📋 根据商品名称查找商品
@@ -50,19 +52,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByCreatorId(Long creatorId, Pageable pageable);
 
     /**
-     * 📋 根据商品类别查找商品列表
-     *
-     * 使用JSONB路径查询，查询指定类别的所有商品。
-     * 使用PostgreSQL的->>操作符进行JSONB字段路径访问。
-     *
-     * @param category 商品类别
-     * @param pageable 分页对象
-     * @return 商品分页结果
-     */
-    @Query(value = "SELECT p.* FROM Product p WHERE p.productData->'specifications'->>'category' = :category", nativeQuery = true)
-    Page<Product> findByCategory(@Param("category") String category, Pageable pageable);
-
-    /**
      * 📋 根据价格范围查找商品列表
      *
      * 查询价格在指定范围内的所有商品。
@@ -74,71 +63,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @return 商品分页结果
      */
     Page<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
-
-    /**
-     * 📋 根据商品规格属性查找商品列表
-     *
-     * 使用JSONB路径查询，查询具有指定规格属性的商品。
-     * 支持多种规格属性的组合查询。
-     *
-     * @param color 颜色属性值
-     * @param size 尺寸属性值
-     * @param brand 品牌属性值
-     * @param pageable 分页对象
-     * @return 商品分页结果
-     */
-    @Query(value = "SELECT p.* FROM Product p WHERE " +
-           "(:color IS NULL OR p.productData->'specifications'->>'color' = :color) AND " +
-           "(:size IS NULL OR p.productData->'specifications'->>'size' = :size) AND " +
-           "(:brand IS NULL OR p.productData->'specifications'->>'brand' = :brand)", nativeQuery = true)
-    Page<Product> findBySpecifications(
-            @Param("color") String color,
-            @Param("size") String size,
-            @Param("brand") String brand,
-            Pageable pageable
-    );
-
-    /**
-     * 📋 根据商品颜色查找商品列表
-     *
-     * 使用JSONB路径查询，查询指定颜色的所有商品。
-     * 这是一个便捷方法，内部调用findBySpecifications。
-     *
-     * @param color 颜色
-     * @param pageable 分页对象
-     * @return 商品分页结果
-     */
-    default Page<Product> findByColor(String color, Pageable pageable) {
-        return findBySpecifications(color, null, null, pageable);
-    }
-
-    /**
-     * 📋 根据商品尺寸查找商品列表
-     *
-     * 使用JSONB路径查询，查询指定尺寸的所有商品。
-     * 这是一个便捷方法，内部调用findBySpecifications。
-     *
-     * @param size 尺寸
-     * @param pageable 分页对象
-     * @return 商品分页结果
-     */
-    default Page<Product> findBySize(String size, Pageable pageable) {
-        return findBySpecifications(null, size, null, pageable);
-    }
-
-    /**
-     * 📋 根据商品品牌查找商品列表
-     *
-     * 使用JSONB路径查询，查询指定品牌的所有商品。
-     * 这是一个便捷方法，内部调用findBySpecifications。
-     *
-     * @param brand 品牌
-     * @param pageable 分页对象
-     * @return 商品分页结果
-     */
-    default Page<Product> findByBrand(String brand, Pageable pageable) {
-        return findBySpecifications(null, null, brand, pageable);
-    }
 
     /**
      * 📋 查找可购买的商品列表
@@ -394,107 +318,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Object[] getProductStatsByCreator(@Param("creatorId") Long creatorId);
 
     /**
-     * 📋 查找指定颜色的商品数量
-     *
-     * 使用JSONB路径查询，统计指定颜色的商品数量。
-     * 用于颜色管理和统计报表。
-     *
-     * @param color 商品颜色
-     * @return 指定颜色的商品数量
-     */
-    @Query(value = "SELECT COUNT(p) FROM Product p WHERE p.productData->'specifications'->>'color' = :color", nativeQuery = true)
-    Long countByColor(@Param("color") String color);
-
-    /**
-     * 📋 查找所有颜色及其商品数量
-     *
-     * 使用JSONB路径查询，统计所有颜色及其商品数量。
-     * 用于颜色筛选和统计报表。
-     *
-     * @return 颜色统计结果
-     */
-    @Query(value = "SELECT p.productData->'specifications'->>'color' as color, COUNT(p) as count " +
-           "FROM Product p WHERE p.productData->'specifications'->>'color' IS NOT NULL " +
-           "GROUP BY p.productData->'specifications'->>'color' ORDER BY count DESC", nativeQuery = true)
-    List<Object[]> countAllColors();
-
-    /**
-     * 📋 查找指定品牌的商品数量
-     *
-     * 使用JSONB路径查询，统计指定品牌的商品数量。
-     * 用于品牌管理和统计报表。
-     *
-     * @param brand 商品品牌
-     * @return 指定品牌的商品数量
-     */
-    @Query(value = "SELECT COUNT(p) FROM Product p WHERE p.productData->'specifications'->>'brand' = :brand", nativeQuery = true)
-    Long countByBrand(@Param("brand") String brand);
-
-    /**
-     * 📋 查找所有品牌及其商品数量
-     *
-     * 使用JSONB路径查询，统计所有品牌及其商品数量。
-     * 用于品牌筛选和统计报表。
-     *
-     * @return 品牌统计结果
-     */
-    @Query(value = "SELECT p.productData->'specifications'->>'brand' as brand, COUNT(p) as count " +
-           "FROM Product p WHERE p.productData->'specifications'->>'brand' IS NOT NULL " +
-           "GROUP BY p.productData->'specifications'->>'brand' ORDER BY count DESC", nativeQuery = true)
-    List<Object[]> countAllBrands();
-
-    /**
-     * 📋 查找指定尺寸的商品数量
-     *
-     * 使用JSONB路径查询，统计指定尺寸的商品数量。
-     * 用于尺寸管理和统计报表。
-     *
-     * @param size 商品尺寸
-     * @return 指定尺寸的商品数量
-     */
-    @Query(value = "SELECT COUNT(p) FROM Product p WHERE p.productData->'specifications'->>'size' = :size", nativeQuery = true)
-    Long countBySize(@Param("size") String size);
-
-    /**
-     * 📋 查找所有尺寸及其商品数量
-     *
-     * 使用JSONB路径查询，统计所有尺寸及其商品数量。
-     * 用于尺寸筛选和统计报表。
-     *
-     * @return 尺寸统计结果
-     */
-    @Query(value = "SELECT p.productData->'specifications'->>'size' as size, COUNT(p) as count " +
-           "FROM Product p WHERE p.productData->'specifications'->>'size' IS NOT NULL " +
-           "GROUP BY p.productData->'specifications'->>'size' ORDER BY count DESC", nativeQuery = true)
-    List<Object[]> countAllSizes();
-
-    /**
-     * 📋 查找指定价格范围的商品数量
-     *
-     * 统计价格在指定范围内的商品数量。
-     * 用于价格区间分析和市场调研。
-     *
-     * @param minPrice 最低价格
-     * @param maxPrice 最高价格
-     * @return 指定价格范围的商品数量
-     */
-    @Query("SELECT COUNT(p) FROM Product p WHERE p.price BETWEEN :minPrice AND :maxPrice")
-    Long countByPriceBetween(@Param("minPrice") BigDecimal minPrice, @Param("maxPrice") BigDecimal maxPrice);
-
-    /**
-     * 📋 查找指定折扣范围的商品数量
-     *
-     * 统计折扣率在指定范围内的商品数量。
-     * 用于促销活动分析和效果评估。
-     *
-     * @param minDiscount 最低折扣率
-     * @param maxDiscount 最高折扣率
-     * @return 指定折扣范围的商品数量
-     */
-    @Query("SELECT COUNT(p) FROM Product p WHERE p.discount BETWEEN :minDiscount AND :maxDiscount")
-    Long countByDiscountBetween(@Param("minDiscount") BigDecimal minDiscount, @Param("maxDiscount") BigDecimal maxDiscount);
-
-    /**
      * 📋 查找指定创建者的商品列表
      *
      * 查询指定用户创建的商品，支持分页和排序。
@@ -572,4 +395,142 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     @Query(value = "SELECT COUNT(p) FROM Product p WHERE jsonb_array_length(p.productData->'variants') > 0", nativeQuery = true)
     Long countByHasVariants();
+
+    // ==================== 🔄 动态属性系统支持 ====================
+
+    /**
+     * 🔄 根据动态属性键值对查询商品
+     *
+     * 完全灵活的动态属性查询，支持任意属性名称（如"颜色"、"尺寸"、"材质"、"款式"等）
+     * 零假设：不对属性名称和值做任何预设，完全由数据驱动
+     * 优雅降级：没有动态属性的商品自动隐藏属性选择区域
+     *
+     * 使用PostgreSQL的jsonb_each_text函数实现扁平化查询
+     *
+     * @param attrName 属性名称（如："颜色"、"尺寸"、"材质"等）
+     * @param attrValue 属性值
+     * @param pageable 分页对象
+     * @return 商品分页结果
+     */
+    @Query(value = "SELECT p.* FROM Product p, " +
+           "jsonb_each_text(p.productData->'specifications') as spec " +
+           "WHERE spec.key = :attrName AND spec.value = :attrValue", nativeQuery = true)
+    Page<Product> findByAttributeName(@Param("attrName") String attrName,
+                                    @Param("attrValue") String attrValue,
+                                    Pageable pageable);
+
+    /**
+     * 🔄 多动态属性组合查询
+     *
+     * 支持多个任意属性名称的组合查询
+     * 使用PostgreSQL的jsonb_path_exists函数实现复杂查询
+     *
+     * @param attributes 属性名值对
+     * @param pageable 分页对象
+     * @return 商品分页结果
+     */
+    @Query(value = "SELECT p.* FROM Product p WHERE " +
+           "EXISTS(SELECT 1 FROM jsonb_each_text(p.productData->'specifications') as spec " +
+           "WHERE (spec.key = :attrName1 AND spec.value = :attrValue1) " +
+           "AND (spec.key = :attrName2 AND spec.value = :attrValue2))", nativeQuery = true)
+    Page<Product> findByDynamicAttributes(@Param("attrName1") String attrName1,
+                                        @Param("attrValue1") String attrValue1,
+                                        @Param("attrName2") String attrName2,
+                                        @Param("attrValue2") String attrValue2,
+                                        Pageable pageable);
+
+    /**
+     * 🔄 获取所有存在的属性名称
+     *
+     * 查询所有商品中使用过的属性名称，用于前端构建筛选器
+     * 优雅降级：没有动态属性的商品自动隐藏属性选择区域
+     *
+     * @return 属性名称列表
+     */
+    @Query(value = "SELECT DISTINCT jsonb_object_keys(p.productData->'specifications') as attrName " +
+           "FROM Product p WHERE p.productData->'specifications' IS NOT NULL", nativeQuery = true)
+    List<String> findAllSpecificationAttributeNames();
+
+    /**
+     * 📊 按属性名称统计值分布
+     *
+     * 统计指定属性名称的所有值及其出现次数
+     * 用于前端动态构建筛选器
+     *
+     * @param attrName 属性名称
+     * @return 值及其计数的列表
+     */
+    @Query(value = "SELECT p.productData->'specifications'->>:attrName as attrValue, COUNT(p) as count " +
+           "FROM Product p WHERE p.productData->'specifications'->>:attrName IS NOT NULL " +
+           "GROUP BY p.productData->'specifications'->>:attrName ORDER BY count DESC", nativeQuery = true)
+    List<Object[]> countByAttributeValue(@Param("attrName") String attrName);
+
+    /**
+     * 🔄 根据属性名称和值范围查询（用于数值型属性）
+     *
+     * 支持价格、重量等数值型属性的范围查询
+     *
+     * @param attrName 属性名称
+     * @param minValue 最小值
+     * @param maxValue 最大值
+     * @param pageable 分页对象
+     * @return 商品分页结果
+     */
+    @Query(value = "SELECT p.* FROM Product p WHERE " +
+           "(p.productData->'specifications'->>:attrName)::numeric BETWEEN :minValue AND :maxValue", nativeQuery = true)
+    Page<Product> findBySpecificationRange(@Param("attrName") String attrName,
+                                          @Param("minValue") BigDecimal minValue,
+                                          @Param("maxValue") BigDecimal maxValue,
+                                          Pageable pageable);
+
+    /**
+     * 🔄 根据属性名进行模糊匹配查询
+     *
+     * 支持文本型属性的模糊查询
+     *
+     * @param attrName 属性名称
+     * @param attrValue 模糊匹配值
+     * @param pageable 分页对象
+     * @return 商品分页结果
+     */
+    @Query(value = "SELECT p.* FROM Product p WHERE " +
+           "p.productData->'specifications'->>:attrName ILIKE %:attrValue%", nativeQuery = true)
+    Page<Product> findBySpecificationLike(@Param("attrName") String attrName,
+                                         @Param("attrValue") String attrValue,
+                                         Pageable pageable);
+
+    // ==================== 📊 ProductService专用方法 ====================
+
+    /**
+     * 📋 检查商品名称是否存在
+     *
+     * @param productName 商品名称
+     * @return 是否存在
+     */
+    boolean existsByProductName(String productName);
+
+    /**
+     * 📋 统计上架商品数量
+     *
+     * @param isAvailable 上架状态
+     * @return 商品数量
+     */
+    long countByIsAvailable(Boolean isAvailable);
+
+    /**
+     * 📋 统计指定库存的商品数量
+     *
+     * @param stockQuantity 库存数量
+     * @return 商品数量
+     */
+    long countByStockQuantity(Integer stockQuantity);
+
+    /**
+     * 📋 获取热销商品列表
+     *
+     * @param pageable 分页对象
+     * @return 热销商品列表
+     */
+    @Query("SELECT p FROM Product p ORDER BY p.salesCount DESC")
+    List<Product> findTopProductsBySalesCount(Pageable pageable);
 }

@@ -18,7 +18,11 @@
       "Bash(curl -X GET http://localhost:8080/public/health -v)",
       "Bash(mkdir -p \"D:\\Code\\Learn\\Java\\Spring\\SpringWeb\\frontend\\API文档\\TODO\\task\")",
       "Bash(curl:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []
