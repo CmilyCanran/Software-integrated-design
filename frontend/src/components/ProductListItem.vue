@@ -6,7 +6,7 @@
     <!-- 商品图片 -->
     <div class="product-image">
       <ImageLoader
-        :src="product.images?.find(img => img.isMain)?.imageUrl || defaultImage"
+        :src="productImage"
         :alt="product.productName"
         :placeholder="defaultImage"
         :fallback="defaultImage"
@@ -31,6 +31,21 @@
           :stock-quantity="product.stockQuantity"
           :show-count="showStockCount"
         />
+      </div>
+
+      <!-- 商品规格 -->
+      <div
+        v-if="hasSpecifications"
+        class="product-specifications"
+      >
+        <div
+          v-for="(values, attributeName) in productSpecifications"
+          :key="attributeName"
+          class="spec-item"
+        >
+          <span class="spec-name">{{ attributeName }}:</span>
+          <span class="spec-values">{{ formatSpecificationValues(values) }}</span>
+        </div>
       </div>
     </div>
 
@@ -66,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import ImageLoader from './ImageLoader.vue'
 import StatusTag from './StatusTag.vue'
 import PriceDisplay from './PriceDisplay.vue'
@@ -106,6 +121,49 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 定义emits
 const emit = defineEmits<Emits>()
+
+// 计算属性：商品图片
+const productImage = computed<string>(() => {
+  // 优先使用主图片
+  if (props.product.images && props.product.images.length > 0) {
+    const mainImage = props.product.images.find(img => img.isMain)
+    if (mainImage?.imageUrl) {
+      return mainImage.imageUrl
+    }
+    if (props.product.images[0]?.imageUrl) {
+      return props.product.images[0].imageUrl
+    }
+  }
+
+  // 如果没有images数组，尝试直接从image字段获取（向后兼容）
+  if ('image' in props.product) {
+    return (props.product as any).image || props.defaultImage
+  }
+
+  return props.defaultImage
+})
+
+// 计算属性：商品规格
+const productSpecifications = computed(() => {
+  const specs = props.product.productData?.specifications
+  if (!specs || typeof specs !== 'object') return {}
+  return specs
+})
+
+// 计算属性：是否有规格
+const hasSpecifications = computed(() => {
+  return Object.keys(productSpecifications.value).length > 0
+})
+
+// 格式化规格值显示
+const formatSpecificationValues = (values: unknown): string => {
+  // 类型守卫：确保values是字符串数组
+  if (!Array.isArray(values)) return ''
+  const stringValues = values.filter((item): item is string => typeof item === 'string')
+  if (stringValues.length === 0) return ''
+  // 只显示前两个值，如果超过则显示省略号
+  return stringValues.slice(0, 2).join(', ') + (stringValues.length > 2 ? '...' : '')
+};
 
 // 事件处理函数
 const handleClick = (): void => {
@@ -206,6 +264,29 @@ defineExpose({
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.product-specifications {
+  font-size: 12px;
+  color: #606266;
+  margin-top: 4px;
+}
+
+.spec-item {
+  display: flex;
+  margin-bottom: 2px;
+}
+
+.spec-name {
+  font-weight: 500;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.spec-values {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .product-actions {

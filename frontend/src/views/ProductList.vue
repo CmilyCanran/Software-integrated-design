@@ -62,6 +62,33 @@
       </div>
     </div>
 
+    <!-- 规格筛选器 -->
+    <div
+      v-if="availableSpecifications && Object.keys(availableSpecifications).length > 0"
+      class="specification-filters"
+    >
+      <div
+        v-for="(values, attributeName) in availableSpecifications"
+        :key="attributeName"
+        class="spec-filter-group"
+      >
+        <span class="filter-label">{{ attributeName }}:</span>
+        <el-checkbox-group
+          v-model="selectedSpecifications[attributeName]"
+          @change="handleSpecificationFilterChange"
+        >
+          <el-checkbox
+            v-for="value in values"
+            :key="value"
+            :label="value"
+            class="spec-checkbox"
+          >
+            {{ value }}
+          </el-checkbox>
+        </el-checkbox-group>
+      </div>
+    </div>
+
     <!-- 商品统计信息 -->
     <div class="product-stats">
       <span class="total-count">
@@ -207,6 +234,9 @@ const pageSize = ref<number>(12)
 const totalProducts = ref<number>(0)
 const selectedCategory = ref<string>('')
 
+// 规格筛选相关
+const selectedSpecifications = ref<Record<string, string[]>>({})
+
 // 搜索建议
 const searchSuggestions = ref<string[]>([
   '运动鞋', 'T恤', '连衣裙', '背包', '手表', '耳机', '手机壳', '休闲裤'
@@ -221,6 +251,33 @@ const sortOptions = ref([
   { label: '库存最多', value: 'stock' }
 ])
 
+// 计算属性：所有商品的可用规格
+const availableSpecifications = computed(() => {
+  const specs: Record<string, string[]> = {}
+
+  // 遍历所有商品，收集规格信息
+  products.value.forEach(product => {
+    const productSpecs = product.productData?.specifications
+    if (productSpecs && typeof productSpecs === 'object') {
+      Object.entries(productSpecs).forEach(([name, values]) => {
+        if (Array.isArray(values)) {
+          if (!specs[name]) {
+            specs[name] = []
+          }
+          // 添加不重复的值
+          values.forEach(value => {
+            if (specs[name] && !specs[name]!.includes(value)) {
+              specs[name]!.push(value)
+            }
+          })
+        }
+      })
+    }
+  })
+
+  return specs
+})
+
 // 计算属性：筛选后的商品
 const filteredProducts = computed<Product[]>(() => {
   let result = products.value
@@ -233,6 +290,24 @@ const filteredProducts = computed<Product[]>(() => {
       product.description?.toLowerCase().includes(query)
     )
   }
+
+  // 规格筛选
+  Object.entries(selectedSpecifications.value).forEach(([attributeName, selectedValues]) => {
+    if (selectedValues.length > 0) {
+      result = result.filter(product => {
+        const productSpecs = product.productData?.specifications
+        if (!productSpecs || typeof productSpecs !== 'object') return false
+
+        const attributeValues = productSpecs[attributeName]
+        if (!Array.isArray(attributeValues)) return false
+
+        // 检查是否有匹配的值
+        return selectedValues.some(selectedValue =>
+          attributeValues.includes(selectedValue)
+        )
+      })
+    }
+  })
 
   // 排序
   result.sort((a, b) => {
@@ -285,7 +360,13 @@ const mockProducts: Product[] = [
     creatorId: 1,
     category: '鞋类',
     brand: '运动品牌',
-    tags: ['新品', '热销'],
+    productData: {
+      specifications: {
+        '颜色': ['红色', '蓝色', '黑色', '白色'],
+        '尺寸': ['36', '37', '38', '39', '40', '41', '42', '43', '44'],
+        '材质': ['运动鞋专用材料', '透气网面']
+      }
+    },
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
     images: [
@@ -304,7 +385,13 @@ const mockProducts: Product[] = [
     creatorId: 1,
     category: '服装',
     brand: '休闲品牌',
-    tags: ['基础款', '舒适'],
+    productData: {
+      specifications: {
+        '颜色': ['白色', '黑色', '灰色', '蓝色', '红色'],
+        '尺寸': ['S', 'M', 'L', 'XL', 'XXL'],
+        '材质': ['纯棉']
+      }
+    },
     createdAt: '2024-01-10T15:30:00Z',
     updatedAt: '2024-01-10T15:30:00Z',
     images: [
@@ -323,7 +410,13 @@ const mockProducts: Product[] = [
     creatorId: 1,
     category: '箱包',
     brand: '商务品牌',
-    tags: ['防水', '大容量'],
+    productData: {
+      specifications: {
+        '颜色': ['黑色', '灰色', '蓝色'],
+        '尺寸': ['40L', '50L'],
+        '材质': ['防水尼龙', '涤纶']
+      }
+    },
     createdAt: '2024-01-05T09:20:00Z',
     updatedAt: '2024-01-05T09:20:00Z',
     images: [
@@ -342,7 +435,13 @@ const mockProducts: Product[] = [
     creatorId: 1,
     category: '配饰',
     brand: '科技品牌',
-    tags: ['智能', '健康'],
+    productData: {
+      specifications: {
+        '颜色': ['黑色', '银色', '金色'],
+        '表带材质': ['硅胶', '金属', '皮革'],
+        '屏幕尺寸': ['1.3英寸', '1.5英寸']
+      }
+    },
     createdAt: '2024-01-20T14:15:00Z',
     updatedAt: '2024-01-20T14:15:00Z',
     images: [
@@ -361,7 +460,13 @@ const mockProducts: Product[] = [
     creatorId: 1,
     category: '服装',
     brand: '时尚品牌',
-    tags: ['优雅', '百搭'],
+    productData: {
+      specifications: {
+        '颜色': ['红色', '黑色', '蓝色', '白色'],
+        '尺寸': ['S', 'M', 'L', 'XL'],
+        '材质': ['雪纺', '棉质']
+      }
+    },
     createdAt: '2024-01-18T11:00:00Z',
     updatedAt: '2024-01-18T11:00:00Z',
     images: [
@@ -380,7 +485,13 @@ const mockProducts: Product[] = [
     creatorId: 1,
     category: '配饰',
     brand: '音频品牌',
-    tags: ['降噪', '无线'],
+    productData: {
+      specifications: {
+        '颜色': ['黑色', '白色'],
+        '连接方式': ['蓝牙5.0', '蓝牙5.2'],
+        '续航时间': ['20小时', '30小时']
+      }
+    },
     createdAt: '2024-01-22T16:30:00Z',
     updatedAt: '2024-01-22T16:30:00Z',
     images: [
@@ -409,6 +520,10 @@ const handlePageChange = (page: number): void => {
 
 const handlePageSizeChange = (size: number): void => {
   pageSize.value = size
+  currentPage.value = 1
+}
+
+const handleSpecificationFilterChange = (): void => {
   currentPage.value = 1
 }
 
@@ -528,6 +643,36 @@ watch(searchQuery, () => {
   margin-bottom: 20px;
   font-size: 14px;
   color: #606266;
+}
+
+/* 规格筛选器样式 */
+.specification-filters {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.spec-filter-group {
+  margin-bottom: 12px;
+}
+
+.spec-filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  display: inline-block;
+  margin-right: 12px;
+  font-weight: 500;
+  color: #495057;
+  min-width: 60px;
+}
+
+.spec-checkbox {
+  margin-right: 16px;
+  margin-bottom: 8px;
 }
 
 .total-count {

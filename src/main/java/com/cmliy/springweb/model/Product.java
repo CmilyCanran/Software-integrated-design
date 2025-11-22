@@ -1,12 +1,14 @@
 package com.cmliy.springweb.model;
 
-import com.cmliy.springweb.model.base.BaseEntity;
 import com.cmliy.springweb.converter.JsonConverter;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +16,7 @@ import java.util.Map;
  * 📦 商品实体
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name = "products", indexes = {
     @Index(name = "idx_product_name", columnList = "product_name"),
@@ -23,7 +25,7 @@ import java.util.Map;
     @Index(name = "idx_sales_count", columnList = "sales_count"),
     @Index(name = "idx_discount", columnList = "discount")
 })
-public class Product extends BaseEntity {
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,6 +59,28 @@ public class Product extends BaseEntity {
     @Convert(converter = JsonConverter.class)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> productData = Map.of();
+
+    // ==================== ⏰ 时间戳字段 ====================
+
+    /**
+     * ⏰ 创建时间戳
+     *
+     * 记录商品首次创建的时间，由数据库自动管理
+     * 格式：UTC时间戳
+     */
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private LocalDateTime createdAt;
+
+    /**
+     * 🔄 更新时间戳
+     *
+     * 记录商品最后一次更新的时间，由数据库自动管理
+     * 格式：UTC时间戳
+     */
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     // ==================== 💰 业务逻辑方法 ====================
 
@@ -235,47 +259,7 @@ public class Product extends BaseEntity {
         return Map.copyOf((Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>()));
     }
 
-    // ==================== 🏷️ 标签相关便捷方法 ====================
-
-    /**
-     * 🏷️ 添加商品标签
-     */
-    public void addTag(String tag) {
-        @SuppressWarnings("unchecked")
-        List<String> tags = (List<String>) productData.computeIfAbsent("tags", k -> new java.util.ArrayList<>());
-        if (!tags.contains(tag)) {
-            tags.add(tag);
-        }
-    }
-
-    /**
-     * 🗑️ 移除商品标签
-     */
-    public boolean removeTag(String tag) {
-        @SuppressWarnings("unchecked")
-        List<String> tags = (List<String>) productData.getOrDefault("tags", new java.util.ArrayList<>());
-        return tags.remove(tag);
-    }
-
-    /**
-     * 📋 检查是否包含标签
-     */
-    public boolean hasTag(String tag) {
-        @SuppressWarnings("unchecked")
-        List<String> tags = (List<String>) productData.getOrDefault("tags", new java.util.ArrayList<>());
-        return tags.contains(tag);
-    }
-
-    /**
-     * 📊 获取标签数量
-     */
-    @SuppressWarnings("unchecked")
-    public int getTagCount() {
-        @SuppressWarnings("unchecked")
-        List<String> tags = (List<String>) productData.getOrDefault("tags", new java.util.ArrayList<>());
-        return tags.size();
-    }
-
+    
     // ==================== 🔧 扩展属性便捷方法 ====================
 
     /**

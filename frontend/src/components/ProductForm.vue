@@ -62,31 +62,6 @@
       <span class="form-tip">折扣率 0-100，如：10 表示打9折</span>
     </el-form-item>
 
-    <!-- 商品分类和品牌 -->
-    <div class="form-row">
-      <el-form-item label="商品分类" prop="category">
-        <el-select
-          v-model="formData.category"
-          placeholder="请选择商品分类"
-          clearable
-          style="width: 200px"
-        >
-          <el-option label="服装" value="服装" />
-          <el-option label="鞋类" value="鞋类" />
-          <el-option label="配饰" value="配饰" />
-          <el-option label="箱包" value="箱包" />
-          <el-option label="其他" value="其他" />
-        </el-select>
-      </el-form-item>
-
-      <el-form-item label="商品品牌" prop="brand">
-        <el-input
-          v-model="formData.brand"
-          placeholder="请输入商品品牌"
-          style="width: 200px"
-        />
-      </el-form-item>
-    </div>
 
     <!-- 商品状态 -->
     <el-form-item label="是否上架" prop="isAvailable">
@@ -98,25 +73,68 @@
       <span class="form-tip">上架后商品将在前台展示</span>
     </el-form-item>
 
-    <!-- 商品标签 -->
-    <el-form-item label="商品标签" prop="tags">
-      <el-select
-        v-model="formData.tags"
-        multiple
-        filterable
-        allow-create
-        default-first-option
-        placeholder="请输入或选择商品标签"
-        style="width: 100%"
-      >
-        <el-option
-          v-for="item in tagOptions"
-          :key="item"
-          :label="item"
-          :value="item"
-        />
-      </el-select>
-      <span class="form-tip">按回车键或点击添加标签</span>
+
+    <!-- 商品规格 -->
+    <el-form-item label="商品规格">
+      <div class="specifications-section">
+        <div class="spec-header">
+          <h4>规格属性</h4>
+          <el-button type="primary" size="small" @click="addSpecification">
+            <el-icon><Plus /></el-icon>
+            添加规格
+          </el-button>
+        </div>
+
+        <div v-if="specifications.length > 0" class="spec-list">
+          <div
+            v-for="(spec, index) in specifications"
+            :key="index"
+            class="spec-item"
+          >
+            <div class="spec-row">
+              <el-input
+                v-model="spec.name"
+                placeholder="规格名称（如：颜色、尺寸）"
+                style="width: 150px"
+                @input="validateSpecification(index)"
+              />
+              <el-select
+                v-model="spec.values"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                placeholder="输入规格值"
+                style="flex: 1; margin: 0 10px"
+              >
+                <el-option
+                  v-for="value in spec.values"
+                  :key="value"
+                  :label="value"
+                  :value="value"
+                />
+              </el-select>
+              <el-button
+                type="danger"
+                size="small"
+                @click="removeSpecification(index)"
+                :disabled="specifications.length <= 1"
+              >
+                删除
+              </el-button>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="empty-specs">
+          <p>暂无规格，点击"添加规格"开始添加商品规格属性</p>
+        </div>
+
+        <div class="spec-tips">
+          <p>💡 提示：规格用于定义商品的不同属性，如颜色、尺寸、材质等</p>
+          <p>💡 每个规格可以包含多个值，如颜色：红色、蓝色、黑色</p>
+        </div>
+      </div>
     </el-form-item>
 
     <!-- 图片上传区域 -->
@@ -188,11 +206,13 @@ const formData = reactive<Partial<ProductCreateRequest | ProductUpdateRequest>>(
   price: 0,
   stockQuantity: 0,
   discount: 0,
-  category: '',
-  brand: '',
   isAvailable: false,
-  tags: [] as string[]
 })
+
+// 规格管理数据
+const specifications = ref<Array<{ name: string; values: string[] }>>([
+  { name: '', values: [] }
+])
 
 // 表单验证规则
 const formRules = reactive({
@@ -213,21 +233,55 @@ const formRules = reactive({
   ]
 })
 
-// 标签选项
-const tagOptions = [
-  '新品',
-  '热销',
-  '推荐',
-  '限时特价',
-  '品牌正品',
-  '包邮',
-  '七日退换'
-]
 
 // 图片上传状态
 const fileList = ref<any[]>([])
 
 // 图片上传URL
+
+// 规格管理方法
+const addSpecification = () => {
+  specifications.value.push({ name: '', values: [] })
+}
+
+const removeSpecification = (index: number) => {
+  if (specifications.value.length > 1) {
+    specifications.value.splice(index, 1)
+  }
+}
+
+const validateSpecification = (index: number) => {
+  const spec = specifications.value[index]
+  if (!spec) return // 添加空值检查
+
+  // 确保规格名称不为空，且不重复
+  if (spec.name.trim() === '') {
+    return
+  }
+
+  // 检查是否有重复的规格名称
+  const duplicateIndex = specifications.value.findIndex((s, i) =>
+    i !== index && s.name.trim() === spec.name.trim()
+  )
+
+  if (duplicateIndex !== -1) {
+    ElMessage.warning('规格名称不能重复')
+    spec.name = ''
+  }
+}
+
+// 构建规格数据用于提交
+const buildSpecificationsData = () => {
+  const specs: Record<string, string[]> = {}
+
+  specifications.value.forEach(spec => {
+    if (spec.name.trim() && spec.values.length > 0) {
+      specs[spec.name.trim()] = spec.values.filter(v => v.trim() !== '')
+    }
+  })
+
+  return specs
+}
 const uploadAction = computed(() => {
   return props.isEdit && props.product
     ? `/api/products/${props.product.id}/image`
@@ -252,13 +306,23 @@ const beforeImageUpload = (file: File) => {
 }
 
 // 图片上传成功处理
-const handleImageSuccess = (response: any, file: any, fileList: any[]) => {
-  console.log('图片上传成功:', response, file)
+// 注意：uploadFile 和 uploadFileList 参数是 Element Plus Upload 组件回调函数的标准参数
+// 虽然当前实现中未使用这些参数，但需要保留以符合组件API规范
+const handleImageSuccess = (response: any, uploadFile: any, uploadFileList: any[]) => {
+  // 只使用response参数记录上传成功的响应
+  // uploadFile: 当前上传的文件对象
+  // uploadFileList: 当前的文件列表
+  console.log('图片上传成功:', response, uploadFile)
   ElMessage.success('图片上传成功')
 }
 
 // 图片上传失败处理
-const handleImageError = (error: any, file: any, fileList: any[]) => {
+// 注意：uploadFile 和 uploadFileList 参数是 Element Plus Upload 组件回调函数的标准参数
+// 虽然当前实现中未使用这些参数，但需要保留以符合组件API规范
+const handleImageError = (error: any, uploadFile: any, uploadFileList: any[]) => {
+  // 只使用error参数记录错误信息
+  // uploadFile: 上传失败的文件对象
+  // uploadFileList: 当前的文件列表
   console.error('图片上传失败:', error)
   ElMessage.error('图片上传失败，请重试')
 }
@@ -271,12 +335,18 @@ const handleSave = async () => {
     await productFormRef.value.validate()
     loading.value = true
 
+    // 构建规格数据
+    const specificationsData = buildSpecificationsData()
+
     // 确保价格和库存是数字类型
     const submitData = {
       ...formData,
       price: Number(formData.price),
       stockQuantity: Number(formData.stockQuantity),
-      discount: Number(formData.discount || 0)
+      discount: Number(formData.discount || 0),
+      productData: {
+        specifications: specificationsData
+      }
     } as ProductCreateRequest | ProductUpdateRequest
 
     emit('save', submitData)
@@ -296,11 +366,9 @@ const resetForm = () => {
     price: 0,
     stockQuantity: 0,
     discount: 0,
-    category: '',
-    brand: '',
     isAvailable: false,
-    tags: [] as string[]
   })
+  specifications.value = [{ name: '', values: [] }]
   fileList.value = []
   if (productFormRef.value) {
     productFormRef.value.clearValidate()
@@ -317,11 +385,19 @@ watch(() => props.product, (newProduct) => {
       price: newProduct.price,
       stockQuantity: newProduct.stockQuantity,
       discount: newProduct.discount,
-      category: newProduct.category || '',
-      brand: newProduct.brand || '',
       isAvailable: newProduct.isAvailable,
-      tags: newProduct.tags || []
     })
+
+    // 填充规格数据
+    const specs = newProduct.productData?.specifications
+    if (specs && typeof specs === 'object') {
+      specifications.value = Object.entries(specs).map(([name, values]) => ({
+        name,
+        values: Array.isArray(values) ? values : []
+      }))
+    } else {
+      specifications.value = [{ name: '', values: [] }]
+    }
   } else {
     // 重置表单
     resetForm()
@@ -333,6 +409,62 @@ watch(() => props.product, (newProduct) => {
 .form-row {
   display: flex;
   gap: 20px;
+}
+
+/* 规格管理样式 */
+.specifications-section {
+  width: 100%;
+}
+
+.spec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.spec-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #606266;
+}
+
+.spec-list {
+  margin-bottom: 16px;
+}
+
+.spec-item {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.spec-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-specs {
+  text-align: center;
+  padding: 20px;
+  color: #909399;
+  background-color: #fafafa;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.spec-tips {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.5;
+}
+
+.spec-tips p {
+  margin: 4px 0;
 }
 
 .form-tip {

@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;      // 导入Spring Se
 import org.springframework.security.core.context.SecurityContextHolder; // 导入安全上下文持有者
 import org.springframework.security.core.userdetails.UserDetails; // 导入Spring Security用户详情接口
 import org.springframework.security.crypto.password.PasswordEncoder; // 导入密码编码器接口
+import org.springframework.web.bind.annotation.GetMapping;    // 导入Spring Web GET请求映射注解
 import org.springframework.web.bind.annotation.PostMapping;   // 导入Spring Web POST请求映射注解
 import org.springframework.web.bind.annotation.RequestBody;   // 导入Spring Web请求体绑定注解
 import org.springframework.web.bind.annotation.RestController; // 导入Spring Web REST控制器注解
@@ -311,6 +312,110 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             ApiResponse<RegisterResponseDTO> errorResponse = ApiResponse.error("注册失败: " + e.getMessage(), 500);
 
             // 📤 返回服务器错误响应
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    /**
+     * 👤 获取当前用户信息接口
+     *
+     * 处理获取当前认证用户信息的请求。
+     * 这个接口需要用户已经通过JWT认证，会返回当前用户的完整信息。
+     *
+     * 用户信息获取流程：
+     * 1. 从Spring Security上下文中获取当前认证的用户名
+     * 2. 从数据库查询完整的用户信息
+     * 3. 转换为UserDTO并返回
+     *
+     * @GetMapping: Spring Web注解，将HTTP GET请求映射到这个方法
+     *              "/userinfo": 这个方法处理 /auth/userinfo 路径的请求
+     *
+     * @return ResponseEntity<ApiResponse<UserDTO>> 包含用户信息的HTTP响应
+     */
+    @GetMapping("/userinfo") // @GetMapping注解：声明这是一个处理GET请求的方法
+    public ResponseEntity<ApiResponse<UserDTO>> getUserInfo() {
+        try {
+            // 🔍 第一步：从安全上下文中获取当前认证信息
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                // 🚨 如果没有认证信息，返回未授权错误
+                ApiResponse<UserDTO> errorResponse = ApiResponse.error("未认证", 401);
+                return ResponseEntity.status(401).body(errorResponse);
+            }
+
+            // 👤 第二步：获取当前用户名
+            String username = authentication.getName();
+
+            // 🗄️ 第三步：从数据库查询用户信息
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (!userOpt.isPresent()) {
+                // 🚨 如果用户不存在，返回错误
+                ApiResponse<UserDTO> errorResponse = ApiResponse.error("用户不存在", 404);
+                return ResponseEntity.status(404).body(errorResponse);
+            }
+
+            User user = userOpt.get();
+
+            // 👤 第四步：创建UserDTO对象
+            UserDTO userDTO = new UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole()
+            );
+
+            // 📤 第五步：构建标准响应格式
+            ApiResponse<UserDTO> response = ApiResponse.success(userDTO, "获取用户信息成功");
+
+            // 📤 第六步：返回成功响应
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            // 🚨 异常处理：构建服务器错误响应
+            ApiResponse<UserDTO> errorResponse = ApiResponse.error("获取用户信息失败: " + e.getMessage(), 500);
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    /**
+     * 🚪 用户登出接口
+     *
+     * 处理用户登出请求。
+     * 由于JWT是无状态的，后端无法真正"注销"令牌。
+     * 这个接口主要用于通知前端清除本地存储的认证信息。
+     *
+     * 登出流程：
+     * 1. 验证用户是否已认证（可选，因为登出时可能已经过期）
+     * 2. 返回成功响应，前端收到后清除localStorage中的token和用户信息
+     *
+     * @PostMapping: Spring Web注解，将HTTP POST请求映射到这个方法
+     *              "/logout": 这个方法处理 /auth/logout 路径的请求
+     *
+     * @return ResponseEntity<ApiResponse<Void>> 登出操作结果响应
+     */
+    @PostMapping("/logout") // @PostMapping注解：声明这是一个处理POST请求的方法
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        try {
+            // 🔍 可选：验证当前用户是否已认证
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                // 👤 获取当前用户名（用于日志记录，可选）
+                String username = authentication.getName();
+                System.out.println("用户登出: " + username);
+            }
+
+            // 📤 构建标准响应格式
+            // 由于JWT无状态，后端无法真正注销令牌
+            // 前端收到成功响应后会清除本地存储的token
+            ApiResponse<Void> response = ApiResponse.success(null, "登出成功");
+
+            // 📤 返回成功响应
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            // 🚨 异常处理：构建服务器错误响应
+            ApiResponse<Void> errorResponse = ApiResponse.error("登出失败: " + e.getMessage(), 500);
             return ResponseEntity.status(500).body(errorResponse);
         }
     }

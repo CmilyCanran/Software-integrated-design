@@ -63,19 +63,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByCategory(@Param("category") String category, Pageable pageable);
 
     /**
-     * 📋 根据商品标签查找商品列表
-     *
-     * 使用JSONB包含查询，查询包含指定标签的所有商品。
-     * 使用PostgreSQL的@>操作符进行JSONB数组包含查询。
-     *
-     * @param tag 商品标签
-     * @param pageable 分页对象
-     * @return 商品分页结果
-     */
-    @Query(value = "SELECT p.* FROM Product p WHERE p.productData->'tags' @> '[:tag]'", nativeQuery = true)
-    Page<Product> findByTag(@Param("tag") String tag, Pageable pageable);
-
-    /**
      * 📋 根据价格范围查找商品列表
      *
      * 查询价格在指定范围内的所有商品。
@@ -407,31 +394,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Object[] getProductStatsByCreator(@Param("creatorId") Long creatorId);
 
     /**
-     * 📋 查找指定标签的商品数量
-     *
-     * 使用JSONB包含查询，统计包含指定标签的商品数量。
-     * 用于标签管理和统计报表。
-     *
-     * @param tag 商品标签
-     * @return 包含指定标签的商品数量
-     */
-    @Query(value = "SELECT COUNT(p) FROM Product p WHERE p.productData->'tags' @> '[:tag]'", nativeQuery = true)
-    Long countByTag(@Param("tag") String tag);
-
-    /**
-     * 📋 查找所有标签及其商品数量
-     *
-     * 使用JSONB数组展开查询，统计所有标签及其商品数量。
-     * 用于标签云和热门标签展示。
-     *
-     * @return 标签统计结果
-     */
-    @Query(value = "SELECT tag, COUNT(p) as count " +
-           "FROM Product p, jsonb_array_elements(p.productData->'tags') as tag " +
-           "GROUP BY tag ORDER BY count DESC", nativeQuery = true)
-    List<Object[]> countAllTags();
-
-    /**
      * 📋 查找指定颜色的商品数量
      *
      * 使用JSONB路径查询，统计指定颜色的商品数量。
@@ -588,17 +550,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     @Query(value = "SELECT COUNT(p) FROM Product p WHERE jsonb_object_keys(p.productData->'specifications') IS NOT NULL", nativeQuery = true)
     Long countByHasSpecifications();
-
-    /**
-     * 📋 查找有标签的商品数量
-     *
-     * 使用JSONB包含查询，统计有标签的商品数量。
-     * 用于标签管理和统计报表。
-     *
-     * @return 有标签的商品数量
-     */
-    @Query(value = "SELECT COUNT(p) FROM Product p WHERE jsonb_array_length(p.productData->'tags') > 0", nativeQuery = true)
-    Long countByHasTags();
 
     /**
      * 📋 查找有扩展属性的商品数量
