@@ -15,7 +15,7 @@ export const productAPI = {
   },
 
   // 获取商家商品列表（根据当前登录用户过滤）
-  getMerchantProducts: (params: ProductQueryParams): Promise<PaginatedResponse<Product>> => {
+  getMerchantProducts: (params?: ProductQueryParams): Promise<PaginatedResponse<Product>> => {
     return api.get('/products/merchant', { params })
   },
 

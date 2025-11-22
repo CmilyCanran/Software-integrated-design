@@ -127,8 +127,10 @@ export const mergeSpecifications = (products: Product[]): ProductSpecifications 
           mergedSpecs[name] = []
         }
         values.forEach(value => {
-          if (!mergedSpecs[name].includes(value)) {
-            mergedSpecs[name].push(value)
+          const specArray = mergedSpecs[name] || []
+          if (!specArray.includes(value)) {
+            specArray.push(value)
+            mergedSpecs[name] = specArray
           }
         })
       }
