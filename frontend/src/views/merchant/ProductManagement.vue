@@ -311,8 +311,18 @@ const mockStats = computed(() => ({
 
 const totalProducts = computed(() => mockProducts.value.length)
 
+// 快速操作按钮配置接口
+interface QuickAction {
+  icon: string                      // 图标名称
+  type?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'default'  // 按钮类型
+  event: string                     // 事件名称
+  tooltip?: string                  // 提示文本
+  disabled?: boolean                // 是否禁用
+  condition?: (product: Product) => boolean  // 显示条件函数，接收product参数
+}
+
 // 商家模式的快速操作配置
-const merchantQuickActions: import('@/components/ProductCard.vue').QuickAction[] = [
+const merchantQuickActions: QuickAction[] = [
   {
     icon: 'Edit',
     type: 'primary' as const,

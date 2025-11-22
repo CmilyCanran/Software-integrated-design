@@ -78,7 +78,6 @@ const handleLogin = async () => {
 
         // 🔍 调试：打印API响应数据
         console.log('🔍 登录API响应:', response)
-        console.log('🔍 response.data:', response.data)
 
         // 🔍 验证数据结构
         // 因为request.js响应拦截器已经提取了data部分，
@@ -106,22 +105,23 @@ const handleLogin = async () => {
         router.push('/dashboard')
 
     } catch (error) {
+        const errorObj = error as any
         console.error('❌ 登录失败详细信息:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            config: error.config
+            message: errorObj?.message,
+            response: errorObj?.response?.data,
+            status: errorObj?.response?.status,
+            config: errorObj?.config
         })
 
         // 🔍 根据不同错误类型显示不同信息
-        if (error.response?.status === 401) {
+        if (errorObj?.response?.status === 401) {
             ElMessage.error('用户名或密码错误')
-        } else if (error.response?.status === 500) {
+        } else if (errorObj?.response?.status === 500) {
             ElMessage.error('服务器内部错误，请稍后重试')
-        } else if (error.message.includes('Network Error')) {
+        } else if (errorObj?.message?.includes('Network Error')) {
             ElMessage.error('网络连接失败，请检查网络')
         } else {
-            ElMessage.error(error.response?.data?.message || '登录失败，请重试')
+            ElMessage.error(errorObj?.response?.data?.message || '登录失败，请重试')
         }
     } finally {
         authStore.setLoading(false)

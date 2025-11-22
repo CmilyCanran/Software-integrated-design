@@ -4,7 +4,14 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Product, ProductQueryParams, PaginatedResponse, ProductStats } from '@/types/product'
+import type {
+  Product,
+  ProductQueryParams,
+  PaginatedResponse,
+  ProductStats,
+  ProductCreateRequest,
+  ProductUpdateRequest
+} from '@/types/product'
 import { productAPI } from '@/api/product'
 import { ElMessage } from 'element-plus'
 
@@ -95,6 +102,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 获取商品列表失败:', error)
       ElMessage.error('获取商品列表失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -112,6 +120,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 获取商品详情失败:', error)
       ElMessage.error('获取商品详情失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -132,6 +141,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 创建商品失败:', error)
       ElMessage.error('创建商品失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -160,6 +170,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 更新商品失败:', error)
       ElMessage.error('更新商品失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -212,6 +223,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 切换商品状态失败:', error)
       ElMessage.error('切换商品状态失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -240,6 +252,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 更新库存失败:', error)
       ElMessage.error('更新库存失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -257,6 +270,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 获取商品统计失败:', error)
       ElMessage.error('获取统计信息失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -280,6 +294,7 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 搜索商品失败:', error)
       ElMessage.error('搜索商品失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }
@@ -301,8 +316,9 @@ export const useProductStore = defineStore('product', () => {
 
       return response
     } catch (error) {
-      console.error('❌ 按分类查询商品失败:', error)
+      console.error('❌ 按分类查询失败:', error)
       ElMessage.error('按分类查询商品失败，请重试')
+      throw error
     } finally {
       setLoading(false)
     }

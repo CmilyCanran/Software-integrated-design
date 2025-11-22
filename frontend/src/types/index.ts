@@ -8,20 +8,6 @@ export interface User {
   updatedAt: string
 }
 
-// 商品相关类型
-export interface Product {
-  id: number
-  name: string
-  description: string
-  price: number
-  stockQuantity: number
-  isAvailable: boolean
-  createdAt: string
-  updatedAt: string
-  userId?: number
-  user?: User
-}
-
 // API响应类型
 export interface ApiResponse<T = any> {
   success: boolean

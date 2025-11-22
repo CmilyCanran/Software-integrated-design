@@ -136,7 +136,7 @@ const emit = defineEmits<Emits>()
 // 响应式数据
 const searchQuery = ref<string>('')
 const searchHistory = ref<string[]>([])
-const debounceTimer = ref<NodeJS.Timeout | null>(null)
+const debounceTimer = ref<number | null>(null)
 const isInputFocused = ref<boolean>(false)
 const searchBoxRef = ref<HTMLElement | null>(null)
 const searchInputRef = ref<any>(null)
