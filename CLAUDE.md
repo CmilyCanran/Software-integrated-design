@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-此文件为 Claude Code (claude.ai/code) 在此代码库中工作时提供指导。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 项目概述
 
@@ -8,20 +8,26 @@
 
 ## 架构说明
 
-### 前端 (Vue 3)
+### 前端 (Vue 3 + TypeScript)
 - **位置**: `frontend/` 目录
-- **技术栈**: Vue 3 + Vue Router + Pinia + Element Plus + Axios
+- **技术栈**: Vue 3 + TypeScript + Vue Router + Pinia + Element Plus + Axios + Vite
 - **开发服务器**: `npm run dev` (运行在 localhost:5173)
 - **构建**: `npm run build`
 - **代码检查**: `npm run lint`
+- **类型检查**: `npm run type-check`
 
 ### 后端 (Spring Boot 3)
 - **位置**: 根目录 (`src/`)
-- **技术栈**: Spring Boot 3 + Spring Security + JPA + MySQL
+- **技术栈**: Spring Boot 3 + Spring Security + JPA + PostgreSQL + JWT
 - **主类**: `com.cmliy.springweb.SpringWebApplication`
 - **开发服务器**: `mvn spring-boot:run` (运行在 localhost:8080)
 - **构建**: `mvn clean package`
 - **测试**: `mvn test`
+
+### 数据库配置
+- **数据库**: PostgreSQL (非MySQL)
+- **连接**: 配置在 `application.properties` 中
+- **JPA**: 使用Hibernate，支持JSONB类型
 
 ### 教程结构
 - **教程文档**: `Spring-Boot-Web开发教程完整版/`
@@ -149,6 +155,9 @@ difficulty: beginner|intermediate|advanced
 
 ### 前端 (在 `frontend/` 目录中)
 ```bash
+# 安装依赖
+npm install
+
 # 启动开发服务器
 npm run dev
 
@@ -160,6 +169,9 @@ npm run preview
 
 # 运行ESLint
 npm run lint
+
+# 类型检查
+npm run type-check
 ```
 
 ### 后端 (在根目录中)
@@ -175,6 +187,19 @@ mvn test
 
 # 运行特定测试
 mvn test -Dtest=ClassName
+
+# 查看依赖树
+mvn dependency:tree
+
+# 清理并编译
+mvn clean compile
+```
+
+### 数据库
+```bash
+# 项目使用PostgreSQL，确保PostgreSQL服务正在运行
+# 默认连接配置在application.properties中
+# 开发时可能需要创建数据库和用户
 ```
 
 ## 核心开发原则
@@ -195,11 +220,45 @@ mvn test -Dtest=ClassName
 
 ### 代码组织
 - **前端组件**: 按功能组织在 `src/views/` 和 `src/components/` 中
-- **状态管理**: Pinia存储在 `src/stores/` 中
-- **API服务**: 集中在 `src/services/` 中
+- **状态管理**: Pinia存储在 `src/stores/` 中，使用TypeScript
+- **API服务**: 集中在 `src/api/` 中，使用TypeScript类型定义
+- **类型定义**: TypeScript类型在 `src/types/` 中
+- **路由配置**: Vue Router配置在 `src/router/` 中
 - **后端控制器**: 按领域组织在 `src/main/java/com/cmliy/springweb/controller/` 中
 - **后端服务**: 业务逻辑在 `src/main/java/com/cmliy/springweb/service/` 中
 - **后端模型**: 实体在 `src/main/java/com/cmliy/springweb/model/` 中
+- **DTO对象**: 数据传输对象在 `src/main/java/com/cmliy/springweb/dto/` 中
+- **转换器**: 实体与DTO转换在 `src/main/java/com/cmliy/springweb/converter/` 中
+- **安全配置**: Spring Security配置在 `src/main/java/com/cmliy/springweb/security/` 中
+- **异常处理**: 全局异常处理在 `src/main/java/com/cmliy/springweb/exception/` 中
+
+## 项目架构详情
+
+### 前端架构
+- **Vue 3 Composition API**: 所有组件使用 `<script setup lang="ts">` 语法
+- **TypeScript严格模式**: 启用严格类型检查，提高代码质量
+- **Pinia状态管理**:
+  - `auth.ts` - 用户认证状态
+  - `product.ts` - 商品相关状态
+  - `counter.ts` - 示例计数器状态
+- **Element Plus UI**: 统一的UI组件库
+- **Axios HTTP客户端**: 封装在 `src/api/request.ts` 中
+- **路由守卫**: 基于认证状态的导航保护
+
+### 后端架构
+- **分层架构**: Controller → Service → Repository → Entity
+- **JWT认证**: 无状态认证机制
+- **Spring Security**: 配置角色权限(USER/SHOPER/ADMIN)
+- **JPA/Hibernate**: ORM映射，支持PostgreSQL JSONB类型
+- **DTO模式**: 前后端数据传输使用专门的DTO对象
+- **全局异常处理**: 统一的错误响应格式
+- **Lombok**: 减少样板代码，提高开发效率
+
+### 核心功能模块
+1. **用户认证系统**: 登录、注册、JWT令牌管理
+2. **商品管理**: CRUD操作、图片上传、分类管理
+3. **角色权限**: 基于Spring Security的访问控制
+4. **API文档**: RESTful API设计，统一响应格式
 
 ## 🎯 核心理念：教程驱动的学习项目
 
@@ -271,11 +330,14 @@ mvn test -Dtest=ClassName
 6. **总结和扩展** - 功能总结和后续改进方向
 
 ### 技术约束
-- **不使用TypeScript**: 教程使用纯JavaScript以提高可访问性
-- **Vue 3 Composition API**: 使用 `<script setup>` 语法
+- **使用TypeScript**: 前端使用TypeScript进行类型安全开发
+- **Vue 3 Composition API**: 使用 `<script setup lang="ts">` 语法
 - **Element Plus UI**: 整个项目使用一致的UI组件
 - **RESTful API**: 后端遵循标准REST约定
-- **MySQL数据库**: 所有数据持久化通过MySQL
+- **PostgreSQL数据库**: 所有数据持久化通过PostgreSQL
+- **Lombok**: 后端使用Lombok简化代码
+- **JWT认证**: 使用JWT进行用户身份验证
+- **用户角色**: 支持USER(普通用户)、SHOPER(商家)、ADMIN(管理员)三种角色
 
 ### 🎯 教程驱动开发工作流程
 1. **精读教程章节** → 按照 `Spring-Boot-Web开发教程完整版/` 顺序学习

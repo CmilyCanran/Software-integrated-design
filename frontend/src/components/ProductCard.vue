@@ -268,21 +268,11 @@ const emit = defineEmits<Emits>()
 // 计算属性：商品图片
 const productImage = computed<string>(() => {
   // 优先使用主图片
-  if (props.product.images && props.product.images.length > 0) {
-    const mainImage = props.product.images.find(img => img.isMain)
-    if (mainImage?.imageUrl) {
-      return mainImage.imageUrl
-    }
-    if (props.product.images[0]?.imageUrl) {
-      return props.product.images[0].imageUrl
-    }
+  if (props.product.mainImageUrl) {
+    return props.product.mainImageUrl
   }
 
-  // 如果没有images数组，尝试直接从image字段获取（向后兼容）
-  if ('image' in props.product) {
-    return (props.product as any).image || props.defaultImage
-  }
-
+  // 向后兼容：如果主图片不存在，使用默认图片
   return props.defaultImage
 })
 

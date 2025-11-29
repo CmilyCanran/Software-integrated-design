@@ -213,9 +213,7 @@ const testProducts = ref<Product[]>([
     creatorId: 1,
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
-    images: [
-      { id: 1, productId: 1, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
+    mainImageUrl: '/images/placeholder-product.png'
   },
   {
     id: 2,
@@ -229,9 +227,7 @@ const testProducts = ref<Product[]>([
     creatorId: 1,
     createdAt: '2024-01-10T15:30:00Z',
     updatedAt: '2024-01-10T15:30:00Z',
-    images: [
-      { id: 2, productId: 2, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
+    mainImageUrl: '/images/placeholder-product.png'
   },
   {
     id: 3,
@@ -245,9 +241,7 @@ const testProducts = ref<Product[]>([
     creatorId: 1,
     createdAt: '2024-01-05T09:20:00Z',
     updatedAt: '2024-01-05T09:20:00Z',
-    images: [
-      { id: 3, productId: 3, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
+    mainImageUrl: '/images/placeholder-product.png'
   },
   {
     id: 4,
@@ -261,9 +255,7 @@ const testProducts = ref<Product[]>([
     creatorId: 1,
     createdAt: '2024-01-20T14:15:00Z',
     updatedAt: '2024-01-20T14:15:00Z',
-    images: [
-      { id: 4, productId: 4, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
+    mainImageUrl: '/images/placeholder-product.png'
   }
 ])
 
