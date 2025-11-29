@@ -294,7 +294,7 @@ const handleSearch = (query: string): void => {
   addLog('搜索', `关键词: "${query}"`)
 }
 
-const handleSearchInput = (_query: string): void => {
+const handleSearchInput = (query: string): void => {
   // 实时搜索输入事件
 }
 
