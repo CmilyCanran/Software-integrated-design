@@ -62,32 +62,6 @@
       </div>
     </div>
 
-    <!-- 规格筛选器 -->
-    <div
-      v-if="availableSpecifications && Object.keys(availableSpecifications).length > 0"
-      class="specification-filters"
-    >
-      <div
-        v-for="(values, attributeName) in availableSpecifications"
-        :key="attributeName"
-        class="spec-filter-group"
-      >
-        <span class="filter-label">{{ attributeName }}:</span>
-        <el-checkbox-group
-          v-model="selectedSpecifications[attributeName]"
-          @change="handleSpecificationFilterChange"
-        >
-          <el-checkbox
-            v-for="value in values"
-            :key="value"
-            :label="value"
-            class="spec-checkbox"
-          >
-            {{ value }}
-          </el-checkbox>
-        </el-checkbox-group>
-      </div>
-    </div>
 
     <!-- 商品统计信息 -->
     <div class="product-stats">
@@ -219,6 +193,7 @@ import ProductListItem from '@/components/ProductListItem.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import type { Product } from '@/types/product'
 import Header from '@/components/Header.vue'
+import { productAPI } from '@/api/product'
 
 // 响应式数据
 const router = useRouter()
@@ -233,9 +208,8 @@ const currentPage = ref<number>(1)
 const pageSize = ref<number>(12)
 const totalProducts = ref<number>(0)
 const selectedCategory = ref<string>('')
+const productsResponse = ref<PaginatedResponse<Product> | null>(null)
 
-// 规格筛选相关
-const selectedSpecifications = ref<Record<string, string[]>>({})
 
 // 搜索建议
 const searchSuggestions = ref<string[]>([
@@ -251,32 +225,6 @@ const sortOptions = ref([
   { label: '库存最多', value: 'stock' }
 ])
 
-// 计算属性：所有商品的可用规格
-const availableSpecifications = computed(() => {
-  const specs: Record<string, string[]> = {}
-
-  // 遍历所有商品，收集规格信息
-  products.value.forEach(product => {
-    const productSpecs = product.productData?.specifications
-    if (productSpecs && typeof productSpecs === 'object') {
-      Object.entries(productSpecs).forEach(([name, values]) => {
-        if (Array.isArray(values)) {
-          if (!specs[name]) {
-            specs[name] = []
-          }
-          // 添加不重复的值
-          values.forEach(value => {
-            if (specs[name] && !specs[name]!.includes(value)) {
-              specs[name]!.push(value)
-            }
-          })
-        }
-      })
-    }
-  })
-
-  return specs
-})
 
 // 计算属性：筛选后的商品
 const filteredProducts = computed<Product[]>(() => {
@@ -290,24 +238,6 @@ const filteredProducts = computed<Product[]>(() => {
       product.description?.toLowerCase().includes(query)
     )
   }
-
-  // 规格筛选
-  Object.entries(selectedSpecifications.value).forEach(([attributeName, selectedValues]) => {
-    if (selectedValues.length > 0) {
-      result = result.filter(product => {
-        const productSpecs = product.productData?.specifications
-        if (!productSpecs || typeof productSpecs !== 'object') return false
-
-        const attributeValues = productSpecs[attributeName]
-        if (!Array.isArray(attributeValues)) return false
-
-        // 检查是否有匹配的值
-        return selectedValues.some(selectedValue =>
-          attributeValues.includes(selectedValue)
-        )
-      })
-    }
-  })
 
   // 排序
   result.sort((a, b) => {
@@ -347,158 +277,7 @@ const customerQuickActions = [
 ]
 
 // 模拟商品数据
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    productName: '时尚运动鞋 - 2024新款',
-    description: '轻便透气，适合跑步和日常穿着，采用最新科技材料制作',
-    price: 299.99,
-    salesCount: 15,
-    discount: 0,
-    stockQuantity: 15,
-    isAvailable: true,
-    creatorId: 1,
-    category: '鞋类',
-    brand: '运动品牌',
-    productData: {
-      specifications: {
-        '颜色': ['红色', '蓝色', '黑色', '白色'],
-        '尺寸': ['36', '37', '38', '39', '40', '41', '42', '43', '44'],
-        '材质': ['运动鞋专用材料', '透气网面']
-      }
-    },
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-    images: [
-      { id: 1, productId: 1, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
-  },
-  {
-    id: 2,
-    productName: '纯棉T恤',
-    description: '100%纯棉材质，舒适透气，多色可选',
-    price: 59.99,
-    salesCount: 50,
-    discount: 10,
-    stockQuantity: 50,
-    isAvailable: true,
-    creatorId: 1,
-    category: '服装',
-    brand: '休闲品牌',
-    productData: {
-      specifications: {
-        '颜色': ['白色', '黑色', '灰色', '蓝色', '红色'],
-        '尺寸': ['S', 'M', 'L', 'XL', 'XXL'],
-        '材质': ['纯棉']
-      }
-    },
-    createdAt: '2024-01-10T15:30:00Z',
-    updatedAt: '2024-01-10T15:30:00Z',
-    images: [
-      { id: 2, productId: 2, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
-  },
-  {
-    id: 3,
-    productName: '商务双肩包',
-    description: '大容量设计，防水面料，适合商务和旅行使用',
-    price: 199.99,
-    salesCount: 25,
-    discount: 5,
-    stockQuantity: 0,
-    isAvailable: false,
-    creatorId: 1,
-    category: '箱包',
-    brand: '商务品牌',
-    productData: {
-      specifications: {
-        '颜色': ['黑色', '灰色', '蓝色'],
-        '尺寸': ['40L', '50L'],
-        '材质': ['防水尼龙', '涤纶']
-      }
-    },
-    createdAt: '2024-01-05T09:20:00Z',
-    updatedAt: '2024-01-05T09:20:00Z',
-    images: [
-      { id: 3, productId: 3, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
-  },
-  {
-    id: 4,
-    productName: '智能手表',
-    description: '多功能运动监测，心率监测，消息提醒，长续航',
-    price: 899.99,
-    salesCount: 8,
-    discount: 0,
-    stockQuantity: 8,
-    isAvailable: true,
-    creatorId: 1,
-    category: '配饰',
-    brand: '科技品牌',
-    productData: {
-      specifications: {
-        '颜色': ['黑色', '银色', '金色'],
-        '表带材质': ['硅胶', '金属', '皮革'],
-        '屏幕尺寸': ['1.3英寸', '1.5英寸']
-      }
-    },
-    createdAt: '2024-01-20T14:15:00Z',
-    updatedAt: '2024-01-20T14:15:00Z',
-    images: [
-      { id: 4, productId: 4, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
-  },
-  {
-    id: 5,
-    productName: '连衣裙',
-    description: '优雅设计，舒适面料，适合多种场合穿着',
-    price: 159.99,
-    salesCount: 25,
-    discount: 15,
-    stockQuantity: 25,
-    isAvailable: true,
-    creatorId: 1,
-    category: '服装',
-    brand: '时尚品牌',
-    productData: {
-      specifications: {
-        '颜色': ['红色', '黑色', '蓝色', '白色'],
-        '尺寸': ['S', 'M', 'L', 'XL'],
-        '材质': ['雪纺', '棉质']
-      }
-    },
-    createdAt: '2024-01-18T11:00:00Z',
-    updatedAt: '2024-01-18T11:00:00Z',
-    images: [
-      { id: 5, productId: 5, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
-  },
-  {
-    id: 6,
-    productName: '无线耳机',
-    description: '蓝牙5.0连接，降噪功能，长续航时间',
-    price: 299.99,
-    salesCount: 12,
-    discount: 20,
-    stockQuantity: 12,
-    isAvailable: true,
-    creatorId: 1,
-    category: '配饰',
-    brand: '音频品牌',
-    productData: {
-      specifications: {
-        '颜色': ['黑色', '白色'],
-        '连接方式': ['蓝牙5.0', '蓝牙5.2'],
-        '续航时间': ['20小时', '30小时']
-      }
-    },
-    createdAt: '2024-01-22T16:30:00Z',
-    updatedAt: '2024-01-22T16:30:00Z',
-    images: [
-      { id: 6, productId: 6, imageUrl: '/images/placeholder-product.png', isMain: true, orderIndex: 1 }
-    ]
-  }
-]
+// 移除mockProducts，使用后端API获取真实数据
 
 // 事件处理函数
 const handleSearch = (query: string): void => {
@@ -523,9 +302,6 @@ const handlePageSizeChange = (size: number): void => {
   currentPage.value = 1
 }
 
-const handleSpecificationFilterChange = (): void => {
-  currentPage.value = 1
-}
 
 const handleProductClick = (product: Product): void => {
   router.push(`/products/${product.id}`)
@@ -564,13 +340,22 @@ const clearCategoryFilter = (): void => {
 const loadProducts = async (): Promise<void> => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    products.value = mockProducts
-    totalProducts.value = mockProducts.length
+    // 调用后端API获取产品列表
+    const params = {
+      page: currentPage.value - 1, // Spring Boot分页从0开始
+      size: pageSize.value,
+      sort: sortBy.value,
+      keyword: searchQuery.value
+    }
+
+    productsResponse.value = await productAPI.getProducts(params)
+    products.value = productsResponse.value?.data || []
+    totalProducts.value = productsResponse.value?.total || 0
   } catch (error) {
     ElMessage.error('加载商品数据失败')
     console.error('Load products error:', error)
+    products.value = []
+    totalProducts.value = 0
   } finally {
     loading.value = false
   }
@@ -584,6 +369,24 @@ onMounted(() => {
 // 监听搜索变化
 watch(searchQuery, () => {
   currentPage.value = 1
+  loadProducts()
+})
+
+// 监听排序变化
+watch(sortBy, () => {
+  currentPage.value = 1
+  loadProducts()
+})
+
+// 监听分页变化
+watch([currentPage, pageSize], () => {
+  loadProducts()
+})
+
+// 监听分类筛选变化
+watch(selectedCategory, () => {
+  currentPage.value = 1
+  loadProducts()
 })
 </script>
 
@@ -645,35 +448,6 @@ watch(searchQuery, () => {
   color: #606266;
 }
 
-/* 规格筛选器样式 */
-.specification-filters {
-  margin-bottom: 20px;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.spec-filter-group {
-  margin-bottom: 12px;
-}
-
-.spec-filter-group:last-child {
-  margin-bottom: 0;
-}
-
-.filter-label {
-  display: inline-block;
-  margin-right: 12px;
-  font-weight: 500;
-  color: #495057;
-  min-width: 60px;
-}
-
-.spec-checkbox {
-  margin-right: 16px;
-  margin-bottom: 8px;
-}
 
 .total-count {
   font-weight: 500;

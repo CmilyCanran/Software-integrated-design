@@ -148,15 +148,15 @@
             :on-error="handleImageError"
             :before-upload="beforeImageUpload"
             :file-list="fileList"
-            :multiple="true"
+            :multiple="false"
             accept="image/*"
-            :limit="5"
+            :limit="1"
           >
             <el-icon><Plus /></el-icon>
           </el-upload>
         </div>
         <div class="upload-tips">
-          <p>支持 jpg、png 格式，单张图片不超过 5MB，最多上传 5 张</p>
+          <p>支持 jpg、png 格式，单张图片不超过 5MB</p>
         </div>
       </div>
     </el-form-item>
@@ -314,6 +314,10 @@ const handleImageSuccess = (response: any, uploadFile: any, uploadFileList: any[
   // uploadFileList: 当前的文件列表
   console.log('图片上传成功:', response, uploadFile)
   ElMessage.success('图片上传成功')
+  // 更新主图片URL
+  if (response && response.imageUrl) {
+    formData.mainImageUrl = response.imageUrl
+  }
 }
 
 // 图片上传失败处理
@@ -367,6 +371,7 @@ const resetForm = () => {
     stockQuantity: 0,
     discount: 0,
     isAvailable: false,
+    mainImageUrl: '',
   })
   specifications.value = [{ name: '', values: [] }]
   fileList.value = []
@@ -386,6 +391,7 @@ watch(() => props.product, (newProduct) => {
       stockQuantity: newProduct.stockQuantity,
       discount: newProduct.discount,
       isAvailable: newProduct.isAvailable,
+      mainImageUrl: newProduct.mainImageUrl || '',
     })
 
     // 填充规格数据
@@ -397,6 +403,18 @@ watch(() => props.product, (newProduct) => {
       }))
     } else {
       specifications.value = [{ name: '', values: [] }]
+    }
+
+    // 填充图片数据
+    if (newProduct.mainImageUrl) {
+      fileList.value = [
+        {
+          name: '主图',
+          url: newProduct.mainImageUrl
+        }
+      ]
+    } else {
+      fileList.value = []
     }
   } else {
     // 重置表单

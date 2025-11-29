@@ -4,6 +4,13 @@ spring:
   profiles:
     active: dev
 
+  # 数据库初始化配置
+  sql:
+    init:
+      mode: never
+      encoding: UTF-8
+      continue-on-error: false
+
   datasource:
     url: jdbc:postgresql://localhost:5432/clothes_db
     username: postgres

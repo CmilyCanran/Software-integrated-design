@@ -98,10 +98,6 @@
                   <el-icon><Document /></el-icon>
                   我的订单
                 </el-button>
-                <el-button type="info" size="large" @click="handleViewFavorites">
-                  <el-icon><Star /></el-icon>
-                  我的收藏
-                </el-button>
                 <el-button type="warning" size="large" @click="handleSettings">
                   <el-icon><Setting /></el-icon>
                   个人设置
@@ -177,9 +173,6 @@ const handleViewStats = () => {
   ElMessage.info('数据统计功能开发中...')
 }
 
-const handleViewFavorites = () => {
-  ElMessage.info('收藏功能开发中...')
-}
 
 const handleSettings = () => {
   ElMessage.info('设置功能开发中...')

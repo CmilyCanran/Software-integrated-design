@@ -1,11 +1,16 @@
 <template>
   <el-header class="merchant-header">
     <div class="header-content">
-      <!-- 左侧：面包屑导航 -->
+      <!-- 左侧-->
       <div class="header-left">
+        <div class="back-button">
+          <el-button type="default" circle icon="ArrowLeft" @click="handleBack"/>
+        </div>
         <el-breadcrumb separator="/">
           <el-breadcrumb-item :to="{ path: '/dashboard' }">
-            <el-icon><HomeFilled /></el-icon>
+            <el-icon>
+              <HomeFilled />
+            </el-icon>
             仪表板
           </el-breadcrumb-item>
           <el-breadcrumb-item v-if="pageTitle">
@@ -31,24 +36,34 @@
           <span class="user-dropdown">
             <el-avatar :size="32" :icon="UserIcon" />
             <span class="username">{{ username }}</span>
-            <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+            <el-icon class="dropdown-icon">
+              <ArrowDown />
+            </el-icon>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="profile">
-                <el-icon><User /></el-icon>
+                <el-icon>
+                  <User />
+                </el-icon>
                 个人资料
               </el-dropdown-item>
               <el-dropdown-item v-if="isMerchant" command="dashboard">
-                <el-icon><House /></el-icon>
+                <el-icon>
+                  <House />
+                </el-icon>
                 仪表板
               </el-dropdown-item>
               <el-dropdown-item v-if="isMerchant" command="products">
-                <el-icon><ShoppingCart /></el-icon>
+                <el-icon>
+                  <ShoppingCart />
+                </el-icon>
                 商品管理
               </el-dropdown-item>
               <el-dropdown-item divided command="logout">
-                <el-icon><SwitchButton /></el-icon>
+                <el-icon>
+                  <SwitchButton />
+                </el-icon>
                 退出登录
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -99,6 +114,10 @@ const isMerchant = computed(() => {
   return authStore.userInfo?.role === 'SHOPER' || authStore.userInfo?.role === 'ADMIN'
 })
 const UserIcon = User
+
+const handleBack = () => {
+  router.back()
+}
 
 // 事件处理函数
 const handleCommand = (command: string) => {
@@ -170,6 +189,9 @@ const handleNotifications = () => {
 .notification-badge {
   margin-right: 8px;
 }
+  .back-button {
+  margin-right: 16px;;
+  }
 
 .user-dropdown {
   display: flex;
@@ -218,6 +240,7 @@ const handleNotifications = () => {
   .username {
     display: none;
   }
+
 }
 
 @media (max-width: 480px) {

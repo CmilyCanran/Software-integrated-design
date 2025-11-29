@@ -1,15 +1,6 @@
 <template>
+  <Header page-title="商品详情" />
   <div class="product-detail">
-    <!-- 返回按钮 -->
-    <div class="back-button">
-      <el-button
-        type="default"
-        icon="ArrowLeft"
-        @click="handleBack"
-      >
-        返回商品列表
-      </el-button>
-    </div>
 
     <!-- 加载状态 -->
     <div
@@ -42,7 +33,7 @@
           <!-- 主图片展示 -->
           <div class="main-image-container">
             <ImageLoader
-              :src="currentImage"
+              :src="product.mainImageUrl || '/images/placeholder-product.png'"
               :alt="product.productName"
               :placeholder="'/images/placeholder-product.png'"
               :fallback="'/images/placeholder-product.png'"
@@ -57,24 +48,6 @@
             ></div>
           </div>
 
-          <!-- 缩略图列表 -->
-          <div class="thumbnail-list">
-            <div
-              v-for="(image, index) in productImages"
-              :key="index"
-              :class="['thumbnail-item', { active: currentImageIndex === index }]"
-              @click="selectImage(index)"
-            >
-              <ImageLoader
-                :src="image"
-                :alt="`${product.productName} 图片${index + 1}`"
-                :placeholder="'/images/placeholder-product.png'"
-                :fallback="'/images/placeholder-product.png'"
-                class="thumbnail-image"
-                @click="selectImage(index)"
-              />
-            </div>
-          </div>
         </div>
 
         <!-- 右侧商品信息 -->
@@ -204,6 +177,8 @@ import ImageLoader from '@/components/ImageLoader.vue'
 import PriceDisplay from '@/components/PriceDisplay.vue'
 import StockIndicator from '@/components/StockIndicator.vue'
 import type { Product } from '@/types/product'
+import Header from '@/components/Header.vue'
+import { productAPI } from '@/api/product'
 
 // 路由相关
 const route = useRoute()
@@ -217,10 +192,6 @@ const selectedAttributes = ref<Record<string, string>>({})
 const addingToCart = ref<boolean>(false)
 const showZoom = ref<boolean>(false)
 const zoomPosition = ref({ x: 0, y: 0 })
-
-// 图片相关
-const currentImageIndex = ref<number>(0)
-const productImages = ref<string[]>([])
 
 // 动态属性计算属性
 const dynamicAttributes = computed(() => {
@@ -238,10 +209,6 @@ const dynamicAttributes = computed(() => {
 
 
 // 计算属性
-const currentImage = computed<string>(() => {
-  return productImages.value[currentImageIndex.value] || ''
-})
-
 const currentPrice = computed<number>(() => {
   return product.value?.price || 0
 })
@@ -261,58 +228,10 @@ const zoomLensStyle = computed(() => ({
 }))
 
 // 模拟商品数据
-const mockProduct: Product = {
-  id: 1,
-  productName: '时尚运动鞋 - 2024新款',
-  description: '这款运动鞋采用最新科技材料制作，轻便透气，适合跑步和日常穿着。鞋底采用耐磨橡胶，提供良好的抓地力。鞋面采用网眼设计，确保足部透气舒适。',
-  price: 299.99,
-  originalPrice: 399.99,
-  stockQuantity: 15,
-  isAvailable: true,
-  createdAt: '2024-01-15T10:00:00Z',
-  updatedAt: '2024-01-15T10:00:00Z',
-  brand: '运动品牌',
-  category: '运动鞋',
-  salesCount: 128,
-  discount: 0.25,
-  creatorId: 1,
-  productData: {
-    specifications: {
-      '颜色': ['红色', '蓝色', '黑色', '白色'],
-      '尺寸': ['S', 'M', 'L', 'XL'],
-      '材质': ['运动鞋专用材料', '透气网面'],
-      '款式': ['运动款', '休闲款']
-    }
-  },
-  images: [
-    {
-      id: 1,
-      productId: 1,
-      imageUrl: '/images/placeholder-product.png',
-      isMain: true,
-      alt: '时尚运动鞋主图',
-      orderIndex: 0
-    }
-  ]
-}
-
-// 初始化商品图片
-const initProductImages = () => {
-  if (product.value) {
-    productImages.value = [
-      product.value.images?.[0]?.imageUrl || '/images/placeholder-product.png',
-      '/images/placeholder-product.png',
-      '/images/placeholder-product.png',
-      '/images/placeholder-product.png'
-    ]
-  }
-}
+// 移除mockProduct，使用后端API获取真实数据
 
 
-// 图片处理函数
-const selectImage = (index: number) => {
-  currentImageIndex.value = index
-}
+
 
 const handleImageClick = () => {
   showZoom.value = !showZoom.value
@@ -351,9 +270,7 @@ const handleBuyNow = async () => {
   router.push('/cart')
 }
 
-const handleBack = () => {
-  router.back()
-}
+
 
 // 移除未使用的formatDate函数，已通过模板中的日期过滤器处理
 
@@ -362,20 +279,18 @@ const loadProduct = async () => {
   loading.value = true
 
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 从路由参数获取产品ID
+    const productId = Number(route.params.id)
 
-    // 使用模拟数据
-    product.value = mockProduct
-
-    // 初始化图片
-    initProductImages()
+    // 调用后端API获取产品详情
+    product.value = await productAPI.getProduct(productId)
 
     // 清空属性选择
     selectedAttributes.value = {}
   } catch (error) {
     ElMessage.error('加载商品信息失败')
     console.error('Load product error:', error)
+    product.value = null
   } finally {
     loading.value = false
   }
@@ -392,6 +307,11 @@ watch(() => route.params.id, () => {
     loadProduct()
   }
 })
+
+// 返回商品列表页面
+const handleBack = () => {
+  router.push('/products')
+}
 </script>
 
 <style scoped>
@@ -401,9 +321,6 @@ watch(() => route.params.id, () => {
   padding: 20px;
 }
 
-.back-button {
-  margin-bottom: 20px;
-}
 
 .loading-container,
 .error-state {
@@ -711,13 +628,5 @@ watch(() => route.params.id, () => {
     padding: 0 20px 20px;
   }
 
-  .thumbnail-list {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-
-  .thumbnail-item {
-    height: 50px;
-  }
 }
 </style>

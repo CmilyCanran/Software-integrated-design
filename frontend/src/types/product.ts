@@ -28,11 +28,9 @@ export interface Product {
   createdAt: string
   updatedAt: string
   // 扩展字段（根据后端数据结构）
-  images?: ProductImage[]
   originalPrice?: number
-  // 后端DTO新增字段
+  // 后端DTO字段 - 单张主图
   mainImageUrl?: string
-  imageUrls?: string[]
   specifications?: { [key: string]: any }
   category?: string
   brand?: string
@@ -42,15 +40,6 @@ export interface Product {
   tags?: string[]
 }
 
-// 商品图片接口
-export interface ProductImage {
-  id: number
-  productId: number
-  imageUrl: string
-  isMain: boolean
-  alt?: string
-  orderIndex: number
-}
 
 // 商品创建请求接口
 export interface ProductCreateRequest {
@@ -60,11 +49,10 @@ export interface ProductCreateRequest {
   discount?: number
   stockQuantity: number
   isAvailable: boolean
-  images?: File[]
+  image?: File
   productData?: ProductData
-  // 后端DTO新增字段
+  // 后端DTO字段 - 单张主图
   mainImageUrl?: string
-  imageUrls?: string[]
   specifications?: { [key: string]: any }
   category?: string
   brand?: string
