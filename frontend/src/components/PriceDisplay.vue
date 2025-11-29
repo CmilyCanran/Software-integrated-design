@@ -16,7 +16,7 @@ interface Props {
 }
 
 // 使用withDefaults设置默认值
-const _props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   size: 'medium',
   currency: '¥'
 })
