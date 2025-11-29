@@ -11,7 +11,18 @@ import type { Product, ProductCreateRequest, ProductUpdateRequest, ProductQueryP
 export const productAPI = {
   // 获取商品列表（支持分页、筛选、排序）
   getProducts: (params: ProductQueryParams): Promise<PaginatedResponse<Product>> => {
-    return api.get('/products', { params })
+    return api.get('/products', { params }).then((response: any) => {
+      // 处理后端Spring Boot分页响应格式
+      return {
+        data: response.content || [],
+        total: response.totalElements || 0,
+        page: response.number || 0,
+        size: response.size || 10,
+        totalPages: response.totalPages || 0,
+        hasNext: !response.last,
+        hasPrev: !response.first
+      }
+    })
   },
 
   // 获取商家商品列表（根据当前登录用户过滤）
