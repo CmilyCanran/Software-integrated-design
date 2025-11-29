@@ -31,12 +31,11 @@ export interface Product {
   originalPrice?: number
   // 后端DTO字段 - 单张主图
   mainImageUrl?: string
-  specifications?: { [key: string]: any }
+  specifications?: { [key: string]: any }  // 统一的规格字段，包含所有属性
   category?: string
   brand?: string
   color?: string
   size?: string
-  extendedAttributes?: { [key: string]: any }
   tags?: string[]
 }
 
@@ -53,12 +52,11 @@ export interface ProductCreateRequest {
   productData?: ProductData
   // 后端DTO字段 - 单张主图
   mainImageUrl?: string
-  specifications?: { [key: string]: any }
+  specifications?: { [key: string]: any }  // 统一的规格字段，包含所有属性
   category?: string
   brand?: string
   color?: string
   size?: string
-  extendedAttributes?: { [key: string]: any }
   tags?: string[]
   originalPrice?: number
 }
