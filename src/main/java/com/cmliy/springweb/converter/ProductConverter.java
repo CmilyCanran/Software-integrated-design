@@ -57,12 +57,8 @@ public class ProductConverter {
         dto.setMainImageUrl(product.getMainImage());
         dto.setImageUrls(product.getImageUrls());
 
-        // 规格信息
+        // 统一规格信息 - 只返回specifications
         dto.setSpecifications(product.getAllSpecifications());
-        dto.setCategory(product.getCategory());
-        dto.setBrand(product.getBrand());
-        dto.setColor(product.getColor());
-        dto.setSize(product.getSize());
 
         // 格式化价格
         dto.setFormattedPrice(product.getFormattedPrice());
@@ -109,15 +105,8 @@ public class ProductConverter {
         dto.setThumbnails(product.getThumbnails());
         dto.setTotalImages(product.getTotalImages());
 
-        // 详细规格信息
+        // 统一规格信息 - 只返回specifications
         dto.setSpecifications(product.getAllSpecifications());
-        dto.setCategory(product.getCategory());
-        dto.setBrand(product.getBrand());
-        dto.setColor(product.getColor());
-        dto.setSize(product.getSize());
-
-        // 扩展属性
-        dto.setExtendedAttributes(product.getAllExtendedAttributes());
 
         // 价格信息
         dto.setFormattedPrice(product.getFormattedPrice());
@@ -154,11 +143,20 @@ public class ProductConverter {
         dto.setSalesCount(product.getSalesCount());
         dto.setDiscount(product.getDiscount());
         dto.setMainImageUrl(product.getMainImage());
-        dto.setCategory(product.getCategory());
-        dto.setBrand(product.getBrand());
+        // 从specifications中动态获取分类和品牌信息（如果存在）
+        Object category = product.getSpecification("分类");
+        Object brand = product.getSpecification("品牌");
+        if (category instanceof String) {
+            dto.setCategory((String) category);
+        }
+        if (brand instanceof String) {
+            dto.setBrand((String) brand);
+        }
         dto.setFormattedPrice(product.getFormattedPrice());
         dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
         dto.setStockStatus(product.getStockStatus());
+        dto.setStockQuantity(product.getStockQuantity());
+        dto.setIsAvailable(product.getIsAvailable());
 
         return dto;
     }
@@ -186,6 +184,7 @@ public class ProductConverter {
         dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
         dto.setStockStatus(product.getStockStatus());
         dto.setIsAvailable(product.getIsAvailable());
+        dto.setStockQuantity(product.getStockQuantity());
 
         return dto;
     }
@@ -221,28 +220,9 @@ public class ProductConverter {
             product.setImageUrls(requestDTO.getImageUrls());
         }
 
-        // 设置规格信息
+        // 统一设置规格属性 - 所有属性都通过specifications处理
         if (requestDTO.getSpecifications() != null && !requestDTO.getSpecifications().isEmpty()) {
             requestDTO.getSpecifications().forEach(product::addSpecification);
-        }
-
-        // 设置扩展属性
-        if (requestDTO.getExtendedAttributes() != null && !requestDTO.getExtendedAttributes().isEmpty()) {
-            requestDTO.getExtendedAttributes().forEach(product::addExtendedAttribute);
-        }
-
-        // 设置分类、品牌、颜色、尺寸
-        if (requestDTO.getCategory() != null) {
-            product.addSpecification("category", requestDTO.getCategory());
-        }
-        if (requestDTO.getBrand() != null) {
-            product.addSpecification("brand", requestDTO.getBrand());
-        }
-        if (requestDTO.getColor() != null) {
-            product.addSpecification("color", requestDTO.getColor());
-        }
-        if (requestDTO.getSize() != null) {
-            product.addSpecification("size", requestDTO.getSize());
         }
 
         return product;
@@ -297,14 +277,11 @@ public class ProductConverter {
             requestDTO.getSpecifications().forEach(product::addSpecification);
         }
 
-        // 更新扩展属性
-        if (requestDTO.getExtendedAttributes() != null) {
-            clearExtendedAttributes(product);
-            requestDTO.getExtendedAttributes().forEach(product::addExtendedAttribute);
+        // 更新规格属性 - 所有属性统一处理
+        if (requestDTO.getSpecifications() != null) {
+            clearSpecifications(product);
+            requestDTO.getSpecifications().forEach(product::addSpecification);
         }
-
-        // 更新分类、品牌、颜色、尺寸
-        updateBasicSpecifications(product, requestDTO);
 
         return product;
     }
@@ -377,21 +354,4 @@ public class ProductConverter {
         }
     }
 
-    /**
-     * 🔄 更新基本规格信息
-     */
-    private void updateBasicSpecifications(Product product, ProductUpdateRequestDTO requestDTO) {
-        if (requestDTO.getCategory() != null) {
-            product.addSpecification("category", requestDTO.getCategory());
-        }
-        if (requestDTO.getBrand() != null) {
-            product.addSpecification("brand", requestDTO.getBrand());
-        }
-        if (requestDTO.getColor() != null) {
-            product.addSpecification("color", requestDTO.getColor());
-        }
-        if (requestDTO.getSize() != null) {
-            product.addSpecification("size", requestDTO.getSize());
-        }
     }
-}

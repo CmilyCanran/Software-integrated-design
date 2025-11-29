@@ -76,6 +76,12 @@ public class ProductListItemDTO {
     private Boolean isAvailable;
 
     /**
+     * 📦 库存数量 - 商品库存数量
+     * 数据来源：数据库products表stock_quantity字段
+     */
+    private Integer stockQuantity;
+
+    /**
      * 💰 格式化价格 - 带货币符号的显示价格
      * 数据来源：后端格式化处理，基于price字段
      */
