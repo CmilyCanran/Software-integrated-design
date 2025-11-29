@@ -324,9 +324,12 @@ public class ProductConverter {
     @SuppressWarnings("unchecked")
     private List<String> getVariantsFromProductData(Product product) {
         try {
-            Object variantsObj = product.getExtendedAttribute("variants");
-            if (variantsObj instanceof List) {
-                return (List<String>) variantsObj;
+            Map<String, Object> productData = product.getProductData();
+            if (productData != null) {
+                Object variantsObj = productData.get("variants");
+                if (variantsObj instanceof List) {
+                    return (List<String>) variantsObj;
+                }
             }
         } catch (Exception e) {
             // 忽略异常，返回空列表
@@ -344,14 +347,5 @@ public class ProductConverter {
         }
     }
 
-    /**
-     * 🗑️ 清除商品的所有扩展属性
-     */
-    private void clearExtendedAttributes(Product product) {
-        Map<String, Object> productData = product.getProductData();
-        if (productData != null) {
-            productData.remove("extended_attributes");
-        }
-    }
-
+    
     }

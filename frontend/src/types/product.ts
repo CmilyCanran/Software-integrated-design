@@ -31,7 +31,7 @@ export interface Product {
   originalPrice?: number
   // 后端DTO字段 - 单张主图
   mainImageUrl?: string
-  specifications?: { [key: string]: any }  // 统一的规格字段，包含所有属性
+  specifications?: Record<string, string[]>  // 统一的动态规格字段，键为规格名，值为规格值数组
   category?: string
   brand?: string
   color?: string
@@ -52,7 +52,7 @@ export interface ProductCreateRequest {
   productData?: ProductData
   // 后端DTO字段 - 单张主图
   mainImageUrl?: string
-  specifications?: { [key: string]: any }  // 统一的规格字段，包含所有属性
+  specifications?: Record<string, string[]>  // 统一的动态规格字段，键为规格名，值为规格值数组
   category?: string
   brand?: string
   color?: string
