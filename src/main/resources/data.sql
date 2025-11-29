@@ -1,3 +1,7 @@
+-- 清理数据表（按外键依赖顺序）
+DELETE FROM products;
+DELETE FROM users;
+
 -- 插入测试用户数据（密码都是123456）
 
 INSERT INTO public.users
@@ -24,7 +28,7 @@ VALUES
     60,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"颜色": ["白色", "黑色", "灰色", "蓝色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["纯棉"], "分类": ["服装"], "品牌": ["基础款"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["白色", "黑色", "灰色"], "尺寸": ["S", "M", "L"], "材质": ["纯棉"], "分类": ["服装"], "品牌": ["基础款"], "适合季节": ["春夏", "四季"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -37,7 +41,7 @@ VALUES
     35,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"颜色": ["碎花蓝色", "碎花粉色", "纯白色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["雪纺", "棉质"], "分类": ["服装"], "品牌": ["时尚女装"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["碎花蓝色", "碎花粉色"], "尺寸": ["S", "M"], "材质": ["雪纺"], "分类": ["服装"], "品牌": ["时尚女装"], "适合场合": ["约会", "聚会"], "裙长": ["及膝", "长款"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -50,7 +54,7 @@ VALUES
     0,
     false,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"extended_attributes": {"颜色": ["深黑色", "藏青色", "灰色"], "尺寸": ["28", "30", "32", "34", "36"], "材质": ["弹力棉", "涤纶混纺"], "分类": ["服装"], "品牌": ["商务系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["深黑色", "藏青色", "灰色"], "尺寸": ["28", "30", "32", "34", "36"], "材质": ["弹力棉", "涤纶混纺"], "分类": ["服装"], "品牌": ["商务系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -63,7 +67,7 @@ VALUES
     45,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"extended_attributes": {"颜色": ["黑色", "灰色", "白色", "蓝色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["棉绒", "抓绒"], "分类": ["服装"], "品牌": ["运动系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["黑色", "灰色", "白色", "蓝色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["棉绒", "抓绒"], "分类": ["服装"], "品牌": ["运动系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -76,7 +80,7 @@ VALUES
     25,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"extended_attributes": {"颜色": ["深蓝色", "浅蓝色", "黑色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["牛仔布", "棉质"], "分类": ["服装"], "品牌": ["经典系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["深蓝色", "浅蓝色", "黑色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["牛仔布", "棉质"], "分类": ["服装"], "品牌": ["经典系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -89,7 +93,7 @@ VALUES
     50,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"extended_attributes": {"颜色": ["红色", "蓝色", "紫色", "粉色"], "尺寸": ["均码"], "材质": ["真丝"], "分类": ["服装"], "品牌": ["配饰系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["红色", "蓝色", "紫色", "粉色"], "尺寸": ["均码"], "材质": ["真丝"], "分类": ["服装"], "品牌": ["配饰系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -103,7 +107,7 @@ VALUES
     30,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "针织系列"}, "extended_attributes": {"颜色": ["米白色", "驼色", "灰色", "黑色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["羊毛"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["米白色", "驼色"], "尺寸": ["M", "L"], "材质": ["羊毛"], "分类": ["服装"], "品牌": ["针织系列"], "领型": ["V领"], "厚度": ["中等"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -116,7 +120,7 @@ VALUES
     40,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "牛仔系列"}, "extended_attributes": {"颜色": ["深蓝色", "浅蓝色", "黑色"], "尺寸": ["28", "30", "32", "34", "36", "38"], "材质": ["牛仔布"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["深蓝色", "黑色"], "尺寸": ["30", "32", "34"], "材质": ["牛仔布"], "分类": ["服装"], "品牌": ["牛仔系列"], "裤型": ["直筒", "宽松"], "功能": ["多口袋"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -129,7 +133,7 @@ VALUES
     25,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "正装系列"}, "extended_attributes": {"颜色": ["白色", "浅蓝色", "条纹"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["棉涤混纺"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["白色", "浅蓝色", "条纹"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["棉涤混纺"], "分类": ["服装"], "品牌": ["正装系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -142,7 +146,7 @@ VALUES
     55,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "运动系列"}, "extended_attributes": {"颜色": ["黑色", "灰色", "蓝色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["聚酯纤维"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["黑色", "灰色", "蓝色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["聚酯纤维"], "分类": ["服装"], "品牌": ["运动系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -155,7 +159,7 @@ VALUES
     20,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "针织系列"}, "extended_attributes": {"颜色": ["粉色", "米色", "浅灰色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["棉线"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["粉色", "米色", "浅灰色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["棉线"], "分类": ["服装"], "品牌": ["针织系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -168,7 +172,7 @@ VALUES
     15,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "女装系列"}, "extended_attributes": {"颜色": ["黑色", "卡其色", "深蓝色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["西装面料"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["黑色", "卡其色", "深蓝色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["西装面料"], "分类": ["服装"], "品牌": ["女装系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -181,7 +185,7 @@ VALUES
     80,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "配饰系列"}, "extended_attributes": {"颜色": ["黑色", "白色", "红色", "蓝色"], "尺寸": ["均码"], "材质": ["棉"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["黑色", "白色", "红色", "蓝色"], "尺寸": ["均码"], "材质": ["棉"], "分类": ["服装"], "品牌": ["配饰系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -194,7 +198,7 @@ VALUES
     0,
     false,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "羽绒系列"}, "extended_attributes": {"颜色": ["黑色", "蓝色", "粉色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["羽绒", "尼龙"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["黑色", "蓝色", "粉色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["羽绒", "尼龙"], "分类": ["服装"], "品牌": ["羽绒系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -207,7 +211,7 @@ VALUES
     35,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "休闲系列"}, "extended_attributes": {"颜色": ["蓝白条纹", "黑白条纹"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["纯棉"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["蓝白条纹", "黑白条纹"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["纯棉"], "分类": ["服装"], "品牌": ["休闲系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -220,7 +224,7 @@ VALUES
     28,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "运动系列"}, "extended_attributes": {"颜色": ["紫色", "黑色", "灰色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["氨纶混纺"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["紫色", "黑色", "灰色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["氨纶混纺"], "分类": ["服装"], "品牌": ["运动系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -233,7 +237,7 @@ VALUES
     12,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "外套系列"}, "extended_attributes": {"颜色": ["卡其色", "黑色", "藏青色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["聚酯纤维", "棉"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["卡其色", "黑色", "藏青色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["聚酯纤维", "棉"], "分类": ["服装"], "品牌": ["外套系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -246,7 +250,7 @@ VALUES
     48,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "休闲系列"}, "extended_attributes": {"颜色": ["灰色", "蓝色", "黑色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["纯棉"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["灰色", "蓝色", "黑色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["纯棉"], "分类": ["服装"], "品牌": ["休闲系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   ),
@@ -259,7 +263,7 @@ VALUES
     18,
     true,
     (SELECT id FROM users WHERE username = 'admin'),
-    '{"specifications": {"category": "服装", "brand": "针织系列"}, "extended_attributes": {"颜色": ["红色", "绿色", "米白色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["羊毛混纺"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
+    '{"specifications": {"颜色": ["红色", "绿色", "米白色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["羊毛混纺"], "分类": ["服装"], "品牌": ["针织系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
   );

@@ -259,44 +259,36 @@ public class Product {
         return Map.copyOf((Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>()));
     }
 
+    /**
+     * 📝 设置规格属性
+     */
+    public void setSpecification(String key, Object value) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> specifications = (Map<String, Object>) productData.computeIfAbsent("specifications", k -> new java.util.HashMap<>());
+        specifications.put(key, value);
+    }
+
+    /**
+     * 🔍 检查是否存在指定规格
+     */
+    public boolean hasSpecification(String key) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> specifications = (Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>());
+        return specifications.containsKey(key);
+    }
+
+    /**
+     * 🗑️ 清空所有规格
+     */
+    public void clearSpecifications() {
+        Map<String, Object> productData = this.productData;
+        if (productData != null) {
+            productData.remove("specifications");
+        }
+    }
+
     
-    // ==================== 🔧 扩展属性便捷方法 ====================
-
-    /**
-     * 🔧 添加扩展属性
-     */
-    public void addExtendedAttribute(String key, Object value) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> extendedAttributes = (Map<String, Object>) productData.computeIfAbsent("extended_attributes", k -> new java.util.HashMap<>());
-        extendedAttributes.put(key, value);
-    }
-
-    /**
-     * 📋 获取扩展属性
-     */
-    public Object getExtendedAttribute(String key) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> extendedAttributes = (Map<String, Object>) productData.getOrDefault("extended_attributes", new java.util.HashMap<>());
-        return extendedAttributes.get(key);
-    }
-
-    /**
-     * 🗑️ 移除扩展属性
-     */
-    public Object removeExtendedAttribute(String key) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> extendedAttributes = (Map<String, Object>) productData.getOrDefault("extended_attributes", new java.util.HashMap<>());
-        return extendedAttributes.remove(key);
-    }
-
-    /**
-     * 📋 获取所有扩展属性
-     */
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getAllExtendedAttributes() {
-        return Map.copyOf((Map<String, Object>) productData.getOrDefault("extended_attributes", new java.util.HashMap<>()));
-    }
-
+    
     // ==================== 🎨 变体相关便捷方法 ====================
 
     /**
