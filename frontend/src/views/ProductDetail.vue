@@ -193,9 +193,9 @@ const addingToCart = ref<boolean>(false)
 const showZoom = ref<boolean>(false)
 const zoomPosition = ref({ x: 0, y: 0 })
 
-// 动态属性计算属性
+// 动态属性计算属性 - 统一使用specifications
 const dynamicAttributes = computed(() => {
-  const specs = product.value?.productData?.specifications
+  const specs = product.value?.specifications
   if (!specs || typeof specs !== 'object') return {}
 
   const validAttributes: Record<string, string[]> = {}
