@@ -105,7 +105,7 @@
             <div class="quantity-controls">
               <el-input-number
                 v-model="quantity"
-                :min="1"
+                :min="currentStock === 0 ? 0 : 1"
                 :max="currentStock"
                 size="large"
                 :disabled="currentStock === 0"
@@ -227,6 +227,17 @@ const zoomLensStyle = computed(() => ({
   top: `${zoomPosition.value.y}px`
 }))
 
+// 监听库存变化，自动调整数量
+watch(currentStock, (newStock) => {
+  if (newStock === 0) {
+    quantity.value = 0
+  } else if (quantity.value > newStock) {
+    quantity.value = newStock
+  } else if (quantity.value === 0 && newStock > 0) {
+    quantity.value = 1
+  }
+}, { immediate: true })
+
 // 模拟商品数据
 // 移除mockProduct，使用后端API获取真实数据
 
@@ -288,9 +299,10 @@ const loadProduct = async () => {
     // 清空属性选择
     selectedAttributes.value = {}
   } catch (error) {
-    ElMessage.error('加载商品信息失败')
     console.error('Load product error:', error)
+    ElMessage.error('加载商品信息失败')
     product.value = null
+    quantity.value = 0  // 确保数量重置
   } finally {
     loading.value = false
   }

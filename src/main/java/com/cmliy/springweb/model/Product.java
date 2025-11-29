@@ -27,35 +27,95 @@ import java.util.Map;
 })
 public class Product {
 
+    /**
+     * 🆔 商品唯一标识符
+     *
+     * 主键，自动递增的唯一标识
+     * 用于数据库索引和关联查询
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * 📝 商品名称
+     *
+     * 商品的显示名称，必须唯一且不为空
+     * 最大长度50字符，用于用户界面显示
+     */
     @Column(name = "product_name", unique = true, nullable = false, length = 50)
     private String productName;
 
+    /**
+     * 📄 商品详细描述
+     *
+     * 商品的详细说明信息，支持长文本
+     * 使用TEXT类型，可存储大段描述内容
+     */
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    /**
+     * 💰 商品价格
+     *
+     * 商品的销售价格，必须不为空
+     * 使用BigDecimal保证精度，最大10位数，其中2位小数
+     */
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    /**
+     * 📊 销售数量
+     *
+     * 商品的总销售数量，默认值为0
+     * 用于统计商品销量和热门程度分析
+     */
     @Column(name = "sales_count", nullable = false)
     private Integer salesCount = 0;
 
+    /**
+     * 🏷️ 折扣百分比
+     *
+     * 商品的折扣百分比，默认为0（无折扣）
+     * 精度为5位数，其中2位小数，例如：15.50表示15.5%折扣
+     */
     @Column(name = "discount", precision = 5, scale = 2)
     private BigDecimal discount = BigDecimal.ZERO;
 
+    /**
+     * 📦 库存数量
+     *
+     * 商品的库存数量，默认为0
+     * 用于库存管理和购买可用性检查
+     */
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity = 0;
 
+    /**
+     * ✅ 商品上架状态
+     *
+     * 商品是否可购买的状态标志，默认为false（下架）
+     * true表示上架可购买，false表示下架不可购买
+     */
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = false;
 
+    /**
+     * 👤 商品创建者
+     *
+     * 创建该商品的用户，必须指定
+     * 使用LAZY加载避免不必要的关联查询
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
     private User creator;
 
+    /**
+     * 📋 商品扩展数据
+     *
+     * 存储商品的扩展信息，使用PostgreSQL的JSONB类型
+     * 包含图片数据、规格属性、变体信息等灵活数据
+     */
     @Convert(converter = JsonConverter.class)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> productData = Map.of();
