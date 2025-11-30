@@ -1,22 +1,11 @@
+# Spring Boot 主配置文件
+# ============================================================================
+
 spring:
   application:
     name: SpringWeb
   profiles:
-    active: dev
-
-  # 数据库初始化配置
-  sql:
-    init:
-      mode: always
-      encoding: UTF-8
-      continue-on-error: false
-      data-locations: classpath:data.sql
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/clothes_db
-    username: postgres
-    password: 123456
-    driver-class-name: org.postgresql.Driver
+    active: ${SPRING_PROFILES_ACTIVE:dev}  # 默认开发环境
 
   jpa:
     hibernate:
@@ -49,11 +38,13 @@ spring:
     resources:
       static-locations: classpath:/static/,file:uploads/
 
+# 基础配置（所有环境共享）
 server:
   port: 8080
   servlet:
     context-path: /api
 
+# 日志配置
 logging:
   level:
     com.cmliy.springweb: DEBUG
@@ -62,20 +53,3 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     # 🔧 日志配置（调试用）
     com.cmliy.springweb.service.ProductDataService: DEBUG
-
-# 图片存储配置
-image:
-  storage:
-    upload-dir: ./uploads/images
-    base-url: http://localhost:8080/api/images
-    max-file-size: 5242880  # 5MB
-    allowed-types:
-      - image/jpeg
-      - image/png
-      - image/gif
-
-# 应用图片配置
-app:
-  image:
-    storage:
-      path: D:\Code\Learn\Java\Spring\image\uploads\images

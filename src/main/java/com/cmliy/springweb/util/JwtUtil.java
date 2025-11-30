@@ -5,6 +5,7 @@ package com.cmliy.springweb.util;
 import io.jsonwebtoken.*;                               // 导入JWT库的所有类
 import io.jsonwebtoken.security.Keys;                 // 导入JWT密钥生成工具
 import org.springframework.stereotype.Component;          // 导入Spring组件注解
+import com.cmliy.springweb.config.AppConfig;            // 导入应用配置类
 
 import javax.crypto.SecretKey;                         // 导入Java加密密钥接口
 import java.util.Date;                                 // 导入Java日期类
@@ -29,35 +30,44 @@ import java.util.HashMap;                              // 导入Java HashMap类
 @Component // @Component注解：声明这是一个Spring组件，Spring会自动管理其生命周期
 public class JwtUtil { // public class: 定义公共类，其他类可以访问
 
-    // ===== JWT配置常量 =====
+    // ===== JWT配置依赖 =====
 
     /**
-     * 🔐 JWT签名密钥
-     * 用于JWT令牌的签名和验证，必须是保密的。
-     * 密钥长度至少32字节（256位）以确保HMAC-SHA256算法的安全性。
+     * ⚙️ 应用配置类
+     *
+     * 提供类型安全的JWT配置访问，从环境变量或配置文件中读取。
+     * 避免硬编码敏感信息，提高安全性和可维护性。
      */
-    private final String secret = "mySecretKey123456789012345678901234567890"; // JWT签名密钥，实际项目中应该从配置文件读取
+    private final AppConfig appConfig; // appConfig: 应用配置类
 
     /**
-     * ⏰ JWT过期时间（毫秒）
-     * 86400000毫秒 = 24小时 = 24 * 60 * 60 * 1000
-     * 令牌过期后需要重新登录获取新令牌。
+     * 🏗️ 构造函数注入
+     *
+     * 使用构造函数进行依赖注入，确保配置对象在类创建时就已经初始化。
+     * 这是Spring Boot推荐的最佳实践，提供更好的不可变性和测试支持。
+     *
+     * @param appConfig 应用配置类，包含JWT密钥和过期时间配置
      */
-    private final long expiration = 86400000; // JWT令牌有效期：24小时
+    public JwtUtil(AppConfig appConfig) {
+        this.appConfig = appConfig; // 注入应用配置依赖
+    }
 
     // ===== 核心方法 =====
 
     /**
      * 🔑 获取JWT签名密钥
      *
-     * 使用密钥字符串生成HMAC-SHA256算法所需的SecretKey对象。
-     * 密钥的安全性直接影响JWT令牌的安全性。
+     * 使用AppConfig中的密钥字符串生成HMAC-SHA256算法所需的SecretKey对象。
+     * 现在从配置文件读取密钥，避免硬编码敏感信息，提高安全性。
+     *
+     * 密钥的安全性直接影响JWT令牌的安全性，确保密钥长度至少32字节（256位）。
      *
      * @return SecretKey: 用于JWT签名的密钥对象
      */
     private SecretKey getSigningKey() { // private方法：只在类内部使用
+        // appConfig.getJwt().getSecret(): 从配置中读取JWT密钥
         // Keys.hmacShaKeyFor(): 根据字节数组生成HMAC-SHA算法的密钥
-        return Keys.hmacShaKeyFor(secret.getBytes()); // 将字符串密钥转换为字节数组并生成密钥对象
+        return Keys.hmacShaKeyFor(appConfig.getJwt().getSecret().getBytes()); // 将配置中的密钥转换为字节数组并生成密钥对象
     }
 
     /**
@@ -166,13 +176,15 @@ public class JwtUtil { // public class: 定义公共类，其他类可以访问
      *
      * 根据Spring Security用户详情生成JWT令牌。
      * 令牌包含用户名作为subject，用于后续认证。
+     * 现在使用AppConfig中的过期时间配置。
      *
      * @param userDetails: Spring Security用户详情对象，包含用户信息和权限
      * @return String: 生成的JWT令牌字符串
      */
     public String generateToken(org.springframework.security.core.userdetails.UserDetails userDetails) { // public方法：供其他类调用
         // userDetails.getUsername(): 获取用户名作为JWT的subject
-        return createToken(userDetails.getUsername(), expiration); // 调用令牌创建方法
+        // appConfig.getJwt().getExpiration(): 从配置中读取JWT过期时间
+        return createToken(userDetails.getUsername(), appConfig.getJwt().getExpiration()); // 调用令牌创建方法
     }
 
     /**
@@ -180,6 +192,7 @@ public class JwtUtil { // public class: 定义公共类，其他类可以访问
      *
      * 根据Spring Security用户详情和用户ID生成JWT令牌。
      * 令牌包含用户名作为subject，用户ID作为自定义声明，用于后续认证和授权。
+     * 现在使用AppConfig中的过期时间配置。
      *
      * @param userDetails: Spring Security用户详情对象，包含用户信息和权限
      * @param userId: 用户ID，将存储在JWT的claims中
@@ -188,7 +201,8 @@ public class JwtUtil { // public class: 定义公共类，其他类可以访问
     public String generateTokenWithUserId(org.springframework.security.core.userdetails.UserDetails userDetails, Long userId) { // public方法：供其他类调用
         // userDetails.getUsername(): 获取用户名作为JWT的subject
         // userId: 用户ID，将添加到JWT claims中
-        return createTokenWithClaims(userDetails.getUsername(), userId, expiration); // 调用带claims的令牌创建方法
+        // appConfig.getJwt().getExpiration(): 从配置中读取JWT过期时间
+        return createTokenWithClaims(userDetails.getUsername(), userId, appConfig.getJwt().getExpiration()); // 调用带claims的令牌创建方法
     }
 
     /**
@@ -268,10 +282,11 @@ public class JwtUtil { // public class: 定义公共类，其他类可以访问
      * 🕐 获取JWT令牌过期时间配置
      *
      * 返回配置的令牌过期时间，供外部使用（如设置响应头）。
+     * 现在从AppConfig读取过期时间配置。
      *
      * @return long: 令牌过期时间（毫秒）
      */
     public long getExpiration() { // public方法：供其他类调用
-        return expiration; // 返回配置的过期时间
+        return appConfig.getJwt().getExpiration(); // 返回从配置中读取的过期时间
     }
 }
