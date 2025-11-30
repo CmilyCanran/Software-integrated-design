@@ -1,10 +1,10 @@
 // ============================================================================
-// 商品相关TypeScript类型定义
+// 商品相关TypeScript类型定义 - 与后端DTO完全对齐
 // ============================================================================
 
-// 商品规格接口
+// 🔧 强化的规格类型定义 - 与后端Map<String, List<String>>对应
 export interface ProductSpecifications {
-  [key: string]: string[]
+  [key: string]: string[]  // 明确值为字符串数组
 }
 
 // 商品数据接口
@@ -39,37 +39,46 @@ export interface Product {
   tags?: string[]
 }
 
-
-// 商品创建请求接口
+// 🔧 完全对齐后端DTO的商品创建请求接口
 export interface ProductCreateRequest {
-  productName: string
+  // 基本字段 - 与ProductCreateRequestDTO完全匹配
+  productName: string                    // @NotBlank @Size(max=50)
+  description?: string                    // 可选字段
+  price: number                           // @NotNull @DecimalMin("0.0")
+  discount?: number                       // @DecimalMin("0.0") @DecimalMax("100.0")
+  stockQuantity: number                   // @NotNull @Min(0)
+  isAvailable: boolean                    // @NotNull
+
+  // 扩展字段 - 与后端DTO完全对应
+  productData?: Record<string, any>       // Map<String, Object>
+  mainImageUrl?: string                   // 单张主图
+  imageUrls?: string[]                    // List<String>
+  specifications?: ProductSpecifications  // Map<String, Object>
+  category?: string                       // 商品类别
+  brand?: string                          // 商品品牌
+  color?: string                          // 商品颜色
+  size?: string                           // 商品尺寸
+  extendedAttributes?: Record<string, any> // Map<String, Object>
+}
+
+// 🔧 完全对齐后端DTO的商品更新请求接口
+export interface ProductUpdateRequest {
+  // 所有字段可选，与ProductUpdateRequestDTO匹配
+  productName?: string                    // @Size(max=50)
   description?: string
-  price: number
-  discount?: number
-  stockQuantity: number
-  isAvailable: boolean
-  image?: File
-  productData?: ProductData
-  // 后端DTO字段 - 单张主图
+  price?: number                          // @DecimalMin("0.0")
+  discount?: number                       // @DecimalMin("0.0") @DecimalMax("100.0")
+  stockQuantity?: number                  // @Min(0)
+  isAvailable?: boolean
+  productData?: Record<string, any>
   mainImageUrl?: string
-  specifications?: Record<string, string[]>  // 统一的动态规格字段，键为规格名，值为规格值数组
+  imageUrls?: string[]
+  specifications?: ProductSpecifications
   category?: string
   brand?: string
   color?: string
   size?: string
-  tags?: string[]
-  originalPrice?: number
-}
-
-// 商品更新请求接口
-export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
-  // 可以更新所有商品字段
-  productName?: string
-  description?: string
-  price?: number
-  discount?: number
-  stockQuantity?: number
-  isAvailable?: boolean
+  extendedAttributes?: Record<string, any>
 }
 
 // 商品查询参数接口
@@ -137,6 +146,55 @@ export type ProductStatusType = keyof typeof ProductStatus
 
 // 商品操作类型
 export type ProductAction = 'create' | 'update' | 'delete' | 'publish' | 'unpublish'
+
+// 🔧 与后端验证注解完全对应的接口
+export interface ValidationRule {
+  required?: boolean
+  min?: number
+  max?: number
+  pattern?: string
+  message: string
+}
+
+export interface ProductValidationRules {
+  productName: ValidationRule & { max: 50, required: true }
+  price: ValidationRule & { min: 0.01, required: true }
+  discount: ValidationRule & { min: 0, max: 100 }
+  stockQuantity: ValidationRule & { min: 0, required: true }
+}
+
+// 🔧 导出验证规则常量 - 完全映射后端注解
+export const PRODUCT_VALIDATION_RULES: ProductValidationRules = {
+  productName: {
+    required: true,
+    max: 50,
+    message: '商品名称长度在3到50个字符'
+  },
+  price: {
+    required: true,
+    min: 0.01,
+    message: '商品价格必须大于0'
+  },
+  discount: {
+    min: 0,
+    max: 100,
+    message: '折扣率范围在0到100'
+  },
+  stockQuantity: {
+    required: true,
+    min: 0,
+    message: '库存数量不能为负数'
+  }
+}
+
+// 🔧 新增：扩展字段类型定义
+export interface ProductExtendedFields {
+  category?: string      // 商品类别
+  brand?: string         // 商品品牌
+  color?: string         // 商品颜色
+  size?: string          // 商品尺寸
+  extendedAttributes?: Record<string, any>  // 其他扩展属性
+}
 
 // 商品表单验证规则接口
 export interface ProductFormRules {

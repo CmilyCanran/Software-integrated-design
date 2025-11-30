@@ -1,184 +1,188 @@
 <template>
-  <el-form
-    ref="productFormRef"
-    :model="formData"
-    :rules="formRules"
-    label-width="100px"
-  >
-    <!-- 商品基本信息 -->
-    <el-form-item label="商品名称" prop="productName">
-      <el-input
-        v-model="formData.productName"
-        placeholder="请输入商品名称（3-50个字符）"
-      />
-    </el-form-item>
-
-    <el-form-item label="商品描述" prop="description">
-      <el-input
-        v-model="formData.description"
-        type="textarea"
-        :rows="3"
-        placeholder="请输入商品描述"
-      />
-    </el-form-item>
-
-    <!-- 商品价格和库存 -->
-    <div class="form-row">
-      <el-form-item label="商品价格" prop="price">
-        <el-input-number
-          v-model="formData.price"
-          :min="0.01"
-          :precision="2"
-          :step="1"
-          controls-position="right"
-          style="width: 200px"
-          placeholder="请输入商品价格"
-        />
-      </el-form-item>
-
-      <el-form-item label="商品库存" prop="stockQuantity">
-        <el-input-number
-          v-model="formData.stockQuantity"
-          :min="0"
-          :step="1"
-          controls-position="right"
-          style="width: 150px"
-          placeholder="请输入库存数量"
-        />
-      </el-form-item>
-    </div>
-
-    <!-- 折扣信息 -->
-    <el-form-item label="折扣率" prop="discount">
-      <el-input-number
-        v-model="formData.discount"
-        :min="0"
-        :max="100"
-        :step="5"
-        controls-position="right"
-        style="width: 150px"
-        placeholder="请输入折扣率（0-100%）"
-      />
-      <span class="form-tip">折扣率 0-100，如：10 表示打9折</span>
-    </el-form-item>
-
-
-    <!-- 商品状态 -->
-    <el-form-item label="是否上架" prop="isAvailable">
-      <el-switch
-        v-model="formData.isAvailable"
-        active-text="上架"
-        inactive-text="下架"
-      />
-      <span class="form-tip">上架后商品将在前台展示</span>
-    </el-form-item>
-
-
-    <!-- 商品规格 -->
-    <el-form-item label="商品规格">
-      <div class="specifications-section">
-        <div class="spec-header">
-          <h4>规格属性</h4>
-          <el-button type="primary" size="small" @click="addSpecification">
-            <el-icon><Plus /></el-icon>
-            添加规格
-          </el-button>
-        </div>
-
-        <div v-if="specifications.length > 0" class="spec-list">
-          <div
-            v-for="(spec, index) in specifications"
-            :key="index"
-            class="spec-item"
-          >
-            <div class="spec-row">
-              <el-input
-                v-model="spec.name"
-                placeholder="规格名称（如：颜色、尺寸）"
-                style="width: 150px"
-                @input="validateSpecification(index)"
-              />
-              <el-select
-                v-model="spec.values"
-                multiple
-                filterable
-                allow-create
-                default-first-option
-                placeholder="输入规格值"
-                style="flex: 1; margin: 0 10px"
-              >
-                <el-option
-                  v-for="value in getAllSpecificationValues()"
-                  :key="value"
-                  :label="value"
-                  :value="value"
+  <div class="product-form">
+    <el-form ref="productFormRef" :model="formData" :rules="formRules">
+      <!-- 🔧 标签页导航 -->
+      <el-tabs v-model="activeTab" type="card">
+        <!-- 基本信息标签页 -->
+        <el-tab-pane label="基本信息" name="basic">
+          <div class="tab-content">
+            <el-form-item label="商品名称" prop="productName">
+              <el-input v-model="formData.productName" placeholder="请输入商品名称（3-50个字符）" />
+            </el-form-item>
+            <el-form-item label="商品描述" prop="description">
+              <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入商品描述" />
+            </el-form-item>
+            <div class="form-row">
+              <el-form-item label="商品价格" prop="price">
+                <el-input-number
+                  v-model="formData.price"
+                  :min="0.01"
+                  :precision="2"
+                  :step="1"
+                  controls-position="right"
+                  style="width: 200px"
+                  placeholder="请输入商品价格"
                 />
-              </el-select>
-              <el-button
-                type="danger"
-                size="small"
-                @click="removeSpecification(index)"
-                :disabled="specifications.length <= 1"
-              >
-                删除
-              </el-button>
+              </el-form-item>
+              <el-form-item label="商品库存" prop="stockQuantity">
+                <el-input-number
+                  v-model="formData.stockQuantity"
+                  :min="0"
+                  :step="1"
+                  controls-position="right"
+                  style="width: 150px"
+                  placeholder="请输入库存数量"
+                />
+              </el-form-item>
+            </div>
+            <el-form-item label="折扣率" prop="discount">
+              <el-input-number
+                v-model="formData.discount"
+                :min="0"
+                :max="100"
+                :step="5"
+                controls-position="right"
+                style="width: 150px"
+                placeholder="请输入折扣率（0-100%）"
+              />
+              <span class="form-tip">折扣率 0-100，如：10 表示打9折</span>
+            </el-form-item>
+            <el-form-item label="是否上架" prop="isAvailable">
+              <el-switch
+                v-model="formData.isAvailable"
+                active-text="上架"
+                inactive-text="下架"
+              />
+              <span class="form-tip">上架后商品将在前台展示</span>
+            </el-form-item>
+          </div>
+        </el-tab-pane>
+
+        
+        <!-- 规格管理标签页 -->
+        <el-tab-pane label="规格管理" name="specifications">
+          <div class="tab-content">
+            <!-- 🔧 统一规格系统 - 所有属性都在规格中管理 -->
+            <div class="specifications-section">
+              <div class="spec-header">
+                <h4>商品规格</h4>
+                <el-button type="primary" size="small" @click="addSpecification">
+                  <el-icon><Plus /></el-icon>
+                  添加规格
+                </el-button>
+              </div>
+
+              <!-- 🔧 常用规格提示 -->
+              <div class="spec-tips">
+                <p>💡 常用规格建议：类别、品牌、颜色、尺寸、材质、季节、风格、重量、产地等</p>
+                <p>🎯 每个商品可以有完全不同的规格，支持完全自定义</p>
+              </div>
+
+              <div v-if="specifications.length > 0" class="spec-list">
+                <div v-for="(spec, index) in specifications" :key="index" class="spec-item">
+                  <div class="spec-row">
+                    <el-input
+                      v-model="spec.name"
+                      placeholder="规格名称（如：颜色、尺寸）"
+                      style="width: 150px"
+                      @input="validateSpecification(index)"
+                    />
+                    <el-select
+                      v-model="spec.values"
+                      multiple
+                      filterable
+                      allow-create
+                      default-first-option
+                      placeholder="输入规格值"
+                      style="flex: 1; margin: 0 10px"
+                    >
+                      <el-option
+                        v-for="value in getAllSpecificationValues()"
+                        :key="value"
+                        :label="value"
+                        :value="value"
+                      />
+                    </el-select>
+                    <el-button
+                      type="danger"
+                      size="small"
+                      @click="removeSpecification(index)"
+                      :disabled="specifications.length <= 1"
+                    >
+                      删除
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="empty-specs">
+                <p>暂无规格，点击"添加规格"开始添加商品规格属性</p>
+              </div>
+
+              <div class="spec-tips">
+                <p>💡 提示：规格用于定义商品的不同属性，如颜色、尺寸、材质等</p>
+                <p>💡 每个规格可以包含多个值，如颜色：红色、蓝色、黑色</p>
+              </div>
             </div>
           </div>
-        </div>
+        </el-tab-pane>
 
-        <div v-else class="empty-specs">
-          <p>暂无规格，点击"添加规格"开始添加商品规格属性</p>
-        </div>
+        <!-- 商品图片标签页 -->
+        <el-tab-pane label="商品图片" name="image">
+          <div class="tab-content">
+            <div class="image-upload-section">
+              <!-- 🔧 图片预览和上传 -->
+              <div class="image-preview-area">
+                <div v-if="formData.mainImageUrl" class="current-image">
+                  <img :src="formData.mainImageUrl" alt="商品主图" />
+                  <div class="image-actions">
+                    <el-button type="danger" size="small" @click="removeImage">
+                      <el-icon><Delete /></el-icon>
+                      删除图片
+                    </el-button>
+                  </div>
+                </div>
 
-        <div class="spec-tips">
-          <p>💡 提示：规格用于定义商品的不同属性，如颜色、尺寸、材质等</p>
-          <p>💡 每个规格可以包含多个值，如颜色：红色、蓝色、黑色</p>
-        </div>
-      </div>
-    </el-form-item>
+                <div v-else class="upload-area">
+                  <el-upload
+                    :action="uploadAction"
+                    :show-file-list="false"
+                    :on-success="handleImageSuccess"
+                    :on-error="handleImageError"
+                    :before-upload="beforeImageUpload"
+                    :multiple="false"
+                    accept="image/*"
+                  >
+                    <div class="upload-placeholder">
+                      <el-icon size="48"><Plus /></el-icon>
+                      <p>点击上传商品主图</p>
+                    </div>
+                  </el-upload>
+                </div>
+              </div>
+              <div class="upload-tips">
+                <p>📸 商品主图：支持 jpg、png 格式，单张图片不超过 5MB</p>
+                <p>💡 每个商品只需要一张主图，删除后可重新上传</p>
+                <p>🔄 如需更换图片，请先删除当前图片再上传新图片</p>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
 
-    <!-- 图片上传区域 -->
-    <el-form-item label="商品图片">
-      <div class="image-upload-section">
-        <div class="upload-area">
-          <el-upload
-            :action="uploadAction"
-            list-type="picture-card"
-            :on-success="handleImageSuccess"
-            :on-error="handleImageError"
-            :before-upload="beforeImageUpload"
-            :file-list="fileList"
-            :multiple="false"
-            accept="image/*"
-            :limit="1"
-          >
-            <el-icon><Plus /></el-icon>
-          </el-upload>
-        </div>
-        <div class="upload-tips">
-          <p>支持 jpg、png 格式，单张图片不超过 5MB</p>
-        </div>
-      </div>
-    </el-form-item>
-
-    <!-- 表单操作按钮 -->
-    <el-form-item>
+      <!-- 操作按钮 -->
       <div class="form-actions">
-        <el-button type="primary" @click="handleSave" :loading="loading">
-          保存
-        </el-button>
-        <el-button @click="$emit('cancel')">
-          取消
-        </el-button>
+        <el-button type="primary" @click="handleSave" :loading="loading">保存</el-button>
+        <el-button @click="$emit('cancel')">取消</el-button>
       </div>
-    </el-form-item>
-  </el-form>
+    </el-form>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Delete } from '@element-plus/icons-vue'
 import type { Product, ProductCreateRequest, ProductUpdateRequest } from '@/types/product'
 
 // 属性定义
@@ -199,15 +203,21 @@ const loading = ref(false)
 // 表单引用
 const productFormRef = ref()
 
-// 表单数据
-const formData = reactive<Partial<ProductCreateRequest | ProductUpdateRequest>>({
+// 🔧 完全对齐DTO的表单数据结构
+const formData = reactive<ProductCreateRequest>({
   productName: '',
   description: '',
   price: 0,
-  stockQuantity: 0,
   discount: 0,
+  stockQuantity: 0,
   isAvailable: false,
-})
+  productData: {},           // 新增：扩展数据
+  mainImageUrl: '',          // 商品主图URL
+  specifications: {},        // 统一规格数据
+    })
+
+// 🔧 新增：当前活动标签页
+const activeTab = ref('basic')
 
 // 规格管理数据
 const specifications = ref<Array<{ name: string; values: string[] }>>([
@@ -270,18 +280,22 @@ const validateSpecification = (index: number) => {
   }
 }
 
-// 获取所有规格的唯一值，用于el-select的选项
+// 修复循环依赖的核心方案 - 从当前规格数据中收集所有值
 const getAllSpecificationValues = () => {
   const allValues = new Set<string>()
 
+  // 🔧 关键修复：从当前规格数据中收集所有值
   specifications.value.forEach(spec => {
-    spec.values.forEach(value => {
-      if (value && value.trim() !== '') {
-        allValues.add(value.trim())
-      }
-    })
+    if (spec.values && Array.isArray(spec.values)) {
+      spec.values.forEach(value => {
+        if (value && typeof value === 'string' && value.trim()) {
+          allValues.add(value.trim())
+        }
+      })
+    }
   })
 
+  // 🔧 关键修复：如果没有值，返回空数组而不是undefined
   return Array.from(allValues).sort()
 }
 
@@ -359,27 +373,36 @@ const validateSpecificationsData = () => {
   return true
 }
 
-// 统一的数据加载方法 - 兼容多种后端响应格式
+// 统一规格数据加载逻辑 - 支持完全灵活的规格结构
 const loadSpecifications = (product: any) => {
-  // 尝试从多个可能的字段获取规格数据
   let specs = null
 
-  // 优先从直接的 specifications 字段获取
+  // 优先级1：直接规格字段（基于后端分析的主要来源）
   if (product.specifications && typeof product.specifications === 'object') {
     specs = product.specifications
   }
-  // 备选：从 productData.specifications 获取
+  // 优先级2：嵌套的 productData.specifications（备选）
   else if (product.productData?.specifications && typeof product.productData.specifications === 'object') {
     specs = product.productData.specifications
   }
 
+  // 处理规格数据
   if (specs && typeof specs === 'object') {
-    specifications.value = Object.entries(specs)
+    const processedSpecs = Object.entries(specs)
       .map(([name, values]) => ({
-        name: name || '',
-        values: Array.isArray(values) ? [...values] : []
+        name: String(name || '').trim(),
+        values: Array.isArray(values)
+          ? values.map(v => String(v)).filter(v => v.trim())
+          : [String(values)].filter(v => v.trim())
       }))
-      .filter(spec => spec.name) // 过滤空名称
+      .filter(spec => spec.name && spec.values.length > 0)
+
+    if (processedSpecs.length > 0) {
+      // 通过创建新数组确保Vue 3响应式
+      specifications.value = [...processedSpecs]
+    } else {
+      specifications.value = [{ name: '', values: [] }]
+    }
   } else {
     specifications.value = [{ name: '', values: [] }]
   }
@@ -460,61 +483,61 @@ const handleImageError = (error: any, uploadFile: any, uploadFileList: any[]) =>
   ElMessage.error('图片上传失败，请重试')
 }
 
-// 处理表单保存
-const handleSave = async () => {
-  if (!productFormRef.value) {
-    console.error('ProductForm - 表单引用为空')
-    return
+// 删除图片
+const removeImage = () => {
+  formData.mainImageUrl = ''
+  ElMessage.success('图片已删除，可以重新上传')
+}
+
+// 🔧 后端验证错误的智能处理
+const handleBackendValidationError = (error: any) => {
+  const response = error.response?.data
+
+  if (response?.code === 400 && response?.message) {
+    const errorMessage = response.message
+
+    // 根据错误类型显示不同的提示 - 映射后端验证注解
+    if (errorMessage.includes('商品名称') || errorMessage.includes('productName')) {
+      ElMessage.error(`商品名称验证失败: ${errorMessage}`)
+    } else if (errorMessage.includes('价格') || errorMessage.includes('price')) {
+      ElMessage.error(`价格验证失败: ${errorMessage}`)
+    } else if (errorMessage.includes('库存') || errorMessage.includes('stockQuantity')) {
+      ElMessage.error(`库存验证失败: ${errorMessage}`)
+    } else if (errorMessage.includes('折扣') || errorMessage.includes('discount')) {
+      ElMessage.error(`折扣验证失败: ${errorMessage}`)
+    } else if (errorMessage.includes('规格') || errorMessage.includes('specifications')) {
+      ElMessage.error(`规格数据验证失败: ${errorMessage}`)
+    } else {
+      ElMessage.error(`数据验证失败: ${errorMessage}`)
+    }
+  } else {
+    ElMessage.error('保存失败，请检查网络连接或稍后重试')
   }
+}
+
+// 🔧 增强的保存方法
+const handleSave = async () => {
+  if (!productFormRef.value) return
 
   try {
     await productFormRef.value.validate()
     loading.value = true
 
-    // 构建规格数据
+    // 构建完全对齐DTO的数据
     const specificationsData = buildSpecificationsData()
-
-    // 确保价格和库存是数字类型，并添加数值验证
-    const price = Number(formData.price)
-    const stockQuantity = Number(formData.stockQuantity)
-    const discount = Number(formData.discount || 0)
-
-    // 数值验证
-    if (isNaN(price) || price <= 0) {
-      ElMessage.error('请输入有效的商品价格')
-      return
-    }
-    if (isNaN(stockQuantity) || stockQuantity < 0) {
-      ElMessage.error('请输入有效的库存数量')
-      return
-    }
-    if (isNaN(discount) || discount < 0 || discount > 100) {
-      ElMessage.error('请输入有效的折扣率（0-100）')
-      return
-    }
-
-    // 规格数据验证
-    if (!validateSpecificationsData()) {
-      return // 验证失败，停止提交
-    }
-
-    // 构建提交数据
-    const productData = buildProductData()
-
     const submitData = {
       ...formData,
-      price,
-      stockQuantity,
-      discount,
-      specifications: specificationsData, // 只提交这一层规格数据
-      productData: productData // productData中不包含specifications，避免重复
+      specifications: specificationsData,
+      // 确保扩展字段正确处理
+      category: formData.category || undefined,
+      brand: formData.brand || undefined,
+      color: formData.color || undefined,
+      size: formData.size || undefined
     } as ProductCreateRequest | ProductUpdateRequest
 
     emit('save', submitData)
-
   } catch (error) {
-    console.error('ProductForm - 表单验证失败:', error)
-    ElMessage.error('请检查表单填写是否正确')
+    handleBackendValidationError(error)
   } finally {
     loading.value = false
   }
@@ -526,13 +549,16 @@ const resetForm = () => {
     productName: '',
     description: '',
     price: 0,
-    stockQuantity: 0,
     discount: 0,
+    stockQuantity: 0,
     isAvailable: false,
-    mainImageUrl: '',
-  })
+    productData: {},           // 重置扩展数据
+    mainImageUrl: '',          // 重置商品主图URL
+    specifications: {},        // 重置规格数据
+          })
   specifications.value = [{ name: '', values: [] }]
   fileList.value = []
+  activeTab.value = 'basic'  // 重置标签页
   if (productFormRef.value) {
     productFormRef.value.clearValidate()
   }
@@ -540,6 +566,9 @@ const resetForm = () => {
 
 // 监听属性变化，填充表单数据
 watch(() => props.product, (newProduct) => {
+  console.log('🔍 [DEBUG] 产品监视器触发，isEdit:', props.isEdit)
+  console.log('🔍 [DEBUG] 新产品数据:', newProduct)
+
   if (props.isEdit && newProduct) {
     // 填充商品数据
     Object.assign(formData, {
@@ -549,10 +578,12 @@ watch(() => props.product, (newProduct) => {
       stockQuantity: newProduct.stockQuantity,
       discount: newProduct.discount,
       isAvailable: newProduct.isAvailable,
-      mainImageUrl: newProduct.mainImageUrl || '',
-    })
+      productData: newProduct.productData || {},  // 填充扩展数据
+      mainImageUrl: newProduct.mainImageUrl || '', // 填充商品主图URL
+      specifications: newProduct.specifications || {}, // 填充规格数据
+                })
 
-    // 填充规格数据 - 兼容多种后端响应格式
+    // 关键：加载规格
     loadSpecifications(newProduct)
 
     // 填充图片数据
@@ -566,11 +597,25 @@ watch(() => props.product, (newProduct) => {
     } else {
       fileList.value = []
     }
+
+    // 强制UI更新
+    nextTick(() => {
+      console.log('🔄 [DEBUG] Next tick 完成，UI应该已更新')
+    })
   } else {
-    // 重置表单
+    console.log('🔍 [DEBUG] 重置表单（非编辑模式或无产品）')
     resetForm()
   }
-}, { immediate: true })
+}, { immediate: true, deep: true })
+
+// 添加响应式监听确保UI及时更新
+watch(() => specifications.value, (newSpecs) => {
+  console.log('规格数据更新:', newSpecs)
+  // 强制触发el-select选项更新
+  nextTick(() => {
+    // Vue会在下一个tick更新DOM
+  })
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -656,6 +701,56 @@ watch(() => props.product, (newProduct) => {
 
 .upload-tips p {
   margin: 0;
+}
+
+/* 图片预览区域样式 */
+.image-preview-area {
+  margin-bottom: 20px;
+}
+
+.current-image {
+  position: relative;
+  display: inline-block;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  padding: 8px;
+  background-color: #fafafa;
+}
+
+.current-image img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+
+.image-actions {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.upload-area {
+  border: 2px dashed #d9d9d9;
+  border-radius: 6px;
+  padding: 40px;
+  text-align: center;
+  background-color: #fafafa;
+  transition: border-color 0.3s ease;
+}
+
+.upload-area:hover {
+  border-color: #409eff;
+}
+
+.upload-placeholder {
+  color: #8c939d;
+  cursor: pointer;
+}
+
+.upload-placeholder p {
+  margin: 16px 0 0 0;
+  font-size: 14px;
 }
 
 .form-actions {

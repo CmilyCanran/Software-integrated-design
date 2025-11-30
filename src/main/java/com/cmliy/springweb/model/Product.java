@@ -1,21 +1,27 @@
 package com.cmliy.springweb.model;
 
-import com.cmliy.springweb.converter.JsonConverter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 📦 商品实体
  */
+@Slf4j
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity
@@ -113,14 +119,12 @@ public class Product {
     private User creator;
 
     /**
-     * 📋 商品扩展数据
-     *
-     * 存储商品的扩展信息，使用PostgreSQL的JSONB类型
-     * 包含图片数据、规格属性、变体信息等灵活数据
+     * 🗄️ 商品扩展数据 - JSONB字段
+     * 存储商品的规格、图片等扩展信息
+     * 使用Hibernate原生JSONB支持，确保类型安全
      */
-    @Convert(converter = JsonConverter.class)
-    @Column(columnDefinition = "jsonb")
-    private Map<String, Object> productData = Map.of();
+    @JdbcTypeCode(SqlTypes.JSON)  // 🔧 关键修复：指定JSON类型处理
+    private Map<String, Object> productData = new HashMap<>();
 
     // ==================== ⏰ 时间戳字段 ====================
 
@@ -366,5 +370,70 @@ public class Product {
         @SuppressWarnings("unchecked")
         Map<String, Object> specifications = (Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>());
         return (String) specifications.get("size");
+    }
+
+    // ==================== 🔧 JSONB数据处理方法 ====================
+
+    /**
+     * 🔧 新增方法：安全的JSONB数据设置
+     * 确保数据可以被正确序列化为JSON
+     */
+    public void setProductData(Map<String, Object> productData) {
+        // 确保数据可以被正确序列化为JSON
+        if (productData != null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                String json = mapper.writeValueAsString(productData);
+                // 验证JSON格式正确性
+                mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+                this.productData = productData;
+            } catch (Exception e) {
+                log.error("🔧 JSONB数据格式验证失败: {}", productData, e);
+                throw new IllegalArgumentException("商品数据格式不正确", e);
+            }
+        } else {
+            this.productData = new HashMap<>();
+        }
+    }
+
+    /**
+     * 🔧 新增方法：安全的JSONB数据获取
+     */
+    public Map<String, Object> getProductData() {
+        if (this.productData == null) {
+            return new HashMap<>();
+        }
+        return this.productData;
+    }
+
+    /**
+     * 🔧 新增方法：安全地更新productData中的特定字段
+     */
+    public void updateProductDataField(String key, Object value) {
+        if (this.productData == null) {
+            this.productData = new HashMap<>();
+        }
+        this.productData.put(key, value);
+    }
+
+    /**
+     * 🔧 新增方法：从productData中安全地获取特定字段
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getProductDataField(String key, Class<T> type, T defaultValue) {
+        if (this.productData == null) {
+            return defaultValue;
+        }
+        Object value = this.productData.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return type.cast(value);
+        } catch (ClassCastException e) {
+            log.warn("🔧 productData字段类型转换失败: key={}, expectedType={}, actualType={}, value={}",
+                     key, type.getSimpleName(), value.getClass().getSimpleName(), value);
+            return defaultValue;
+        }
     }
 }

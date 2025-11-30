@@ -26,6 +26,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # 🔧 PostgreSQL JSONB配置
+        jdbc:
+          batch_versioned_data: true
+
+  # 🔧 Jackson JSON配置
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
 
   servlet:
     multipart:
@@ -44,6 +55,8 @@ logging:
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # 🔧 日志配置（调试用）
+    com.cmliy.springweb.service.ProductDataService: DEBUG
 
 # 图片存储配置
 image:
