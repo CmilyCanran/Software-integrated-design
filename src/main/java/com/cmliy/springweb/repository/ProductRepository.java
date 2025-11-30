@@ -1,7 +1,9 @@
 package com.cmliy.springweb.repository;
 
-import com.cmliy.springweb.model.Product;
-import com.cmliy.springweb.model.User;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,10 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import com.cmliy.springweb.model.Product;
+import com.cmliy.springweb.model.User;
 
 /**
  * 📦 商品数据访问接口 - Product Repository
@@ -22,8 +22,7 @@ import java.util.Optional;
  * 继承JpaRepository，自动获得基本的CRUD操作能力。
  * 通过自定义查询方法，支持复杂的JSONB字段查询。
  *
- * @author Claude
- * @since 2025-01-20
+
  */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {

@@ -14,9 +14,7 @@ import java.util.List;
  *
  * 负责将List<String>与数据库JSONB字段之间的转换
  * 主要用于存储商品标签、图片URL列表等数组数据
- *
- * @author Claude
- * @since 2025-01-20
+
  */
 @Component
 @Converter

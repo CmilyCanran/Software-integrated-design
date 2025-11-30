@@ -16,9 +16,7 @@ import java.util.Map;
  *
  * 负责将Map<String, Object>与数据库JSONB字段之间的转换
  * 支持PostgreSQL的JSONB类型存储和检索
- *
- * @author Claude
- * @since 2025-01-20
+
  */
 @Component
 @Converter(autoApply = true)

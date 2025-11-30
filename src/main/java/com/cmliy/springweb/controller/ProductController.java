@@ -1,38 +1,46 @@
 package com.cmliy.springweb.controller;
 
-import com.cmliy.springweb.common.ApiResponse;
-import com.cmliy.springweb.dto.ProductResponseDTO;
-import com.cmliy.springweb.dto.ProductDetailDTO;
-import com.cmliy.springweb.dto.ProductSummaryDTO;
-import com.cmliy.springweb.dto.ProductListItemDTO;
-import com.cmliy.springweb.dto.ProductCreateRequestDTO;
-import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
-import com.cmliy.springweb.dto.ProductQueryRequestDTO;
-import com.cmliy.springweb.service.ProductService;
-import com.cmliy.springweb.service.ImageService;
-import com.cmliy.springweb.service.ProductDataService;
-import com.cmliy.springweb.repository.UserRepository;
-import com.cmliy.springweb.util.JwtUtil;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.validation.annotation.Validated;
-import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
+import com.cmliy.springweb.common.ApiResponse;
+import com.cmliy.springweb.dto.ProductCreateRequestDTO;
+import com.cmliy.springweb.dto.ProductDetailDTO;
+import com.cmliy.springweb.dto.ProductListItemDTO;
+import com.cmliy.springweb.dto.ProductQueryRequestDTO;
+import com.cmliy.springweb.dto.ProductResponseDTO;
+import com.cmliy.springweb.dto.ProductSummaryDTO;
+import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
+import com.cmliy.springweb.repository.UserRepository;
+import com.cmliy.springweb.service.ImageService;
+import com.cmliy.springweb.service.ProductDataService;
+import com.cmliy.springweb.service.ProductService;
+import com.cmliy.springweb.util.JwtUtil;
+
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 📦 商品控制器 - Product Controller
  *
  * 提供商品相关的REST API接口，包括商品的CRUD操作、查询、统计等
  * 集成DTO转换，确保API响应的一致性和安全性
- *
- * @author Claude
- * @since 2025-11-22
+
  */
 @Slf4j
 @RestController
