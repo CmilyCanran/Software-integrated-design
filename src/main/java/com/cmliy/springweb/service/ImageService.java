@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
-public class ImageService {
+public class ImageService extends BaseService {
 
     /**
      * 📁 图片存储根目录
@@ -82,10 +82,10 @@ public class ImageService {
      * @return 图片URL信息
      */
     public ImageUploadResult uploadImage(MultipartFile file, String category) {
-        // 🔍 验证文件
-        validateImageFile(file);
+        return executeWithLogAndIO("上传图片", () -> {
+            // 🔍 验证文件
+            validateImageFile(file);
 
-        try {
             // 🏷️ 生成安全的文件名
             String originalFilename = file.getOriginalFilename();
             String fileExtension = getFileExtension(originalFilename);
@@ -114,11 +114,7 @@ public class ImageService {
                     file.getContentType(),
                     LocalDateTime.now()
             );
-
-        } catch (IOException e) {
-            log.error("图片上传失败", e);
-            throw new ImageUploadException("图片上传失败: " + e.getMessage(), e);
-        }
+        }, file.getOriginalFilename(), category);
     }
 
     /**
@@ -443,10 +439,10 @@ public class ImageService {
      * @return 图片上传结果
      */
     public ImageUploadResult uploadProductImage(MultipartFile file, Long productId) {
-        // 🔍 验证文件
-        validateImageFile(file);
+        return executeWithLogAndIO("上传商品图片", () -> {
+            // 🔍 验证文件
+            validateImageFile(file);
 
-        try {
             // 🏷️ 使用商品ID+image的命名规则
             String originalFilename = file.getOriginalFilename();
             String fileExtension = getFileExtension(originalFilename);
@@ -477,10 +473,7 @@ public class ImageService {
                     LocalDateTime.now()
             );
 
-        } catch (IOException e) {
-            log.error("商品图片上传失败", e);
-            throw new ImageUploadException("商品图片上传失败: " + e.getMessage(), e);
-        }
+        }, file.getOriginalFilename(), productId);
     }
 
     /**
