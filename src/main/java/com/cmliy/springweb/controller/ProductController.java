@@ -78,8 +78,7 @@ public class ProductController extends BaseController {
 
         Page<ProductListItemDTO> productPage = productService.getProductList(page, size, sortBy, sortDirection, isAvailable);
 
-        ApiResponse<Page<ProductListItemDTO>> response = ApiResponse.success(productPage, "获取商品列表成功");
-        return ResponseEntity.ok(response);
+        return success(productPage, "获取商品列表成功");
     }
 
     /**
@@ -93,14 +92,8 @@ public class ProductController extends BaseController {
         log.info("获取商品详情请求: id={}", id);
 
         return productService.getProductById(id)
-                .map(product -> {
-                    ApiResponse<ProductDetailDTO> response = ApiResponse.success(product, "获取商品详情成功");
-                    return ResponseEntity.ok(response);
-                })
-                .orElseGet(() -> {
-                    ApiResponse<ProductDetailDTO> response = ApiResponse.error("商品不存在", 404);
-                    return ResponseEntity.status(404).body(response);
-                });
+                .map(product -> success(product, "获取商品详情成功"))
+                .orElseGet(() -> error(404, "商品不存在"));
     }
 
     /**
@@ -119,14 +112,11 @@ public class ProductController extends BaseController {
         try {
             Long currentUserId = getCurrentUserId();
             ProductResponseDTO product = productService.createProduct(requestDTO, currentUserId);
-
-            ApiResponse<ProductResponseDTO> response = ApiResponse.success(product, "商品创建成功");
-            return ResponseEntity.status(201).body(response);
+            return ResponseEntity.status(201).body(success(product, "商品创建成功").getBody());
 
         } catch (RuntimeException e) {
             log.error("创建商品失败: {}", e.getMessage());
-            ApiResponse<ProductResponseDTO> response = ApiResponse.error(e.getMessage(), 400);
-            return ResponseEntity.badRequest().body(response);
+            return error(400, e.getMessage());
         }
     }
 
@@ -212,14 +202,11 @@ public class ProductController extends BaseController {
         try {
             Long currentUserId = getCurrentUserId();
             productService.deleteProduct(id, currentUserId);
-
-            ApiResponse<Void> response = ApiResponse.success(null, "商品删除成功");
-            return ResponseEntity.ok(response);
+            return success(null, "商品删除成功");
 
         } catch (RuntimeException e) {
             log.error("删除商品失败: {}", e.getMessage());
-            ApiResponse<Void> response = ApiResponse.error(e.getMessage(), 400);
-            return ResponseEntity.badRequest().body(response);
+            return error(400, e.getMessage());
         }
     }
 

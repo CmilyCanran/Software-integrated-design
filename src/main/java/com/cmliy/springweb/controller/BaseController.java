@@ -1,9 +1,12 @@
 package com.cmliy.springweb.controller;
 
+import com.cmliy.springweb.common.ApiResponse;
 import com.cmliy.springweb.repository.UserRepository;
 import com.cmliy.springweb.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -124,5 +127,75 @@ public abstract class BaseController {
     protected void logOperation(String operation, Long targetId, String details) {
         log.info("操作: {} | 用户: {} | 目标: {} | 详情: {}",
                 operation, getCurrentUsername(), targetId, details);
+    }
+
+    // ===== 🚀 统一API响应方法 =====
+    // 这些方法大大简化了控制器的响应处理代码
+
+    /**
+     * ✅ 成功响应（默认状态码200）
+     *
+     * @param data 响应数据
+     * @param message 成功消息
+     * @param <T> 数据类型
+     * @return 统一成功响应
+     */
+    protected <T> ResponseEntity<ApiResponse<T>> success(T data, String message) {
+        return ResponseEntity.ok(ApiResponse.success(data, message));
+    }
+
+    /**
+     * ✅ 成功响应（带自定义状态码）
+     *
+     * @param status HTTP状态码
+     * @param data 响应数据
+     * @param message 成功消息
+     * @param <T> 数据类型
+     * @return 统一成功响应
+     */
+    protected <T> ResponseEntity<ApiResponse<T>> success(int status, T data, String message) {
+        return ResponseEntity.status(status).body(ApiResponse.success(data, message));
+    }
+
+    /**
+     * ✅ 成功响应（无数据）
+     *
+     * @param message 成功消息
+     * @return 统一成功响应
+     */
+    protected ResponseEntity<ApiResponse<Void>> success(String message) {
+        return ResponseEntity.ok(ApiResponse.success(null, message));
+    }
+
+    /**
+     * ❌ 错误响应（默认状态码400）
+     *
+     * @param message 错误消息
+     * @return 统一错误响应
+     */
+    protected <T> ResponseEntity<ApiResponse<T>> error(String message) {
+        return ResponseEntity.badRequest().body(ApiResponse.<T>error(message, 400));
+    }
+
+    /**
+     * ❌ 错误响应（带自定义状态码）
+     *
+     * @param status HTTP状态码
+     * @param message 错误消息
+     * @return 统一错误响应
+     */
+    protected <T> ResponseEntity<ApiResponse<T>> error(int status, String message) {
+        return ResponseEntity.status(status).body(ApiResponse.<T>error(message, status));
+    }
+
+    /**
+     * ❌ 错误响应（指定HTTP状态）
+     *
+     * @param status HTTP状态枚举
+     * @param message 错误消息
+     * @return 统一错误响应
+     */
+    protected <T> ResponseEntity<ApiResponse<T>> error(HttpStatus status, String message) {
+        return ResponseEntity.status(status).body(ApiResponse.<T>error(message, status.value()));
     }
 }
