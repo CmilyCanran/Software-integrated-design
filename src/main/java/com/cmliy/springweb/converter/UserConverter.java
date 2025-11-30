@@ -1,10 +1,11 @@
 package com.cmliy.springweb.converter;
 
-import com.cmliy.springweb.dto.UserDTO;
-import com.cmliy.springweb.model.User;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.cmliy.springweb.dto.UserDTO;
+import com.cmliy.springweb.model.User;
 
 /**
  * 🔄 用户转换器 - User Converter
@@ -12,9 +13,7 @@ import java.util.List;
  * 负责User实体与DTO之间的转换
  * 继承BaseConverter获得通用的转换功能
  * 统一管理用户数据的映射逻辑，确保数据一致性
- *
- * @author Claude
- * @since 2025-11-22
+
  */
 @Component
 public class UserConverter extends BaseConverter {
