@@ -62,7 +62,6 @@ export interface ProductCreateRequest {
   // 扩展字段 - 与后端DTO完全对应
   productData?: Record<string, any>       // Map<String, Object>
   mainImageUrl?: string                   // 单张主图
-  imageUrls?: string[]                    // List<String>
   specifications?: ProductSpecifications  // Map<String, Object>
   category?: string                       // 商品类别
   brand?: string                          // 商品品牌
@@ -82,7 +81,6 @@ export interface ProductUpdateRequest {
   isAvailable?: boolean
   productData?: Record<string, any>
   mainImageUrl?: string
-  imageUrls?: string[]
   specifications?: ProductSpecifications
   category?: string
   brand?: string

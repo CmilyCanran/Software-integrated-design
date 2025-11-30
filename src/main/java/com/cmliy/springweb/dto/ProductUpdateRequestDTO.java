@@ -71,12 +71,7 @@ public class ProductUpdateRequestDTO {
      */
     private String mainImageUrl;
 
-    /**
-     * 🖼️ 图片URL列表 - 商品的所有图片
-     * 前端数据来源：图片上传组件
-     */
-    private List<String> imageUrls;
-
+    
     /**
      * 📋 商品规格 - 商品规格信息
      * 前端数据来源：规格表单
