@@ -90,16 +90,23 @@ export const useProductStore = defineStore('product', () => {
 
       const response = await productAPI.getMerchantProducts(params)
 
-      setProducts(response.data, {
-        total: response.total,
-        totalPages: response.totalPages,
-        page: response.page,
-        size: response.size
+      setProducts(response.data || [], {
+        total: response.total || 0,
+        totalPages: response.totalPages || 0,
+        page: response.page || 1,
+        size: response.size || 12
       })
 
       return response
     } catch (error) {
       console.error('❌ 获取商品列表失败:', error)
+      // 在错误情况下设置默认值，避免渲染错误
+      setProducts([], {
+        total: 0,
+        totalPages: 0,
+        page: 1,
+        size: 12
+      })
       ElMessage.error('获取商品列表失败，请重试')
       throw error
     } finally {
@@ -264,10 +271,35 @@ export const useProductStore = defineStore('product', () => {
 
       const stats = await productAPI.getProductStats()
 
-      productStats.value = stats
-      return stats
+      // 🔧 数据转换：将后端Map格式转换为前端ProductStats接口格式
+      const convertedStats: ProductStats = {
+        totalProducts: Number(stats.totalProducts) || 0,
+        availableProducts: Number(stats.availableProducts) || 0,
+        unavailableProducts: Number(stats.unavailableProducts) || 0,
+        totalSales: 0, // 后端当前未提供，设为默认值
+        totalRevenue: Number(stats.totalRevenue) || 0,
+        averagePrice: 0, // 后端当前未提供，设为默认值
+        lowStockCount: 0, // 后端当前未提供，设为默认值
+        outOfStockCount: Number(stats.unavailableProducts) || 0, // 使用不可用商品数作为缺货数
+        salesTrend: [] // 后端当前未提供，设为空数组
+      }
+
+      productStats.value = convertedStats
+      return convertedStats
     } catch (error) {
       console.error('❌ 获取商品统计失败:', error)
+      // 在错误情况下设置默认值，避免渲染错误
+      productStats.value = {
+        totalProducts: 0,
+        availableProducts: 0,
+        unavailableProducts: 0,
+        totalSales: 0,
+        totalRevenue: 0,
+        averagePrice: 0,
+        lowStockCount: 0,
+        outOfStockCount: 0,
+        salesTrend: []
+      }
       ElMessage.error('获取统计信息失败，请重试')
       throw error
     } finally {

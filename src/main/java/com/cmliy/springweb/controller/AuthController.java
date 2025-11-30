@@ -168,22 +168,28 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             // 这样在后续的请求中可以获取当前用户信息
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // 👤 第四步：获取用户详情信息
-            // userDetailsService: 自定义用户详情服务
-            // loadUserByUsername(): 根据用户名加载用户详情
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            // 🎫 第五步：生成JWT访问令牌
-            // jwtUtil: JWT工具类
-            // generateToken(): 根据用户详情生成JWT令牌
-            String token = jwtUtil.generateToken(userDetails);
-
-            // 🗄️ 第六步：获取完整用户信息
+            // 👤 第四步：获取完整用户信息
             // userRepository: 用户数据访问层
             // findByUsername(): 根据用户名查询用户
             // Optional<User>: Java 8容器类，避免空指针异常
             Optional<User> userOpt = userRepository.findByUsername(username);
             User user = userOpt.orElse(null); // 如果用户存在则获取，否则为null
+
+            // 👤 第五步：获取用户详情信息
+            // userDetailsService: 自定义用户详情服务
+            // loadUserByUsername(): 根据用户名加载用户详情
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            // 🎫 第六步：生成JWT访问令牌
+            // jwtUtil: JWT工具类
+            // generateTokenWithUserId(): 根据用户详情和用户ID生成JWT令牌（包含用户ID在claims中）
+            String token = null;
+            if (user != null) {
+                token = jwtUtil.generateTokenWithUserId(userDetails, user.getId());
+            } else {
+                // 备用方案：如果用户信息获取失败，使用原来的方法
+                token = jwtUtil.generateToken(userDetails);
+            }
 
             // 👤 第七步：创建UserDTO对象
             UserDTO userDTO = null;

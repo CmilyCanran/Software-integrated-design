@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;          // 导入Spring组件�
 import javax.crypto.SecretKey;                         // 导入Java加密密钥接口
 import java.util.Date;                                 // 导入Java日期类
 import java.util.function.Function;                    // 导入Java函数式接口
+import java.util.Map;                                  // 导入Java Map接口
+import java.util.HashMap;                              // 导入Java HashMap类
 
 /**
  * 🔑 JWT工具类
@@ -70,6 +72,29 @@ public class JwtUtil { // public class: 定义公共类，其他类可以访问
     public String extractUsername(String token) { // public方法：供其他类调用
         // Claims::getSubject: 方法引用，等同于claims -> claims.getSubject()
         return extractClaim(token, Claims::getSubject); // 调用通用提取方法，提取subject声明
+    }
+
+    /**
+     * 🆔 从JWT令牌中提取用户ID
+     *
+     * 从JWT的Payload部分提取userId声明，存储用户ID。
+     * 这是一个新增的方法，用于支持从令牌中直接获取用户ID。
+     *
+     * @param token: JWT令牌字符串
+     * @return Long: 从令牌中提取的用户ID，如果不存在则返回null
+     */
+    public Long extractUserId(String token) { // public方法：供其他类调用
+        try {
+            Object userIdObj = extractClaim(token, claims -> claims.get("userId")); // 提取userId声明
+            if (userIdObj instanceof Number) {
+                return ((Number) userIdObj).longValue(); // 转换为Long类型
+            } else if (userIdObj instanceof String) {
+                return Long.parseLong((String) userIdObj); // 字符串转Long
+            }
+            return null; // 无法转换时返回null
+        } catch (Exception e) {
+            return null; // 异常时返回null
+        }
     }
 
     /**
@@ -151,6 +176,22 @@ public class JwtUtil { // public class: 定义公共类，其他类可以访问
     }
 
     /**
+     * 🔑 生成包含用户ID的JWT访问令牌（推荐使用）
+     *
+     * 根据Spring Security用户详情和用户ID生成JWT令牌。
+     * 令牌包含用户名作为subject，用户ID作为自定义声明，用于后续认证和授权。
+     *
+     * @param userDetails: Spring Security用户详情对象，包含用户信息和权限
+     * @param userId: 用户ID，将存储在JWT的claims中
+     * @return String: 生成的JWT令牌字符串
+     */
+    public String generateTokenWithUserId(org.springframework.security.core.userdetails.UserDetails userDetails, Long userId) { // public方法：供其他类调用
+        // userDetails.getUsername(): 获取用户名作为JWT的subject
+        // userId: 用户ID，将添加到JWT claims中
+        return createTokenWithClaims(userDetails.getUsername(), userId, expiration); // 调用带claims的令牌创建方法
+    }
+
+    /**
      * 🔧 创建JWT令牌
      *
      * 使用JWT构建器模式创建令牌，设置标准声明和签名。
@@ -166,6 +207,35 @@ public class JwtUtil { // public class: 定义公共类，其他类可以访问
 
         // Jwts.builder(): 创建JWT构建器
         return Jwts.builder()
+                .setSubject(subject)           // 设置subject声明（用户名）
+                .setIssuedAt(now)              // 设置签发时间声明
+                .setExpiration(expiryDate)     // 设置过期时间声明
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // 使用HMAC-SHA256算法签名
+                .compact(); // .compact(): 生成紧凑的JWT字符串
+    }
+
+    /**
+     * 🔧 创建包含用户ID的JWT令牌
+     *
+     * 使用JWT构建器模式创建令牌，设置标准声明、自定义声明和签名。
+     * 生成的令牌包含签发时间、过期时间、用户信息和用户ID。
+     *
+     * @param subject: JWT主题，通常是用户名
+     * @param userId: 用户ID，将存储在自定义声明中
+     * @param expiration: 令牌过期时间（毫秒）
+     * @return String: 生成的JWT令牌字符串
+     */
+    private String createTokenWithClaims(String subject, Long userId, long expiration) { // private方法：只在类内部使用
+        Date now = new Date(); // 当前时间：签发时间
+        Date expiryDate = new Date(now.getTime() + expiration); // 过期时间：当前时间 + 有效期
+
+        // 创建自定义声明
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId); // 添加用户ID到claims
+
+        // Jwts.builder(): 创建JWT构建器
+        return Jwts.builder()
+                .setClaims(claims)            // 设置自定义声明（包含userId）
                 .setSubject(subject)           // 设置subject声明（用户名）
                 .setIssuedAt(now)              // 设置签发时间声明
                 .setExpiration(expiryDate)     // 设置过期时间声明

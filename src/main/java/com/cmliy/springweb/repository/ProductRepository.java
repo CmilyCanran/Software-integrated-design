@@ -533,4 +533,42 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      */
     @Query("SELECT p FROM Product p ORDER BY p.salesCount DESC")
     List<Product> findTopProductsBySalesCount(Pageable pageable);
+
+    // ==================== 🏪 商家专用方法 ====================
+
+    /**
+     * 📋 查找指定创建者的商品列表
+     *
+     * 查询指定用户创建的所有商品，返回列表形式。
+     * 用于商家商品统计和管理。
+     *
+     * @param creatorId 创建者ID
+     * @return 指定创建者的商品列表
+     */
+    List<Product> findByCreatorId(Long creatorId);
+
+    /**
+     * 📋 统计指定创建者的商品数量
+     *
+     * 统计指定用户创建的商品总数。
+     * 用于商家商品统计。
+     *
+     * @param creatorId 创建者ID
+     * @return 指定创建者的商品数量
+     */
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.creator.id = :creatorId")
+    long countByCreatorId(@Param("creatorId") Long creatorId);
+
+    /**
+     * 📋 统计指定创建者上架的商品数量
+     *
+     * 统计指定用户创建且上架的商品数量。
+     * 用于商家商品统计。
+     *
+     * @param creatorId 创建者ID
+     * @param isAvailable 上架状态
+     * @return 指定创建者上架的商品数量
+     */
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.creator.id = :creatorId AND p.isAvailable = :isAvailable")
+    long countByCreatorIdAndIsAvailable(@Param("creatorId") Long creatorId, @Param("isAvailable") Boolean isAvailable);
 }
