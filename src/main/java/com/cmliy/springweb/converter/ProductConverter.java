@@ -8,10 +8,14 @@ import com.cmliy.springweb.dto.ProductCreateRequestDTO;
 import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
 import com.cmliy.springweb.model.Product;
 import com.cmliy.springweb.model.User;
+import com.cmliy.springweb.service.ProductDataService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -23,8 +27,12 @@ import java.util.stream.Collectors;
  * @author Claude
  * @since 2025-11-22
  */
+@Slf4j
 @Component
 public class ProductConverter {
+
+    @Autowired
+    private ProductDataService productDataService;
 
     /**
      * 🔄 Product实体转ProductResponseDTO
@@ -213,17 +221,17 @@ public class ProductConverter {
 
         // 设置主图片
         if (requestDTO.getMainImageUrl() != null && !requestDTO.getMainImageUrl().trim().isEmpty()) {
-            product.setMainImage(requestDTO.getMainImageUrl());
+            productDataService.updateProductImageData(product, requestDTO.getMainImageUrl());
         }
 
         // 设置图片列表
         if (requestDTO.getImageUrls() != null && !requestDTO.getImageUrls().isEmpty()) {
-            product.setImageUrls(requestDTO.getImageUrls());
+            productDataService.updateImageUrls(product, requestDTO.getImageUrls());
         }
 
         // 统一设置规格属性 - 所有属性都通过specifications处理
         if (requestDTO.getSpecifications() != null && !requestDTO.getSpecifications().isEmpty()) {
-            requestDTO.getSpecifications().forEach(product::addSpecification);
+            productDataService.updateSpecifications(product, requestDTO.getSpecifications());
         }
 
         return product;
@@ -263,66 +271,32 @@ public class ProductConverter {
 
         // 更新主图片
         if (requestDTO.getMainImageUrl() != null) {
-            product.setMainImage(requestDTO.getMainImageUrl());
+            productDataService.updateProductImageData(product, requestDTO.getMainImageUrl());
         }
 
         // 更新图片列表
         if (requestDTO.getImageUrls() != null) {
-            product.setImageUrls(requestDTO.getImageUrls());
+            productDataService.updateImageUrls(product, requestDTO.getImageUrls());
         }
 
-        // 更新规格信息 - 统一处理所有规格属性
-        boolean hasSpecificationsUpdate = false;
+        // 更新规格信息 - 使用ProductDataService安全处理
         if (requestDTO.getSpecifications() != null && !requestDTO.getSpecifications().isEmpty()) {
-            // 清除现有规格并设置新规格
-            clearSpecifications(product);
-            requestDTO.getSpecifications().forEach(product::addSpecification);
-            hasSpecificationsUpdate = true;
+            productDataService.updateSpecifications(product, requestDTO.getSpecifications());
         }
 
-        // 注意：完全避免productData字段的直接更新
-        // 只有当确实有规格数据需要更新时，才通过Product实体的方法更新
-        // 这样可以避免Hibernate触发不必要的product_data字段更新
-
-        // 只有当有规格数据或分类品牌等数据时，才更新productData相关字段
-        boolean hasAnyProductDataUpdate = hasSpecificationsUpdate;
-
+        // 🔧 新架构：使用ProductDataService处理分类品牌等数据
+        // 这样可以确保所有productData的更新都是安全和可控的
         if (requestDTO.getCategory() != null) {
-            if (!hasAnyProductDataUpdate) {
-                // 第一次更新时，确保productData已初始化
-                if (product.getProductData() == null || product.getProductData().isEmpty()) {
-                    product.setProductData(new java.util.HashMap<>());
-                }
-            }
-            product.setSpecification("分类", requestDTO.getCategory());
-            hasAnyProductDataUpdate = true;
+            productDataService.updateCategory(product, requestDTO.getCategory());
         }
         if (requestDTO.getBrand() != null) {
-            if (!hasAnyProductDataUpdate) {
-                if (product.getProductData() == null || product.getProductData().isEmpty()) {
-                    product.setProductData(new java.util.HashMap<>());
-                }
-            }
-            product.setSpecification("品牌", requestDTO.getBrand());
-            hasAnyProductDataUpdate = true;
+            productDataService.updateBrand(product, requestDTO.getBrand());
         }
         if (requestDTO.getColor() != null) {
-            if (!hasAnyProductDataUpdate) {
-                if (product.getProductData() == null || product.getProductData().isEmpty()) {
-                    product.setProductData(new java.util.HashMap<>());
-                }
-            }
-            product.setSpecification("颜色", requestDTO.getColor());
-            hasAnyProductDataUpdate = true;
+            productDataService.updateColor(product, requestDTO.getColor());
         }
         if (requestDTO.getSize() != null) {
-            if (!hasAnyProductDataUpdate) {
-                if (product.getProductData() == null || product.getProductData().isEmpty()) {
-                    product.setProductData(new java.util.HashMap<>());
-                }
-            }
-            product.setSpecification("尺寸", requestDTO.getSize());
-            hasAnyProductDataUpdate = true;
+            productDataService.updateSize(product, requestDTO.getSize());
         }
 
         return product;
@@ -379,15 +353,6 @@ public class ProductConverter {
         return List.of();
     }
 
-    /**
-     * 🗑️ 清除商品的所有规格
-     */
-    private void clearSpecifications(Product product) {
-        Map<String, Object> productData = product.getProductData();
-        if (productData != null) {
-            productData.remove("specifications");
-        }
-    }
-
     
-    }
+    
+}
