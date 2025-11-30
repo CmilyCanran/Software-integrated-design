@@ -11,8 +11,8 @@ import type { ApiResponse } from '@/types'
 // Axios实例创建：配置默认请求参数
 // ============================================================================
 const request: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api', // 后端API基础地址
-  timeout: 10000,                      // 请求超时时间：10秒
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api', // 后端API基础地址
+  timeout: Number(import.meta.env.VITE_REQUEST_TIMEOUT) || 10000,        // 请求超时时间
   headers: {
     'Content-Type': 'application/json'
   }
