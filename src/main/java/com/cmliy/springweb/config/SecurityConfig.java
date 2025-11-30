@@ -53,6 +53,14 @@ public class SecurityConfig {  // public class: 定义公共类，其他类可�
     // 优势：1. 保证不可变性 2. 支持单元测试 3. 避免字段注入的潜在问题
 
     /**
+     * ⚙️ 应用配置类
+     *
+     * 提供类型安全的配置访问，包括JWT和CORS配置。
+     * 从环境变量或配置文件中读取配置，避免硬编码。
+     */
+    private final AppConfig appConfig; // appConfig: 应用配置类
+
+    /**
      * 🚨 JWT认证入口点
      *
      * 处理未认证用户访问受保护资源时的响应。
@@ -92,14 +100,17 @@ public class SecurityConfig {  // public class: 定义公共类，其他类可�
      *
      * 在配置类中，构造函数注入特别重要，因为配置类通常在应用启动时就被初始化
      *
+     * @param appConfig 应用配置类，提供JWT和CORS配置
      * @param jwtAuthenticationEntryPoint JWT认证入口点处理器
      * @param jwtAuthenticationFilter JWT认证过滤器
      * @param userDetailsService 用户详情服务
      */
-    public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+    public SecurityConfig(AppConfig appConfig,
+                         JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
                          JwtAuthenticationFilter jwtAuthenticationFilter,
                          UserDetailsService userDetailsService) {
         // this关键字：引用当前对象的字段，区分同名的参数和字段
+        this.appConfig = appConfig; // 将传入的应用配置赋值给当前对象的字段
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint; // 将传入的JWT认证入口点赋值给当前对象的字段
         this.jwtAuthenticationFilter = jwtAuthenticationFilter; // 将传入的JWT认证过滤器赋值给当前对象的字段
         this.userDetailsService = userDetailsService; // 将传入的用户详情服务赋值给当前对象的字段
@@ -161,15 +172,19 @@ public class SecurityConfig {  // public class: 定义公共类，其他类可�
      * 配置跨域资源共享（Cross-Origin Resource Sharing）策略，
      * 允许前端应用（如Vue.js、React等）跨域访问后端API。
      *
+     * 现在使用AppConfig从配置文件读取CORS设置，支持环境差异化配置：
+     * - 开发环境：允许本地开发服务器
+     * - 生产环境：仅允许指定域名
+     *
      * CORS工作原理：
      * 1. 浏览器发送OPTIONS预检请求
      * 2. 服务器返回允许的跨域策略
      * 3. 浏览器根据策略决定是否发送实际请求
      *
-     * 安全注意事项：
-     * - 生产环境应该限制允许的源域名
-     * - 谨慎使用通配符"*"
-     * - 根据业务需求配置允许的方法和头
+     * 安全改进：
+     * - 不再使用通配符"*"，提高安全性
+     * - 配置集中管理，支持环境变量
+     * - 类型安全的配置访问
      *
      * @Bean: Spring框架注解，声明这个方法返回一个Bean对象
      *
@@ -182,24 +197,25 @@ public class SecurityConfig {  // public class: 定义公共类，其他类可�
         // CorsConfiguration: Spring提供的CORS配置类
         CorsConfiguration configuration = new CorsConfiguration(); // 创建CORS配置实例
 
-        // 🌐 配置允许的源（Origin）
-        // .setAllowedOriginPatterns(): 设置允许的源域名模式
-        // Arrays.asList("*"): 允许所有域名（生产环境应该限制具体域名）
-        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // 允许所有源访问
+        // 🌐 配置允许的源（Origin）- 从AppConfig读取
+        // .setAllowedOrigins(): 设置允许的具体源域名（不使用通配符提高安全性）
+        // appConfig.getCors().getAllowedOrigins(): 从配置文件读取允许的域名列表
+        configuration.setAllowedOrigins(Arrays.asList(appConfig.getCors().getAllowedOrigins()));
 
-        // 🔄 配置允许的HTTP方法
+        // 🔄 配置允许的HTTP方法 - 从AppConfig读取
         // .setAllowedMethods(): 设置允许的HTTP动词
-        // Arrays.asList(): 将数组转换为列表
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 允许常用HTTP方法
+        // appConfig.getCors().getAllowedMethods(): 从配置文件读取允许的HTTP方法
+        configuration.setAllowedMethods(Arrays.asList(appConfig.getCors().getAllowedMethods()));
 
-        // 📤 配置允许的请求头
+        // 📤 配置允许的请求头 - 从AppConfig读取
         // .setAllowedHeaders(): 设置允许的HTTP请求头
-        configuration.setAllowedHeaders(Arrays.asList("*")); // 允许所有请求头
+        // appConfig.getCors().getAllowedHeaders(): 从配置文件读取允许的请求头
+        configuration.setAllowedHeaders(Arrays.asList(appConfig.getCors().getAllowedHeaders()));
 
-        // 🔐 配置是否允许凭证
+        // 🔐 配置是否允许凭证 - 从AppConfig读取
         // .setAllowCredentials(): 是否允许发送Cookie和认证信息
-        // true: 允许前端发送认证信息（如JWT令牌）
-        configuration.setAllowCredentials(true); // 允许发送凭证
+        // appConfig.getCors().getAllowCredentials(): 从配置文件读取凭证设置
+        configuration.setAllowCredentials(appConfig.getCors().getAllowCredentials());
 
         // ⏰ 配置预检请求缓存时间
         // .setMaxAge(): 设置浏览器缓存CORS预检结果的时间（秒）

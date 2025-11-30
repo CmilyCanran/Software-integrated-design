@@ -1,0 +1,55 @@
+# 开发环境配置
+# ============================================================================
+
+# 开发环境数据库配置
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/clothes_db
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      continue-on-error: false
+      data-locations: classpath:data.sql
+
+# 图片存储配置 - 开发环境
+image:
+  storage:
+    upload-dir: ./uploads/images
+    base-url: http://localhost:8080/api/images
+    max-file-size: 5242880  # 5MB
+    allowed-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+
+app:
+  image:
+    storage:
+      path: D:\Code\Learn\Java\Spring\image\uploads\images
+
+# 自定义应用配置
+app-config:
+  jwt:
+    secret: mySecretKey123456789012345678901234567890
+    expiration: 86400000  # 24小时
+
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+      - http://localhost:3000
+      - http://127.0.0.1:3000
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: true

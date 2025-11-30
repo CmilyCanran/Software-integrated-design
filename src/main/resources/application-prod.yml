@@ -1,0 +1,51 @@
+# 生产环境配置
+# ============================================================================
+
+# 生产环境数据库配置
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/clothes_prod}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:your_prod_password}
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: never  # 生产环境不自动初始化
+      encoding: UTF-8
+
+# 图片存储配置 - 生产环境
+image:
+  storage:
+    upload-dir: ${IMAGE_UPLOAD_DIR:/app/uploads/images}
+    base-url: ${IMAGE_BASE_URL:https://your-domain.com/api/images}
+    max-file-size: 5242880  # 5MB
+    allowed-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+
+app:
+  image:
+    storage:
+      path: ${IMAGE_STORAGE_PATH:/app/uploads/images}
+
+# 自定义应用配置
+app-config:
+  jwt:
+    secret: ${JWT_SECRET:yourProductionSecretKeyHere}
+    expiration: ${JWT_EXPIRATION:86400000}
+
+  cors:
+    allowed-origins:
+      - https://your-domain.com
+      - https://www.your-domain.com
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: true
