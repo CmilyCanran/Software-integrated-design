@@ -342,14 +342,34 @@ const handleSave = async () => {
     // 构建规格数据
     const specificationsData = buildSpecificationsData()
 
-    // 确保价格和库存是数字类型
+    // 确保价格和库存是数字类型，并添加数值验证
+    const price = Number(formData.price)
+    const stockQuantity = Number(formData.stockQuantity)
+    const discount = Number(formData.discount || 0)
+
+    // 数值验证
+    if (isNaN(price) || price <= 0) {
+      ElMessage.error('请输入有效的商品价格')
+      return
+    }
+    if (isNaN(stockQuantity) || stockQuantity < 0) {
+      ElMessage.error('请输入有效的库存数量')
+      return
+    }
+    if (isNaN(discount) || discount < 0 || discount > 100) {
+      ElMessage.error('请输入有效的折扣率（0-100）')
+      return
+    }
+
+    // 构建提交数据 - 规格作为平铺字段发送
     const submitData = {
       ...formData,
-      price: Number(formData.price),
-      stockQuantity: Number(formData.stockQuantity),
-      discount: Number(formData.discount || 0),
+      price,
+      stockQuantity,
+      discount,
+      specifications: specificationsData, // ✅ 平铺规格字段
       productData: {
-        specifications: specificationsData
+        // 其他需要嵌套的数据可以放在这里
       }
     } as ProductCreateRequest | ProductUpdateRequest
 

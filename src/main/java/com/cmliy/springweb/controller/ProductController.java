@@ -9,6 +9,8 @@ import com.cmliy.springweb.dto.ProductCreateRequestDTO;
 import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
 import com.cmliy.springweb.dto.ProductQueryRequestDTO;
 import com.cmliy.springweb.service.ProductService;
+import com.cmliy.springweb.repository.UserRepository;
+import com.cmliy.springweb.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,8 @@ import java.util.Map;
 public class ProductController {
 
     private final ProductService productService;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     /**
      * 📋 获取商品列表（分页）
@@ -47,6 +52,7 @@ public class ProductController {
      * @param size 每页大小（默认10）
      * @param sortBy 排序字段（默认id）
      * @param sortDirection 排序方向（ASC/DESC，默认DESC）
+     * @param isAvailable 是否上架（可选，true=只显示上架商品，false=只显示下架商品，null=显示所有商品）
      * @return 分页商品列表
      */
     @GetMapping
@@ -54,12 +60,13 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDirection) {
+            @RequestParam(defaultValue = "DESC") String sortDirection,
+            @RequestParam(required = false) Boolean isAvailable) {
 
-        log.info("获取商品列表请求: page={}, size={}, sortBy={}, sortDirection={}",
-                page, size, sortBy, sortDirection);
+        log.info("获取商品列表请求: page={}, size={}, sortBy={}, sortDirection={}, isAvailable={}",
+                page, size, sortBy, sortDirection, isAvailable);
 
-        Page<ProductListItemDTO> productPage = productService.getProductList(page, size, sortBy, sortDirection);
+        Page<ProductListItemDTO> productPage = productService.getProductList(page, size, sortBy, sortDirection, isAvailable);
 
         ApiResponse<Page<ProductListItemDTO>> response = ApiResponse.success(productPage, "获取商品列表成功");
         return ResponseEntity.ok(response);
@@ -124,9 +131,9 @@ public class ProductController {
     @PreAuthorize("hasRole('USER') or hasRole('SHOPER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ProductResponseDTO>> updateProduct(
             @PathVariable Long id,
-            @Validated @RequestBody ProductUpdateRequestDTO requestDTO) {
+            @Valid @RequestBody ProductUpdateRequestDTO requestDTO) {
 
-        log.info("更新商品请求: id={}, updater={}", id, getCurrentUsername());
+        log.info("更新商品请求: id={}, updater={}, requestDTO={}", id, getCurrentUsername(), requestDTO);
 
         try {
             Long currentUserId = getCurrentUserId();
@@ -304,25 +311,75 @@ public class ProductController {
     }
 
     /**
+     * 🏪 获取当前商家的商品列表
+     *
+     * @param page 页码（从0开始，默认0）
+     * @param size 每页大小（默认12）
+     * @param keyword 搜索关键词（可选）
+     * @param category 商品分类（可选）
+     * @param isAvailable 是否上架（可选）
+     * @param sortBy 排序字段（默认createdAt）
+     * @param sortDirection 排序方向（默认desc）
+     * @return 商家商品分页列表
+     */
+    @GetMapping("/merchant")
+    @PreAuthorize("hasRole('SHOPER') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Page<ProductListItemDTO>>> getMerchantProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean isAvailable,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+
+        log.info("获取商家商品列表请求: page={}, size={}, keyword={}, category={}, isAvailable={}, sortBy={}, sortDirection={}, operator={}",
+                page, size, keyword, category, isAvailable, sortBy, sortDirection, getCurrentUsername());
+
+        try {
+            Long currentUserId = getCurrentUserId();
+            Page<ProductListItemDTO> productPage = productService.getMerchantProducts(
+                    currentUserId, page, size, keyword, category, isAvailable, sortBy, sortDirection);
+
+            ApiResponse<Page<ProductListItemDTO>> response = ApiResponse.success(productPage, "获取商家商品列表成功");
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            log.error("获取商家商品列表失败: {}", e.getMessage());
+            ApiResponse<Page<ProductListItemDTO>> response = ApiResponse.error(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
      * 📊 获取商品统计信息
      *
      * @return 统计信息
      */
     @GetMapping("/statistics")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SHOPER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getProductStatistics() {
         log.info("获取商品统计信息请求: operator={}", getCurrentUsername());
 
-        Map<String, Object> statistics = productService.getProductStatistics();
+        try {
+            Long currentUserId = getCurrentUserId();
+            Map<String, Object> statistics = productService.getProductStatistics(currentUserId);
 
-        ApiResponse<Map<String, Object>> response = ApiResponse.success(statistics, "获取统计信息成功");
-        return ResponseEntity.ok(response);
+            ApiResponse<Map<String, Object>> response = ApiResponse.success(statistics, "获取统计信息成功");
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            log.error("获取商品统计信息失败: {}", e.getMessage());
+            ApiResponse<Map<String, Object>> response = ApiResponse.error(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     // ==================== 🔧 私有辅助方法 ====================
 
     /**
      * 👤 获取当前认证用户ID
+     * 优先从JWT claims中获取用户ID，如果失败则从用户名查询
      */
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -330,13 +387,35 @@ public class ProductController {
             throw new RuntimeException("用户未认证");
         }
 
-        // 从认证信息中获取用户ID
-        // 注意：这里假设在JWT中包含了用户ID，实际实现可能需要调整
-        String userIdStr = authentication.getName();
+        // 方案1：尝试从JWT claims中获取用户ID（推荐的优化方案）
         try {
-            return Long.parseLong(userIdStr);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("无法解析用户ID");
+            // 从认证信息中获取JWT token
+            if (authentication.getCredentials() instanceof String) {
+                String token = (String) authentication.getCredentials();
+                // 确保token包含Bearer前缀时去除
+                if (token.startsWith("Bearer ")) {
+                    token = token.substring(7);
+                }
+
+                // 使用JwtUtil提取用户ID
+                Long userId = jwtUtil.extractUserId(token);
+                if (userId != null) {
+                    return userId;
+                }
+            }
+        } catch (Exception e) {
+            // JWT claims提取失败，使用备用方案
+            log.debug("从JWT claims获取用户ID失败，使用备用方案: {}", e.getMessage());
+        }
+
+        // 方案2：备用方案 - 从用户名查询用户ID
+        String username = authentication.getName();
+        try {
+            return userRepository.findByUsername(username)
+                    .map(user -> user.getId())
+                    .orElseThrow(() -> new RuntimeException("用户不存在: " + username));
+        } catch (Exception e) {
+            throw new RuntimeException("无法获取用户ID: " + e.getMessage());
         }
     }
 

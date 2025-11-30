@@ -185,6 +185,7 @@ public class ProductConverter {
         dto.setStockStatus(product.getStockStatus());
         dto.setIsAvailable(product.getIsAvailable());
         dto.setStockQuantity(product.getStockQuantity());
+        dto.setDescription(product.getDescription());
 
         return dto;
     }
@@ -270,17 +271,58 @@ public class ProductConverter {
             product.setImageUrls(requestDTO.getImageUrls());
         }
 
-        // 更新规格信息
-        if (requestDTO.getSpecifications() != null) {
+        // 更新规格信息 - 统一处理所有规格属性
+        boolean hasSpecificationsUpdate = false;
+        if (requestDTO.getSpecifications() != null && !requestDTO.getSpecifications().isEmpty()) {
             // 清除现有规格并设置新规格
             clearSpecifications(product);
             requestDTO.getSpecifications().forEach(product::addSpecification);
+            hasSpecificationsUpdate = true;
         }
 
-        // 更新规格属性 - 所有属性统一处理
-        if (requestDTO.getSpecifications() != null) {
-            clearSpecifications(product);
-            requestDTO.getSpecifications().forEach(product::addSpecification);
+        // 注意：完全避免productData字段的直接更新
+        // 只有当确实有规格数据需要更新时，才通过Product实体的方法更新
+        // 这样可以避免Hibernate触发不必要的product_data字段更新
+
+        // 只有当有规格数据或分类品牌等数据时，才更新productData相关字段
+        boolean hasAnyProductDataUpdate = hasSpecificationsUpdate;
+
+        if (requestDTO.getCategory() != null) {
+            if (!hasAnyProductDataUpdate) {
+                // 第一次更新时，确保productData已初始化
+                if (product.getProductData() == null || product.getProductData().isEmpty()) {
+                    product.setProductData(new java.util.HashMap<>());
+                }
+            }
+            product.setSpecification("分类", requestDTO.getCategory());
+            hasAnyProductDataUpdate = true;
+        }
+        if (requestDTO.getBrand() != null) {
+            if (!hasAnyProductDataUpdate) {
+                if (product.getProductData() == null || product.getProductData().isEmpty()) {
+                    product.setProductData(new java.util.HashMap<>());
+                }
+            }
+            product.setSpecification("品牌", requestDTO.getBrand());
+            hasAnyProductDataUpdate = true;
+        }
+        if (requestDTO.getColor() != null) {
+            if (!hasAnyProductDataUpdate) {
+                if (product.getProductData() == null || product.getProductData().isEmpty()) {
+                    product.setProductData(new java.util.HashMap<>());
+                }
+            }
+            product.setSpecification("颜色", requestDTO.getColor());
+            hasAnyProductDataUpdate = true;
+        }
+        if (requestDTO.getSize() != null) {
+            if (!hasAnyProductDataUpdate) {
+                if (product.getProductData() == null || product.getProductData().isEmpty()) {
+                    product.setProductData(new java.util.HashMap<>());
+                }
+            }
+            product.setSpecification("尺寸", requestDTO.getSize());
+            hasAnyProductDataUpdate = true;
         }
 
         return product;

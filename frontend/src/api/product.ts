@@ -27,7 +27,18 @@ export const productAPI = {
 
   // 获取商家商品列表（根据当前登录用户过滤）
   getMerchantProducts: (params?: ProductQueryParams): Promise<PaginatedResponse<Product>> => {
-    return api.get('/products/merchant', { params })
+    return api.get('/products/merchant', { params }).then((response: any) => {
+      // 处理后端Spring Boot分页响应格式
+      return {
+        data: response.content || [],
+        total: response.totalElements || 0,
+        page: response.number || 0,
+        size: response.size || 12,
+        totalPages: response.totalPages || 0,
+        hasNext: !response.last,
+        hasPrev: !response.first
+      }
+    })
   },
 
   // 获取商品详情
@@ -52,7 +63,7 @@ export const productAPI = {
 
   // 商品上架/下架
   toggleProductStatus: (id: number, isAvailable: boolean): Promise<Product> => {
-    return api.put(`/products/${id}/status`, { isAvailable })
+    return api.post(`/products/${id}/toggle-availability`)
   },
 
   // 更新商品库存
@@ -114,12 +125,12 @@ export const productAPI = {
 
   // 获取商品统计信息
   getProductStats: (): Promise<ProductStats> => {
-    return api.get('/products/stats')
+    return api.get('/products/statistics')
   },
 
-  // 获取商家商品统计信息
+  // 获取商家商品统计信息（复用通用统计接口，后端会根据当前用户过滤）
   getMerchantProductStats: (): Promise<ProductStats> => {
-    return api.get('/products/merchant/stats')
+    return api.get('/products/statistics')
   },
 
   // 批量操作 - 批量上架

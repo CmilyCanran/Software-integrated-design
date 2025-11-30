@@ -345,7 +345,8 @@ const loadProducts = async (): Promise<void> => {
       page: currentPage.value - 1, // Spring Boot分页从0开始
       size: pageSize.value,
       sort: sortBy.value,
-      keyword: searchQuery.value
+      keyword: searchQuery.value,
+      isAvailable: true // 只获取上架商品
     }
 
     productsResponse.value = await productAPI.getProducts(params)

@@ -82,6 +82,12 @@ public class ProductListItemDTO {
     private Integer stockQuantity;
 
     /**
+     * 📝 商品描述 - 商品详细描述信息
+     * 数据来源：数据库products表description字段
+     */
+    private String description;
+
+    /**
      * 💰 格式化价格 - 带货币符号的显示价格
      * 数据来源：后端格式化处理，基于price字段
      */

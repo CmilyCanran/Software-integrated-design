@@ -78,13 +78,13 @@
         </div>
 
         <!-- 统计信息卡片 -->
-        <div class="stats-cards" v-if="mockStats">
+        <div class="stats-cards" v-if="productStats">
           <el-card class="stat-card">
             <div class="stat-content">
               <el-icon class="stat-icon"><DataAnalysis /></el-icon>
               <div class="stat-info">
                 <h3>总商品数</h3>
-                <span class="stat-value">{{ mockStats.totalProducts }}</span>
+                <span class="stat-value">{{ productStats.totalProducts }}</span>
               </div>
             </div>
           </el-card>
@@ -94,7 +94,7 @@
               <el-icon class="stat-icon"><ShoppingCart /></el-icon>
               <div class="stat-info">
                 <h3>在售商品</h3>
-                <span class="stat-value">{{ mockStats.availableProducts }}</span>
+                <span class="stat-value">{{ productStats.availableProducts }}</span>
               </div>
             </div>
           </el-card>
@@ -104,7 +104,7 @@
               <el-icon class="stat-icon"><ShoppingCart /></el-icon>
               <div class="stat-info">
                 <h3>下架商品</h3>
-                <span class="stat-value">{{ mockStats.unavailableProducts }}</span>
+                <span class="stat-value">{{ productStats.unavailableProducts }}</span>
               </div>
             </div>
           </el-card>
@@ -114,7 +114,7 @@
               <el-icon class="stat-icon"><Money /></el-icon>
               <div class="stat-info">
                 <h3>总销售额</h3>
-                <span class="stat-value">¥{{ mockStats.totalRevenue.toLocaleString() }}</span>
+                <span class="stat-value">¥{{ productStats.totalRevenue?.toLocaleString() || 0 }}</span>
               </div>
             </div>
           </el-card>
@@ -122,80 +122,109 @@
 
         <!-- 商品展示区域 -->
         <div class="products-area">
-          <!-- 网格布局模式 -->
-          <div v-if="productStore.displayMode === 'grid'" class="product-grid">
-            <ProductCard
-              v-for="product in mockProducts"
-              :key="product.id"
-              :product="product"
-              :can-edit="true"
-              :can-delete="true"
-              :show-quick-actions="false"
-              :quick-actions="merchantQuickActions"
-              @click="viewProductDetail(product)"
-              @edit="openEditDialog(product)"
-              @delete="confirmDelete(product)"
-            />
+          <!-- 错误提示 -->
+          <el-alert
+            v-if="productStore.error"
+            :title="productStore.error"
+            type="error"
+            show-icon
+            closable
+            @close="productStore.clearError"
+            class="error-alert"
+          />
+
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-container">
+            <el-skeleton :rows="5" animated />
           </div>
 
-          <!-- 表格布局模式 -->
-          <div v-else class="product-table">
-            <el-table :data="mockProducts" stripe>
-              <el-table-column prop="productName" label="商品名称" width="200" />
-              <el-table-column prop="category" label="分类" width="100" />
-              <el-table-column prop="price" label="价格" width="120">
-                <template #default="scope">
-                  ¥{{ scope.row.price.toFixed(2) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="stockQuantity" label="库存" width="100" />
-              <el-table-column prop="salesCount" label="销量" width="100" />
-              <el-table-column prop="isAvailable" label="状态" width="100">
-                <template #default="scope">
-                  <el-tag :type="scope.row.isAvailable ? 'success' : 'danger'">
-                    {{ scope.row.isAvailable ? '在售' : '下架' }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="createdAt" label="创建时间" width="180">
-                <template #default="scope">
-                  {{ formatDate(scope.row.createdAt) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" fixed="right" width="200">
-                <template #default="scope">
-                  <el-button
-                    size="small"
-                    type="primary"
-                    @click="openEditDialog(scope.row)"
-                  >
-                    编辑
-                  </el-button>
-                  <el-button
-                    size="small"
-                    @click="toggleProductStatus(scope.row)"
-                    :type="scope.row.isAvailable ? 'warning' : 'success'"
-                  >
-                    {{ scope.row.isAvailable ? '下架' : '上架' }}
-                  </el-button>
-                  <el-button
-                    size="small"
-                    type="danger"
-                    @click="confirmDelete(scope.row)"
-                  >
-                    删除
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+          <!-- 空状态 -->
+          <el-empty
+            v-else-if="!products || products.length === 0"
+            description="暂无商品数据"
+          >
+            <el-button type="primary" @click="openCreateDialog">
+              新增商品
+            </el-button>
+          </el-empty>
+
+          <!-- 商品内容 -->
+          <div v-else>
+            <!-- 网格布局模式 -->
+            <div v-if="productStore.displayMode === 'grid'" class="product-grid">
+              <ProductCard
+                v-for="product in products || []"
+                :key="product.id"
+                :product="product"
+                :can-edit="true"
+                :can-delete="true"
+                :show-quick-actions="false"
+                :quick-actions="merchantQuickActions"
+                @click="viewProductDetail(product)"
+                @edit="openEditDialog(product)"
+                @delete="confirmDelete(product)"
+              />
+            </div>
+
+            <!-- 表格布局模式 -->
+            <div v-else class="product-table">
+              <el-table :data="products || []" stripe>
+                <el-table-column prop="productName" label="商品名称" width="200" />
+                <el-table-column prop="category" label="分类" width="100" />
+                <el-table-column prop="price" label="价格" width="120">
+                  <template #default="scope">
+                    ¥{{ scope.row.price.toFixed(2) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="stockQuantity" label="库存" width="100" />
+                <el-table-column prop="salesCount" label="销量" width="100" />
+                <el-table-column prop="isAvailable" label="状态" width="100">
+                  <template #default="scope">
+                    <el-tag :type="scope.row.isAvailable ? 'success' : 'danger'">
+                      {{ scope.row.isAvailable ? '在售' : '下架' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="createdAt" label="创建时间" width="180">
+                  <template #default="scope">
+                    {{ formatDate(scope.row.createdAt) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" fixed="right" width="200">
+                  <template #default="scope">
+                    <el-button
+                      size="small"
+                      type="primary"
+                      @click="openEditDialog(scope.row)"
+                    >
+                      编辑
+                    </el-button>
+                    <el-button
+                      size="small"
+                      @click="toggleProductStatus(scope.row)"
+                      :type="scope.row.isAvailable ? 'warning' : 'success'"
+                    >
+                      {{ scope.row.isAvailable ? '下架' : '上架' }}
+                    </el-button>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click="confirmDelete(scope.row)"
+                    >
+                      删除
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
 
           <!-- 分页组件 -->
-          <div class="pagination-section">
+          <div v-if="!loading && products && products.length > 0" class="pagination-section">
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
-              :total="totalProducts"
+              :total="pagination?.total || 0"
               :page-sizes="[12, 24, 48, 96]"
               layout="total, sizes, prev, pager, next, jumper"
               @current-change="handlePageChange"
@@ -236,6 +265,12 @@ import dayjs from 'dayjs'
 // 状态管理
 const productStore = useProductStore()
 
+// 使用真实的产品store数据
+const products = computed(() => productStore.products)
+const productStats = computed(() => productStore.productStats)
+const pagination = computed(() => productStore.pagination)
+const loading = computed(() => productStore.loading)
+
 // 搜索和筛选状态
 const searchQuery = ref('')
 const categoryFilter = ref('')
@@ -249,88 +284,6 @@ const pageSize = ref(12)
 const formDialogVisible = ref(false)
 const isEditing = ref(false)
 const editingProduct = ref<Product | null>(null)
-
-// 模拟数据（用于测试）
-const mockProducts = ref<Product[]>([
-  {
-    id: 1,
-    productName: '时尚T恤',
-    description: '舒适透气的纯棉T恤，适合日常穿着',
-    price: 99.00,
-    stockQuantity: 100,
-    salesCount: 25,
-    discount: 0,
-    isAvailable: true,
-    creatorId: 1,
-    category: '服装',
-    brand: '时尚品牌',
-    tags: ['新品', '热销'],
-    productData: {
-      specifications: {
-        '颜色': ['白色', '黑色', '灰色'],
-        '尺寸': ['S', 'M', 'L', 'XL'],
-        '材质': ['纯棉']
-      }
-    },
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: 2,
-    productName: '运动鞋',
-    description: '轻便舒适的运动鞋，适合运动和日常',
-    price: 299.00,
-    stockQuantity: 50,
-    salesCount: 18,
-    discount: 10,
-    isAvailable: true,
-    creatorId: 1,
-    category: '鞋类',
-    brand: '运动品牌',
-    tags: ['推荐', '限时特价'],
-    productData: {
-      specifications: {
-        '颜色': ['黑色', '白色', '蓝色'],
-        '尺寸': ['36', '37', '38', '39', '40', '41', '42', '43'],
-        '材质': ['合成革', '网面']
-      }
-    },
-    createdAt: '2024-01-14T15:20:00Z',
-    updatedAt: '2024-01-14T15:20:00Z'
-  },
-  {
-    id: 3,
-    productName: '休闲背包',
-    description: '大容量双肩包，适合出行和学习',
-    price: 189.00,
-    stockQuantity: 0,
-    salesCount: 42,
-    discount: 0,
-    isAvailable: false,
-    creatorId: 1,
-    category: '箱包',
-    brand: '箱包品牌',
-    tags: ['热销'],
-    productData: {
-      specifications: {
-        '颜色': ['黑色', '灰色', '蓝色'],
-        '尺寸': ['40L', '50L'],
-        '材质': ['防水尼龙']
-      }
-    },
-    createdAt: '2024-01-13T09:15:00Z',
-    updatedAt: '2024-01-13T09:15:00Z'
-  }
-])
-
-const mockStats = computed(() => ({
-  totalProducts: mockProducts.value.length,
-  availableProducts: mockProducts.value.filter(p => p.isAvailable).length,
-  unavailableProducts: mockProducts.value.filter(p => !p.isAvailable).length,
-  totalRevenue: mockProducts.value.reduce((sum, p) => sum + (p.price * p.salesCount), 0)
-}))
-
-const totalProducts = computed(() => mockProducts.value.length)
 
 // 快速操作按钮配置接口
 interface QuickAction {
@@ -358,41 +311,76 @@ const merchantQuickActions: QuickAction[] = [
   }
 ]
 
+// 数据加载方法
+const loadProducts = async () => {
+  try {
+    await productStore.fetchMerchantProducts({
+      page: currentPage.value - 1, // Convert to 0-based for backend
+      size: pageSize.value,
+      keyword: searchQuery.value,
+      isAvailable: statusFilter.value ?
+        (statusFilter.value === 'available') : undefined,
+      category: categoryFilter.value || undefined
+    })
+  } catch (error) {
+    console.error('加载商品列表失败:', error)
+  }
+}
+
+const loadProductStats = async () => {
+  try {
+    await productStore.fetchProductStats()
+  } catch (error) {
+    console.error('加载商品统计失败:', error)
+  }
+}
+
 // 日期格式化
 const formatDate = (date: string) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
 }
 
-// 搜索处理（防抖）
-const handleSearch = async () => {
+// 防抖搜索实现
+let searchTimer: NodeJS.Timeout | null = null
+
+const handleSearch = () => {
   currentPage.value = 1 // 重置到第一页
-  console.log('搜索:', searchQuery.value)
+
+  // 清除之前的定时器
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+
+  // 设置新的定时器
+  searchTimer = setTimeout(async () => {
+    await loadProducts()
+  }, 300) // 300ms防抖延迟
 }
 
 // 清除搜索
 const handleSearchClear = async () => {
   searchQuery.value = ''
   currentPage.value = 1
-  console.log('清除搜索')
+  await loadProducts()
 }
 
 // 筛选条件变化处理
 const handleFilterChange = async () => {
   currentPage.value = 1 // 重置到第一页
-  console.log('筛选条件变化:', { category: categoryFilter.value, status: statusFilter.value })
+  await loadProducts()
 }
 
 // 页面变化处理
 const handlePageChange = async (page: number) => {
   currentPage.value = page
-  console.log('页面变化:', page)
+  await loadProducts()
 }
 
 // 页面大小变化处理
 const handleSizeChange = async (size: number) => {
   pageSize.value = size
   currentPage.value = 1
-  console.log('页面大小变化:', size)
+  await loadProducts()
 }
 
 // 查看商品详情
@@ -423,46 +411,60 @@ const closeFormDialog = () => {
 }
 
 // 确认删除商品
-const confirmDelete = (product: Product) => {
-  ElMessageBox.confirm(
-    `确定要删除商品 "${product.productName}" 吗？此操作不可恢复。`,
-    '删除确认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
+const confirmDelete = async (product: Product) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除商品 "${product.productName}" 吗？此操作不可恢复。`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    await productStore.deleteProduct(product.id)
+    ElMessage.success('商品删除成功')
+    await loadProducts() // 重新加载数据
+    await loadProductStats() // 重新加载统计数据
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('删除商品失败:', error)
+      ElMessage.error('删除失败，请重试')
+    } else {
+      ElMessage.info('已取消删除')
     }
-  ).then(() => {
-    // 从模拟数据中移除
-    const index = mockProducts.value.findIndex(p => p.id === product.id)
-    if (index !== -1) {
-      mockProducts.value.splice(index, 1)
-      ElMessage.success('商品删除成功')
-    }
-  }).catch(() => {
-    ElMessage.info('已取消删除')
-  })
+  }
 }
 
 // 切换商品状态
-const toggleProductStatus = (product: Product) => {
-  const newStatus = !product.isAvailable
-  const action = newStatus ? '上架' : '下架'
+const toggleProductStatus = async (product: Product) => {
+  try {
+    const newStatus = !product.isAvailable
+    const action = newStatus ? '上架' : '下架'
 
-  ElMessageBox.confirm(
-    `确定要${action}商品 "${product.productName}" 吗？`,
-    `${action}确认`,
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(() => {
-    product.isAvailable = newStatus
+    await ElMessageBox.confirm(
+      `确定要${action}商品 "${product.productName}" 吗？`,
+      `${action}确认`,
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    await productStore.toggleProductStatus(product.id, newStatus)
     ElMessage.success(`商品${action}成功`)
-  }).catch(() => {
-    ElMessage.info(`已取消${action}`)
-  })
+    await loadProducts() // 重新加载数据
+    await loadProductStats() // 重新加载统计数据
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error(`${action}商品失败:`, error)
+      ElMessage.error(`${action}失败，请重试`)
+    } else {
+      ElMessage.info(`已取消${action}`)
+    }
+  }
 }
 
 // 处理表单保存
@@ -470,65 +472,20 @@ const handleFormSave = async (formData: ProductCreateRequest | ProductUpdateRequ
   try {
     if (isEditing.value && editingProduct.value) {
       // 编辑模式
-      const index = mockProducts.value.findIndex(p => p.id === editingProduct.value!.id)
-      if (index !== -1) {
-        const existingProduct = mockProducts.value[index]
-        if (existingProduct) {
-          mockProducts.value[index] = {
-            ...existingProduct,
-            ...formData,
-            id: editingProduct.value!.id, // 确保id存在
-            productName: (formData as ProductUpdateRequest).productName ?? existingProduct.productName,
-            price: (formData as ProductUpdateRequest).price ?? existingProduct.price,
-            stockQuantity: (formData as ProductUpdateRequest).stockQuantity ?? existingProduct.stockQuantity,
-            isAvailable: (formData as ProductUpdateRequest).isAvailable ?? existingProduct.isAvailable,
-            discount: (formData as ProductUpdateRequest).discount ?? existingProduct.discount,
-            salesCount: existingProduct.salesCount,
-            creatorId: existingProduct.creatorId,
-            createdAt: existingProduct.createdAt,
-            updatedAt: new Date().toISOString(),
-            // 确保 images 字段类型正确：如果是 File[] 则转换为 undefined，因为编辑时不需要处理 File[]
-            images: Array.isArray(formData.images) ? undefined : existingProduct.images,
-            // 确保其他必需字段存在
-            description: (formData as ProductUpdateRequest).description ?? existingProduct.description,
-            category: (formData as ProductUpdateRequest).category ?? existingProduct.category,
-            brand: (formData as ProductUpdateRequest).brand ?? existingProduct.brand,
-            tags: (formData as ProductUpdateRequest).tags ?? existingProduct.tags,
-            productData: (formData as ProductUpdateRequest).productData ?? existingProduct.productData,
-            originalPrice: (formData as ProductUpdateRequest).originalPrice ?? existingProduct.originalPrice
-          }
-          ElMessage.success('商品更新成功')
-        }
-      }
+      await productStore.updateProduct(
+        editingProduct.value.id,
+        formData as ProductUpdateRequest
+      )
+      ElMessage.success('商品更新成功')
     } else {
       // 创建模式
-      const createData = formData as ProductCreateRequest
-      const newProduct: Product = {
-        id: mockProducts.value.length + 1,
-        productName: createData.productName,
-        description: createData.description,
-        price: createData.price,
-        salesCount: 0,
-        discount: createData.discount ?? 0, // 确保discount有值
-        stockQuantity: createData.stockQuantity,
-        isAvailable: createData.isAvailable,
-        creatorId: 1,
-        productData: createData.productData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        // 创建时，File[] 不应该赋值给 ProductImage[]，暂时设为 undefined
-        images: undefined,
-        // 确保其他字段有默认值
-        category: createData.category,
-        tags: createData.tags,
-        brand: createData.brand,
-        originalPrice: createData.originalPrice
-      }
-      mockProducts.value.unshift(newProduct)
+      await productStore.createProduct(formData as ProductCreateRequest)
       ElMessage.success('商品创建成功')
     }
 
     closeFormDialog()
+    await loadProducts() // 重新加载数据
+    await loadProductStats() // 重新加载统计数据
   } catch (error) {
     console.error('❌ 保存失败:', error)
     ElMessage.error('保存失败，请重试')
@@ -536,9 +493,10 @@ const handleFormSave = async (formData: ProductCreateRequest | ProductUpdateRequ
 }
 
 // 页面挂载时初始化
-onMounted(() => {
+onMounted(async () => {
   console.log('商品管理页面已加载')
-  console.log('当前用户角色:', productStore)
+  await loadProducts()
+  await loadProductStats()
 })
 </script>
 
@@ -622,6 +580,14 @@ onMounted(() => {
 
 .product-table {
   margin-top: 0;
+}
+
+.error-alert {
+  margin-bottom: 16px;
+}
+
+.loading-container {
+  padding: 20px;
 }
 
 .pagination-section {
