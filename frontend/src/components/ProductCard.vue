@@ -151,11 +151,14 @@ import StockIndicator from './StockIndicator.vue'
 import type { Product } from '@/types/product'
 import { processImageUrl } from '@/utils/imageUtils'
 
+// 快速操作事件类型
+type QuickActionEvent = 'add-to-cart' | 'quick-view' | 'edit' | 'delete'
+
 // 快速操作按钮配置接口
 interface QuickAction {
   icon: string                      // 图标名称
   type?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'default'  // 按钮类型
-  event: string                     // 事件名称
+  event: QuickActionEvent           // 事件名称
   tooltip?: string                  // 提示文本
   disabled?: boolean                // 是否禁用
   condition?: (product: Product) => boolean  // 显示条件函数，接收product参数
@@ -325,7 +328,22 @@ const handleQuickAction = (action: QuickAction): void => {
 
   // 动态触发事件
   const eventData = props.product
-  emit(action.event as any, eventData)
+
+  // 类型安全的事件触发
+  switch (action.event) {
+    case 'add-to-cart':
+      emit('add-to-cart', eventData)
+      break
+    case 'quick-view':
+      emit('quick-view', eventData)
+      break
+    case 'edit':
+      emit('edit', eventData)
+      break
+    case 'delete':
+      emit('delete', eventData)
+      break
+  }
 }
 
 const handleViewDetails = (): void => {
