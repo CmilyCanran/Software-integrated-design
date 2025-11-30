@@ -108,7 +108,7 @@
                 style="flex: 1; margin: 0 10px"
               >
                 <el-option
-                  v-for="value in spec.values"
+                  v-for="value in getAllSpecificationValues()"
                   :key="value"
                   :label="value"
                   :value="value"
@@ -270,6 +270,42 @@ const validateSpecification = (index: number) => {
   }
 }
 
+// 获取所有规格的唯一值，用于el-select的选项
+const getAllSpecificationValues = () => {
+  const allValues = new Set<string>()
+
+  specifications.value.forEach(spec => {
+    spec.values.forEach(value => {
+      if (value && value.trim() !== '') {
+        allValues.add(value.trim())
+      }
+    })
+  })
+
+  return Array.from(allValues).sort()
+}
+
+// 添加规格值到指定规格
+const addSpecificationValue = (specIndex: number, value: string) => {
+  if (!value || value.trim() === '') return
+
+  const spec = specifications.value[specIndex]
+  if (!spec) return
+
+  const trimmedValue = value.trim()
+  if (!spec.values.includes(trimmedValue)) {
+    spec.values.push(trimmedValue)
+  }
+}
+
+// 从指定规格中删除规格值
+const removeSpecificationValue = (specIndex: number, valueIndex: number) => {
+  const spec = specifications.value[specIndex]
+  if (!spec || valueIndex < 0 || valueIndex >= spec.values.length) return
+
+  spec.values.splice(valueIndex, 1)
+}
+
 // 构建规格数据用于提交
 const buildSpecificationsData = () => {
   const specs: Record<string, string[]> = {}
@@ -281,6 +317,28 @@ const buildSpecificationsData = () => {
   })
 
   return specs
+}
+
+// 构建完整的productData对象
+const buildProductData = () => {
+  const specificationsData = buildSpecificationsData()
+
+  const productData: Record<string, any> = {}
+
+  // 只有当有规格数据时才添加specifications字段
+  if (Object.keys(specificationsData).length > 0) {
+    productData.specifications = specificationsData
+  }
+
+  // 添加其他可能需要的产品数据字段
+  if (formData.mainImageUrl) {
+    productData.image_data = {
+      main_image: formData.mainImageUrl
+    }
+  }
+
+  console.log('🔍 [DEBUG] ProductForm - 构建的productData:', productData)
+  return productData
 }
 const uploadAction = computed(() => {
   return props.isEdit && props.product
@@ -333,52 +391,95 @@ const handleImageError = (error: any, uploadFile: any, uploadFileList: any[]) =>
 
 // 处理表单保存
 const handleSave = async () => {
-  if (!productFormRef.value) return
+  console.log('🔍 [DEBUG] ProductForm - 开始处理表单保存')
+
+  if (!productFormRef.value) {
+    console.error('❌ [DEBUG] ProductForm - productFormRef.value 为空')
+    return
+  }
 
   try {
+    console.log('🔍 [DEBUG] ProductForm - 开始表单验证')
     await productFormRef.value.validate()
+    console.log('🔍 [DEBUG] ProductForm - 表单验证通过')
+
     loading.value = true
 
     // 构建规格数据
+    console.log('🔍 [DEBUG] ProductForm - 开始构建规格数据')
     const specificationsData = buildSpecificationsData()
+    console.log('🔍 [DEBUG] ProductForm - 构建的规格数据:', specificationsData)
 
     // 确保价格和库存是数字类型，并添加数值验证
+    console.log('🔍 [DEBUG] ProductForm - 原始价格数据:', formData.price, '类型:', typeof formData.price)
+    console.log('🔍 [DEBUG] ProductForm - 原始库存数据:', formData.stockQuantity, '类型:', typeof formData.stockQuantity)
+    console.log('🔍 [DEBUG] ProductForm - 原始折扣数据:', formData.discount, '类型:', typeof formData.discount)
+
     const price = Number(formData.price)
     const stockQuantity = Number(formData.stockQuantity)
     const discount = Number(formData.discount || 0)
 
+    console.log('🔍 [DEBUG] ProductForm - 转换后价格:', price, '类型:', typeof price)
+    console.log('🔍 [DEBUG] ProductForm - 转换后库存:', stockQuantity, '类型:', typeof stockQuantity)
+    console.log('🔍 [DEBUG] ProductForm - 转换后折扣:', discount, '类型:', typeof discount)
+
     // 数值验证
     if (isNaN(price) || price <= 0) {
+      console.error('❌ [DEBUG] ProductForm - 价格验证失败:', { price, isNaN: isNaN(price), lessThanZero: price <= 0 })
       ElMessage.error('请输入有效的商品价格')
       return
     }
     if (isNaN(stockQuantity) || stockQuantity < 0) {
+      console.error('❌ [DEBUG] ProductForm - 库存验证失败:', { stockQuantity, isNaN: isNaN(stockQuantity), lessThanZero: stockQuantity < 0 })
       ElMessage.error('请输入有效的库存数量')
       return
     }
     if (isNaN(discount) || discount < 0 || discount > 100) {
+      console.error('❌ [DEBUG] ProductForm - 折扣验证失败:', { discount, isNaN: isNaN(discount), lessThanZero: discount < 0, greaterThan100: discount > 100 })
       ElMessage.error('请输入有效的折扣率（0-100）')
       return
     }
 
+    console.log('🔍 [DEBUG] ProductForm - 数值验证通过')
+
     // 构建提交数据 - 规格作为平铺字段发送
+    console.log('🔍 [DEBUG] ProductForm - 开始构建提交数据')
+    console.log('🔍 [DEBUG] ProductForm - formData原始内容:', formData)
+
+    // 构建完整的productData对象
+    const productData = buildProductData()
+
     const submitData = {
       ...formData,
       price,
       stockQuantity,
       discount,
       specifications: specificationsData, // ✅ 平铺规格字段
-      productData: {
-        // 其他需要嵌套的数据可以放在这里
-      }
+      productData: productData // ✅ 使用构建的productData对象
     } as ProductCreateRequest | ProductUpdateRequest
 
+    console.log('🔍 [DEBUG] ProductForm - 最终提交数据:', submitData)
+    console.log('🔍 [DEBUG] ProductForm - 提交数据关键字段详情:')
+    console.log('  - 商品名称:', submitData.productName)
+    console.log('  - 价格:', submitData.price, '(类型:', typeof submitData.price, ')')
+    console.log('  - 库存:', submitData.stockQuantity, '(类型:', typeof submitData.stockQuantity, ')')
+    console.log('  - 折扣:', submitData.discount, '(类型:', typeof submitData.discount, ')')
+    console.log('  - 是否上架:', submitData.isAvailable, '(类型:', typeof submitData.isAvailable, ')')
+    console.log('  - 规格:', submitData.specifications)
+    console.log('  - productData:', submitData.productData)
+    console.log('  - 主图URL:', submitData.mainImageUrl)
+    console.log('  - 描述:', submitData.description)
+
+    console.log('🔍 [DEBUG] ProductForm - 发送save事件')
     emit('save', submitData)
+    console.log('🔍 [DEBUG] ProductForm - save事件发送完成')
+
   } catch (error) {
-    console.error('表单验证失败:', error)
+    console.error('❌ [DEBUG] ProductForm - 表单验证失败:', error)
     ElMessage.error('请检查表单填写是否正确')
   } finally {
     loading.value = false
+    console.log('🔍 [DEBUG] ProductForm - loading状态已重置')
   }
 }
 

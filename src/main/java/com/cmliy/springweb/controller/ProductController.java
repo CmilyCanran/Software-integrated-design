@@ -133,19 +133,58 @@ public class ProductController {
             @PathVariable Long id,
             @Valid @RequestBody ProductUpdateRequestDTO requestDTO) {
 
-        log.info("更新商品请求: id={}, updater={}, requestDTO={}", id, getCurrentUsername(), requestDTO);
+        log.info("🔍 [DEBUG] 更新商品请求开始");
+        log.info("🔍 [DEBUG] 商品ID: {}", id);
+        log.info("🔍 [DEBUG] 操作用户: {}", getCurrentUsername());
+        log.info("🔍 [DEBUG] 请求DTO原始内容: {}", requestDTO);
+
+        // 详细记录每个关键字段
+        log.info("🔍 [DEBUG] 商品名称: '{}'", requestDTO.getProductName());
+        log.info("🔍 [DEBUG] 商品价格: {} (类型: {})", requestDTO.getPrice(),
+                requestDTO.getPrice() != null ? requestDTO.getPrice().getClass().getSimpleName() : "null");
+        log.info("🔍 [DEBUG] 库存数量: {} (类型: {})", requestDTO.getStockQuantity(),
+                requestDTO.getStockQuantity() != null ? requestDTO.getStockQuantity().getClass().getSimpleName() : "null");
+        log.info("🔍 [DEBUG] 折扣率: {} (类型: {})", requestDTO.getDiscount(),
+                requestDTO.getDiscount() != null ? requestDTO.getDiscount().getClass().getSimpleName() : "null");
+        log.info("🔍 [DEBUG] 是否上架: {}", requestDTO.getIsAvailable());
+        log.info("🔍 [DEBUG] 商品规格: {} (类型: {})", requestDTO.getSpecifications(),
+                requestDTO.getSpecifications() != null ? requestDTO.getSpecifications().getClass().getSimpleName() : "null");
+        log.info("🔍 [DEBUG] productData: {} (类型: {})", requestDTO.getProductData(),
+                requestDTO.getProductData() != null ? requestDTO.getProductData().getClass().getSimpleName() : "null");
+        log.info("🔍 [DEBUG] 主图片URL: '{}'", requestDTO.getMainImageUrl());
+        log.info("🔍 [DEBUG] 商品描述: '{}'", requestDTO.getDescription());
 
         try {
+            log.info("🔍 [DEBUG] 开始获取当前用户ID");
             Long currentUserId = getCurrentUserId();
+            log.info("🔍 [DEBUG] 当前用户ID: {}", currentUserId);
+
+            log.info("🔍 [DEBUG] 开始调用productService.updateProduct");
             ProductResponseDTO product = productService.updateProduct(id, requestDTO, currentUserId);
+            log.info("🔍 [DEBUG] productService.updateProduct调用成功");
+            log.info("🔍 [DEBUG] 返回的商品信息: {}", product);
 
             ApiResponse<ProductResponseDTO> response = ApiResponse.success(product, "商品更新成功");
+            log.info("🔍 [DEBUG] 构建成功响应: {}", response);
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
-            log.error("更新商品失败: {}", e.getMessage());
+            log.error("❌ [DEBUG] 更新商品失败: {}", e.getMessage());
+            log.error("❌ [DEBUG] 异常类型: {}", e.getClass().getSimpleName());
+            log.error("❌ [DEBUG] 异常堆栈: ", e);
+
+            // 记录失败时的请求状态
+            log.error("❌ [DEBUG] 失败时的请求DTO状态: {}", requestDTO);
+
             ApiResponse<ProductResponseDTO> response = ApiResponse.error(e.getMessage(), 400);
+            log.info("🔍 [DEBUG] 构建错误响应: {}", response);
             return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            log.error("❌ [DEBUG] 未预期的异常: {}", e.getMessage(), e);
+            log.error("❌ [DEBUG] 异常类型: {}", e.getClass().getSimpleName());
+
+            ApiResponse<ProductResponseDTO> response = ApiResponse.error("系统内部错误: " + e.getMessage(), 500);
+            return ResponseEntity.status(500).body(response);
         }
     }
 

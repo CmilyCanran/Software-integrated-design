@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity
+@DynamicUpdate  // 🔧 关键修复：只更新实际修改的字段
 @Table(name = "products", indexes = {
     @Index(name = "idx_product_name", columnList = "product_name"),
     @Index(name = "idx_creator_id", columnList = "creator_id"),
@@ -192,16 +194,7 @@ public class Product {
         return BigDecimal.ZERO;
     }
 
-    // ==================== 🖼️ 图片相关便捷方法 ====================
-
-    /**
-     * 🖼️ 设置主图片URL
-     */
-    public void setMainImage(String mainImageUrl) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.computeIfAbsent("image_data", k -> new java.util.HashMap<>());
-        imageData.put("main_image", mainImageUrl);
-    }
+    // ==================== 🖼️ 图片相关只读方法 ====================
 
     /**
      * 📸 获取主图片URL
@@ -210,17 +203,6 @@ public class Product {
         @SuppressWarnings("unchecked")
         Map<String, Object> imageData = (Map<String, Object>) productData.getOrDefault("image_data", new java.util.HashMap<>());
         return (String) imageData.get("main_image");
-    }
-
-    /**
-     * 🖼️ 添加图片URL
-     */
-    public void addImageUrl(String imageUrl) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.computeIfAbsent("image_data", k -> new java.util.HashMap<>());
-        @SuppressWarnings("unchecked")
-        List<String> gallery = (List<String>) imageData.computeIfAbsent("gallery", k -> new java.util.ArrayList<>());
-        gallery.add(imageUrl);
     }
 
     /**
@@ -234,15 +216,6 @@ public class Product {
     }
 
     /**
-     * 📋 设置图片URL列表
-     */
-    public void setImageUrls(List<String> imageUrls) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.computeIfAbsent("image_data", k -> new java.util.HashMap<>());
-        imageData.put("gallery", imageUrls);
-    }
-
-    /**
      * 🖼️ 获取缩略图信息
      */
     @SuppressWarnings("unchecked")
@@ -250,15 +223,6 @@ public class Product {
         @SuppressWarnings("unchecked")
         Map<String, Object> imageData = (Map<String, Object>) productData.getOrDefault("image_data", new java.util.HashMap<>());
         return (Map<String, String>) imageData.get("thumbnails");
-    }
-
-    /**
-     * 🖼️ 设置缩略图信息
-     */
-    public void setThumbnails(Map<String, String> thumbnails) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.computeIfAbsent("image_data", k -> new java.util.HashMap<>());
-        imageData.put("thumbnails", thumbnails);
     }
 
     /**
@@ -271,27 +235,7 @@ public class Product {
         return (Integer) imageData.getOrDefault("total_images", 0);
     }
 
-    /**
-     * 📏 更新图片总数统计
-     */
-    public void updateImageCount() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.getOrDefault("image_data", new java.util.HashMap<>());
-        @SuppressWarnings("unchecked")
-        List<String> gallery = (List<String>) imageData.getOrDefault("gallery", new java.util.ArrayList<>());
-        imageData.put("total_images", gallery.size());
-    }
-
-    // ==================== 📋 规格相关便捷方法 ====================
-
-    /**
-     * 🏷️ 添加规格属性
-     */
-    public void addSpecification(String key, Object value) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>) productData.computeIfAbsent("specifications", k -> new java.util.HashMap<>());
-        specifications.put(key, value);
-    }
+    // ==================== 📋 规格相关只读方法 ====================
 
     /**
      * 📋 获取规格属性
@@ -303,29 +247,11 @@ public class Product {
     }
 
     /**
-     * 🗑️ 移除规格属性
-     */
-    public Object removeSpecification(String key) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>());
-        return specifications.remove(key);
-    }
-
-    /**
      * 📋 获取所有规格属性
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getAllSpecifications() {
         return Map.copyOf((Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>()));
-    }
-
-    /**
-     * 📝 设置规格属性
-     */
-    public void setSpecification(String key, Object value) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>) productData.computeIfAbsent("specifications", k -> new java.util.HashMap<>());
-        specifications.put(key, value);
     }
 
     /**
@@ -337,49 +263,9 @@ public class Product {
         return specifications.containsKey(key);
     }
 
-    /**
-     * 🗑️ 清空所有规格
-     */
-    public void clearSpecifications() {
-        Map<String, Object> productData = this.productData;
-        if (productData != null) {
-            productData.remove("specifications");
-        }
-    }
-
     
     
-    // ==================== 🎨 变体相关便捷方法 ====================
-
-    /**
-     * 🎨 添加商品变体
-     */
-    public void addVariant(String variant) {
-        @SuppressWarnings("unchecked")
-        List<String> variants = (List<String>) productData.computeIfAbsent("variants", k -> new java.util.ArrayList<>());
-        if (!variants.contains(variant)) {
-            variants.add(variant);
-        }
-    }
-
-    /**
-     * 🗑️ 移除商品变体
-     */
-    public boolean removeVariant(String variant) {
-        @SuppressWarnings("unchecked")
-        List<String> variants = (List<String>) productData.getOrDefault("variants", new java.util.ArrayList<>());
-        return variants.remove(variant);
-    }
-
-    /**
-     * 📋 检查是否包含变体
-     */
-    public boolean hasVariant(String variant) {
-        @SuppressWarnings("unchecked")
-        List<String> variants = (List<String>) productData.getOrDefault("variants", new java.util.ArrayList<>());
-        return variants.contains(variant);
-    }
-
+    
     // ==================== 📊 商品状态判断方法 ====================
 
     /**

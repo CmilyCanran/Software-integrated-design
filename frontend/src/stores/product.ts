@@ -155,29 +155,60 @@ export const useProductStore = defineStore('product', () => {
 
   // 更新商品
   const updateProduct = async (id: number, data: ProductUpdateRequest): Promise<Product> => {
+    console.log('🔍 [DEBUG] ProductStore - 开始更新商品')
+    console.log('🔍 [DEBUG] ProductStore - 商品ID:', id)
+    console.log('🔍 [DEBUG] ProductStore - 更新数据:', data)
+    console.log('🔍 [DEBUG] ProductStore - 数据关键字段:')
+    console.log('  - 商品名称:', data.productName)
+    console.log('  - 价格:', data.price, '(类型:', typeof data.price, ')')
+    console.log('  - 库存:', data.stockQuantity, '(类型:', typeof data.stockQuantity, ')')
+    console.log('  - 折扣:', data.discount, '(类型:', typeof data.discount, ')')
+    console.log('  - 是否上架:', data.isAvailable, '(类型:', typeof data.isAvailable, ')')
+    console.log('  - 规格:', data.specifications)
+    console.log('  - 主图URL:', data.mainImageUrl)
+    console.log('  - 描述:', data.description)
+
     try {
+      console.log('🔍 [DEBUG] ProductStore - 设置loading状态')
       setLoading(true)
 
+      console.log('🔍 [DEBUG] ProductStore - 调用productAPI.updateProduct')
       const updatedProduct = await productAPI.updateProduct(id, data)
+      console.log('🔍 [DEBUG] ProductStore - productAPI.updateProduct调用成功')
+      console.log('🔍 [DEBUG] ProductStore - 返回的商品数据:', updatedProduct)
 
       // 更新列表中的商品
+      console.log('🔍 [DEBUG] ProductStore - 更新本地商品列表')
       const index = products.value.findIndex(p => p.id === id)
       if (index !== -1) {
+        console.log('🔍 [DEBUG] ProductStore - 找到本地商品，索引:', index)
         products.value[index] = updatedProduct
+        console.log('🔍 [DEBUG] ProductStore - 本地商品列表更新完成')
+      } else {
+        console.log('🔍 [DEBUG] ProductStore - 未找到本地商品，跳过列表更新')
       }
 
       // 如果当前商品被更新，也更新当前商品
       if (currentProduct.value?.id === id) {
+        console.log('🔍 [DEBUG] ProductStore - 更新当前选中商品')
         setCurrentProduct(updatedProduct)
       }
 
+      console.log('🔍 [DEBUG] ProductStore - 显示成功消息')
       ElMessage.success('商品更新成功')
       return updatedProduct
     } catch (error) {
-      console.error('❌ 更新商品失败:', error)
+      console.error('❌ [DEBUG] ProductStore - 更新商品失败:', error)
+      console.error('❌ [DEBUG] ProductStore - 错误详情:', {
+        message: error?.message,
+        stack: error?.stack,
+        response: error?.response?.data,
+        status: error?.response?.status
+      })
       ElMessage.error('更新商品失败，请重试')
       throw error
     } finally {
+      console.log('🔍 [DEBUG] ProductStore - 重置loading状态')
       setLoading(false)
     }
   }
