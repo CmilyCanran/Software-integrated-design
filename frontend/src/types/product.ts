@@ -2,6 +2,16 @@
 // 商品相关TypeScript类型定义 - 与后端DTO完全对齐
 // ============================================================================
 
+// 导入共享类型定义
+import type {
+  PaginatedResponse,
+  FormRule,
+  FieldValidation,
+  SortConfig,
+  Tag,
+  KeyValuePair
+} from './index'
+
 // 🔧 强化的规格类型定义 - 与后端Map<String, List<String>>对应
 export interface ProductSpecifications {
   [key: string]: string[]  // 明确值为字符串数组
@@ -106,16 +116,7 @@ export interface ProductQueryParams {
   sortOrder?: 'asc' | 'desc'
 }
 
-// 分页响应接口
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  size: number
-  totalPages: number
-  hasNext: boolean
-  hasPrev: boolean
-}
+// 注意：PaginatedResponse<T> 已从 './index' 导入
 
 // 商品统计信息接口
 export interface ProductStats {
@@ -148,19 +149,13 @@ export type ProductStatusType = keyof typeof ProductStatus
 export type ProductAction = 'create' | 'update' | 'delete' | 'publish' | 'unpublish'
 
 // 🔧 与后端验证注解完全对应的接口
-export interface ValidationRule {
-  required?: boolean
-  min?: number
-  max?: number
-  pattern?: string
-  message: string
-}
+// 注意：ValidationRule 已从 './index' 导入为 FormRule
 
 export interface ProductValidationRules {
-  productName: ValidationRule & { max: 50, required: true }
-  price: ValidationRule & { min: 0.01, required: true }
-  discount: ValidationRule & { min: 0, max: 100 }
-  stockQuantity: ValidationRule & { min: 0, required: true }
+  productName: FormRule & { max: 50, required: true }
+  price: FormRule & { min: 0.01, required: true }
+  discount: FormRule & { min: 0, max: 100 }
+  stockQuantity: FormRule & { min: 0, required: true }
 }
 
 // 🔧 导出验证规则常量 - 完全映射后端注解
@@ -168,22 +163,29 @@ export const PRODUCT_VALIDATION_RULES: ProductValidationRules = {
   productName: {
     required: true,
     max: 50,
-    message: '商品名称长度在3到50个字符'
+    message: '商品名称长度在3到50个字符',
+    trigger: 'blur'
   },
   price: {
     required: true,
     min: 0.01,
-    message: '商品价格必须大于0'
+    message: '商品价格必须大于0',
+    trigger: 'blur',
+    type: 'number'
   },
   discount: {
     min: 0,
     max: 100,
-    message: '折扣率范围在0到100'
+    message: '折扣率范围在0到100',
+    trigger: 'blur',
+    type: 'number'
   },
   stockQuantity: {
     required: true,
     min: 0,
-    message: '库存数量不能为负数'
+    message: '库存数量不能为负数',
+    trigger: 'blur',
+    type: 'number'
   }
 }
 
@@ -196,45 +198,17 @@ export interface ProductExtendedFields {
   extendedAttributes?: Record<string, any>  // 其他扩展属性
 }
 
-// 商品表单验证规则接口
+// 商品表单验证规则接口（基于共享的FieldValidation）
+// 注意：FieldValidation 已从 './index' 导入
 export interface ProductFormRules {
-  productName: {
-    required: boolean
-    message: string
-    trigger: 'blur' | 'change' | 'submit'
-    min?: number
-    max?: number
-  }
-  price: {
-    required: boolean
-    message: string
-    trigger: 'blur' | 'change' | 'submit'
-    type: 'number'
-    min?: number
-    validator?: (rule: any, value: any, callback: any) => void
-  }
-  stockQuantity: {
-    required: boolean
-    message: string
-    trigger: 'blur' | 'change' | 'submit'
-    type: 'number'
-    min?: number
-    validator?: (rule: any, value: any, callback: any) => void
-  }
-  discount: {
-    required: boolean
-    message: string
-    trigger: 'blur' | 'change' | 'submit'
-    type: 'number'
-    min?: number
-    max?: number
-    validator?: (rule: any, value: any, callback: any) => void
-  }
+  productName: FieldValidation & { max: 50 }
+  price: FieldValidation & { type: 'number', min: number }
+  stockQuantity: FieldValidation & { type: 'number', min: number }
+  discount: FieldValidation & { type: 'number', min: number, max: number }
 }
 
-// 商品排序选项
-export interface ProductSortOption {
-  key: string
-  label: string
-  value: string
+// 商品排序选项（基于共享的SortConfig）
+// 注意：SortConfig 已从 './index' 导入
+export type ProductSortOption = SortConfig & {
+  category: 'price' | 'salesCount' | 'createdAt' | 'updatedAt' | 'stockQuantity'
 }

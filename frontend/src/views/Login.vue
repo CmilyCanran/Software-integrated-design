@@ -105,23 +105,30 @@ const handleLogin = async () => {
         router.push('/dashboard')
 
     } catch (error) {
-        const errorObj = error as any
+        // 类型守卫：检查是否为AxiosError
+        const isAxiosError = (err: unknown): err is import('axios').AxiosError => {
+            return err !== null && typeof err === 'object' && 'response' in err
+        }
+
         console.error('❌ 登录失败详细信息:', {
-            message: errorObj?.message,
-            response: errorObj?.response?.data,
-            status: errorObj?.response?.status,
-            config: errorObj?.config
+            message: error instanceof Error ? error.message : '未知错误',
+            response: isAxiosError(error) ? error.response?.data : undefined,
+            status: isAxiosError(error) ? error.response?.status : undefined,
+            config: isAxiosError(error) ? error.config : undefined
         })
 
         // 🔍 根据不同错误类型显示不同信息
-        if (errorObj?.response?.status === 401) {
+        if (isAxiosError(error) && error.response?.status === 401) {
             ElMessage.error('用户名或密码错误')
-        } else if (errorObj?.response?.status === 500) {
+        } else if (isAxiosError(error) && error.response?.status === 500) {
             ElMessage.error('服务器内部错误，请稍后重试')
-        } else if (errorObj?.message?.includes('Network Error')) {
+        } else if (error instanceof Error && error.message.includes('Network Error')) {
             ElMessage.error('网络连接失败，请检查网络')
         } else {
-            ElMessage.error(errorObj?.response?.data?.message || '登录失败，请重试')
+            ElMessage.error(
+                (isAxiosError(error) && error.response?.data?.message) ||
+                (error instanceof Error ? error.message : '登录失败，请重试')
+            )
         }
     } finally {
         authStore.setLoading(false)

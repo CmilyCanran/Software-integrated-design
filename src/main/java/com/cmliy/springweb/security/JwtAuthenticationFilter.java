@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetailsService; // 导�
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource; // 导入Web认证详情源
 import org.springframework.stereotype.Component;          // 导入Spring组件注解
 import org.springframework.web.filter.OncePerRequestFilter; // 导入Spring Web过滤器基类
+import org.slf4j.Logger;                                // 导入SLF4J日志接口
+import org.slf4j.LoggerFactory;                         // 导入SLF4J日志工厂
 
 import java.io.IOException;                             // 导入Java IO异常类
 
@@ -35,6 +37,12 @@ import java.io.IOException;                             // 导入Java IO异常�
  */
 @Component // @Component注解：声明这是一个Spring组件，Spring会自动管理其生命周期
 public class JwtAuthenticationFilter extends OncePerRequestFilter { // extends: 继承父类，获得父类的功能
+
+    /**
+     * 📝 日志记录器
+     * 使用SLF4J进行统一的日志记录，便于调试和监控JWT认证过程
+     */
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     // ===== 依赖注入的字段 =====
     // 使用final字段和构造函数注入，这是Spring Boot推荐的最佳实践
@@ -134,9 +142,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // extends: 
                 username = jwtUtil.extractUsername(jwt); // 从JWT令牌中解析出用户名
             } catch (Exception e) { // 捕获所有可能的JWT解析异常
                 // 常见异常：令牌格式错误、签名无效、令牌过期等
-                // System.err.println(): Java标准错误输出流，用于打印错误信息
-                System.err.println("无法从JWT令牌中提取用户名: " + e.getMessage()); // 打印详细错误信息
-                // 在生产环境中，应该使用日志框架（如SLF4J）而不是System.err
+                // 使用SLF4J记录JWT解析错误，便于调试和监控
+                logger.warn("无法从JWT令牌中提取用户名: {}", e.getMessage());
             }
         }
 

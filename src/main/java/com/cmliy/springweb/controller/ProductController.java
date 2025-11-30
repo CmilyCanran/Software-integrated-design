@@ -13,13 +13,10 @@ import com.cmliy.springweb.service.ImageService;
 import com.cmliy.springweb.service.ProductDataService;
 import com.cmliy.springweb.repository.UserRepository;
 import com.cmliy.springweb.util.JwtUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.validation.annotation.Validated;
@@ -40,15 +37,23 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/products")
-@RequiredArgsConstructor
 @Validated
-public class ProductController {
+public class ProductController extends BaseController {
 
     private final ProductService productService;
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
     private final ImageService imageService;
     private final ProductDataService productDataService;
+
+    public ProductController(ProductService productService,
+                           ImageService imageService,
+                           ProductDataService productDataService,
+                           UserRepository userRepository,
+                           JwtUtil jwtUtil) {
+        super(userRepository, jwtUtil);
+        this.productService = productService;
+        this.imageService = imageService;
+        this.productDataService = productDataService;
+    }
 
     /**
      * 📋 获取商品列表（分页）
@@ -419,61 +424,7 @@ public class ProductController {
         }
     }
 
-    // ==================== 🔧 私有辅助方法 ====================
-
-    /**
-     * 👤 获取当前认证用户ID
-     * 优先从JWT claims中获取用户ID，如果失败则从用户名查询
-     */
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("用户未认证");
-        }
-
-        // 方案1：尝试从JWT claims中获取用户ID（推荐的优化方案）
-        try {
-            // 从认证信息中获取JWT token
-            if (authentication.getCredentials() instanceof String) {
-                String token = (String) authentication.getCredentials();
-                // 确保token包含Bearer前缀时去除
-                if (token.startsWith("Bearer ")) {
-                    token = token.substring(7);
-                }
-
-                // 使用JwtUtil提取用户ID
-                Long userId = jwtUtil.extractUserId(token);
-                if (userId != null) {
-                    return userId;
-                }
-            }
-        } catch (Exception e) {
-            // JWT claims提取失败，使用备用方案
-            log.debug("从JWT claims获取用户ID失败，使用备用方案: {}", e.getMessage());
-        }
-
-        // 方案2：备用方案 - 从用户名查询用户ID
-        String username = authentication.getName();
-        try {
-            return userRepository.findByUsername(username)
-                    .map(user -> user.getId())
-                    .orElseThrow(() -> new RuntimeException("用户不存在: " + username));
-        } catch (Exception e) {
-            throw new RuntimeException("无法获取用户ID: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 👤 获取当前认证用户名
-     */
-    private String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "anonymous";
-        }
-        return authentication.getName();
-    }
-
+    
     // ==================== 🖼️ 图片管理端点 ====================
 
     /**

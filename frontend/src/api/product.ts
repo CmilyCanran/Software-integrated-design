@@ -186,48 +186,18 @@ export const productAPI = {
 
   // 创建商品
   createProduct: (data: ProductCreateRequest): Promise<Product> => {
-    try {
-      // DTO对齐的数据预处理
-      const processedData = preprocessProductData(data) as ProductCreateRequest
+    // DTO对齐的数据预处理
+    const processedData = preprocessProductData(data) as ProductCreateRequest
 
-      return api.post('/products', processedData)
-        .then((response) => {
-          return response
-        })
-        .catch((error) => {
-          // 智能错误处理
-          const errors = handleBackendValidationError(error)
-          error.processedErrors = errors
-          error.message = errors.map(e => e.message).join('; ')
-
-          throw error
-        })
-    } catch (error) {
-      throw error
-    }
+    return api.post('/products', processedData)
   },
 
   // 更新商品
   updateProduct: (id: number, data: ProductUpdateRequest): Promise<Product> => {
-    try {
-      // DTO对齐的数据预处理
-      const processedData = preprocessProductData(data) as ProductUpdateRequest
+    // DTO对齐的数据预处理
+    const processedData = preprocessProductData(data) as ProductUpdateRequest
 
-      return api.put(`/products/${id}`, processedData)
-        .then((response) => {
-          return response
-        })
-        .catch((error) => {
-          // 智能错误处理
-          const errors = handleBackendValidationError(error)
-          error.processedErrors = errors
-          error.message = errors.map(e => e.message).join('; ')
-
-          throw error
-        })
-    } catch (error) {
-      throw error
-    }
+    return api.put(`/products/${id}`, processedData)
   },
 
   // 删除商品

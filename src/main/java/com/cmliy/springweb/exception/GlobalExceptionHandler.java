@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +30,12 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     /**
+     * 📝 日志记录器
+     * 使用SLF4J进行统一的日志记录，便于调试和监控
+     */
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /**
      * 🔐 处理认证相关异常
      *
      * 拦截Spring Security认证异常，返回标准的认证失败响应。
@@ -39,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class, AuthenticationServiceException.class})
     public ResponseEntity<ApiResponse<Map<String, Object>>> handleAuthException(Exception e) {
         // 📝 记录认证失败日志
-        System.err.println("认证失败: " + e.getMessage());
+        logger.warn("认证失败: {}", e.getMessage());
 
         // 🛠️ 构建认证失败的响应数据
         Map<String, Object> errorData = new HashMap<>();
@@ -65,7 +73,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(IllegalArgumentException e) {
         // 📝 记录参数验证失败日志
-        System.err.println("参数验证失败: " + e.getMessage());
+        logger.warn("参数验证失败: {}", e.getMessage());
 
         // 📤 返回400错误请求状态的标准化响应
         return ResponseEntity.status(400).body(
@@ -84,9 +92,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Map<String, Object>>> handleGenericException(Exception e) {
-        // 📝 记录服务器错误日志
-        System.err.println("服务器内部错误: " + e.getMessage());
-        e.printStackTrace(); // 开发环境打印完整堆栈跟踪
+        // 📝 记录服务器错误日志 - 使用ERROR级别记录完整异常信息
+        logger.error("服务器内部错误: {}", e.getMessage(), e);
 
         // 🛠️ 构建错误详情数据
         Map<String, Object> errorDetails = new HashMap<>();

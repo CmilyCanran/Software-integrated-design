@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.PostMapping;   // 导入Spring We
 import org.springframework.web.bind.annotation.RequestBody;   // 导入Spring Web请求体绑定注解
 import org.springframework.web.bind.annotation.RestController; // 导入Spring Web REST控制器注解
 import org.springframework.web.bind.annotation.RequestMapping; // 导入Spring Web请求映射注解
+import org.slf4j.Logger;                                // 导入SLF4J日志接口
+import org.slf4j.LoggerFactory;                         // 导入SLF4J日志工厂
 
 import java.time.LocalDateTime;  // 导入Java 8日期时间类，用于获取当前时间
 import java.util.Map;           // 导入Java Map接口，用于处理请求参数
@@ -46,6 +48,12 @@ import java.util.Optional;      // 导入Java 8 Optional容器类，避免空指
 @RestController // @RestController注解：声明这是一个REST控制器类
 @RequestMapping("/auth") // @RequestMapping注解：为整个控制器设置基础路径
 public class AuthController {  // public class: 定义公共类，其他类可以访问
+
+    /**
+     * 📝 日志记录器
+     * 使用SLF4J进行统一的日志记录，便于调试和监控用户认证过程
+     */
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     // ===== 依赖注入的字段 =====
     // 使用final字段和构造函数注入，这是Spring Boot推荐的最佳实践
@@ -408,7 +416,7 @@ public class AuthController {  // public class: 定义公共类，其他类可�
             if (authentication != null && authentication.isAuthenticated()) {
                 // 👤 获取当前用户名（用于日志记录，可选）
                 String username = authentication.getName();
-                System.out.println("用户登出: " + username);
+                logger.info("用户登出: {}", username);
             }
 
             // 📤 构建标准响应格式
