@@ -27,7 +27,7 @@ VALUES
     0.00,
     60,
     true,
-    (SELECT id FROM users WHERE username = 'admin'),
+    (SELECT id FROM users WHERE username = 'shoper'),
     '{"specifications": {"颜色": ["白色", "黑色", "灰色"], "尺寸": ["S", "M", "L"], "材质": ["纯棉"], "分类": ["服装"], "品牌": ["基础款"], "适合季节": ["春夏", "四季"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
@@ -39,8 +39,8 @@ VALUES
     18,
     15.00,
     35,
-    true,
-    (SELECT id FROM users WHERE username = 'admin'),
+    false,
+    (SELECT id FROM users WHERE username = 'shoper'),
     '{"specifications": {"颜色": ["碎花蓝色", "碎花粉色"], "尺寸": ["S", "M"], "材质": ["雪纺"], "分类": ["服装"], "品牌": ["时尚女装"], "适合场合": ["约会", "聚会"], "裙长": ["及膝", "长款"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
@@ -52,8 +52,8 @@ VALUES
     12,
     10.00,
     0,
-    false,
-    (SELECT id FROM users WHERE username = 'admin'),
+    true,
+    (SELECT id FROM users WHERE username = 'shoper'),
     '{"specifications": {"颜色": ["深黑色", "藏青色", "灰色"], "尺寸": ["28", "30", "32", "34", "36"], "材质": ["弹力棉", "涤纶混纺"], "分类": ["服装"], "品牌": ["商务系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
@@ -66,7 +66,7 @@ VALUES
     0.00,
     45,
     true,
-    (SELECT id FROM users WHERE username = 'admin'),
+    (SELECT id FROM users WHERE username = 'shoper'),
     '{"specifications": {"颜色": ["黑色", "灰色", "白色", "蓝色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["棉绒", "抓绒"], "分类": ["服装"], "品牌": ["运动系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()
@@ -79,7 +79,7 @@ VALUES
     20.00,
     25,
     true,
-    (SELECT id FROM users WHERE username = 'admin'),
+    (SELECT id FROM users WHERE username = 'shoper'),
     '{"specifications": {"颜色": ["深蓝色", "浅蓝色", "黑色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["牛仔布", "棉质"], "分类": ["服装"], "品牌": ["经典系列"]}, "image_data": {"main_image": "/images/placeholder-product.png"}}'::jsonb,
     NOW(),
     NOW()

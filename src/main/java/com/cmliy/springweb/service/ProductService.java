@@ -54,16 +54,28 @@ public class ProductService {
      * @param size 每页大小
      * @param sortBy 排序字段
      * @param sortDirection 排序方向（ASC/DESC）
+     * @param isAvailable 是否上架（可选，true=只显示上架商品，false=只显示下架商品，null=显示所有商品）
      * @return 分页商品列表
      */
-    public Page<ProductListItemDTO> getProductList(int page, int size, String sortBy, String sortDirection) {
-        log.info("获取商品列表: page={}, size={}, sortBy={}, sortDirection={}", page, size, sortBy, sortDirection);
+    public Page<ProductListItemDTO> getProductList(int page, int size, String sortBy, String sortDirection, Boolean isAvailable) {
+        log.info("获取商品列表: page={}, size={}, sortBy={}, sortDirection={}, isAvailable={}",
+                page, size, sortBy, sortDirection, isAvailable);
 
         Sort.Direction direction = "DESC".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
-        Page<Product> productPage = productRepository.findAll(pageable);
-        return productPage.map(productConverter::toListItemDTO);
+        // 如果需要按上架状态过滤，使用Specification查询
+        if (isAvailable != null) {
+            Specification<Product> spec = (root, query, criteriaBuilder) -> {
+                return criteriaBuilder.equal(root.get("isAvailable"), isAvailable);
+            };
+            Page<Product> productPage = productRepository.findAll(spec, pageable);
+            return productPage.map(productConverter::toListItemDTO);
+        } else {
+            // 如果没有过滤条件，使用原来的查询方式
+            Page<Product> productPage = productRepository.findAll(pageable);
+            return productPage.map(productConverter::toListItemDTO);
+        }
     }
 
     /**
@@ -272,24 +284,115 @@ public class ProductService {
     }
 
     /**
-     * 📊 获取商品统计信息
+     * 🏪 获取指定商家的商品列表
      *
+     * @param merchantId 商家ID
+     * @param page 页码（从0开始）
+     * @param size 每页大小
+     * @param keyword 搜索关键词（可选）
+     * @param category 商品分类（可选）
+     * @param isAvailable 是否上架（可选）
+     * @param sortBy 排序字段
+     * @param sortDirection 排序方向
+     * @return 商家商品分页列表
+     */
+    public Page<ProductListItemDTO> getMerchantProducts(
+            Long merchantId, int page, int size, String keyword,
+            String category, Boolean isAvailable, String sortBy, String sortDirection) {
+        log.info("获取商家商品列表: merchantId={}, page={}, size={}, keyword={}, category={}, isAvailable={}, sortBy={}, sortDirection={}",
+                merchantId, page, size, keyword, category, isAvailable, sortBy, sortDirection);
+
+        Sort.Direction direction = "DESC".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // 构建查询条件
+        Specification<Product> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 按商家过滤
+            predicates.add(criteriaBuilder.equal(root.get("creator").get("id"), merchantId));
+
+            // 按上架状态过滤
+            if (isAvailable != null) {
+                predicates.add(criteriaBuilder.equal(root.get("isAvailable"), isAvailable));
+            }
+
+            // 关键词搜索
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchKeyword = "%" + keyword.toLowerCase() + "%";
+                Predicate namePredicate = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("productName")), searchKeyword);
+                Predicate descPredicate = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("description")), searchKeyword);
+                predicates.add(criteriaBuilder.or(namePredicate, descPredicate));
+            }
+
+            // 按分类过滤
+            if (category != null && !category.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("category"), category));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+        return productPage.map(productConverter::toListItemDTO);
+    }
+
+    /**
+     * 📊 获取指定商家的商品统计信息
+     *
+     * @param merchantId 商家ID（可选，如果为null则返回全局统计）
      * @return 统计信息Map
      */
-    public java.util.Map<String, Object> getProductStatistics() {
-        log.info("获取商品统计信息");
+    public java.util.Map<String, Object> getProductStatistics(Long merchantId) {
+        log.info("获取商品统计信息: merchantId={}", merchantId);
 
-        long totalProducts = productRepository.count();
-        long availableProducts = productRepository.countByIsAvailable(true);
-        long outOfStockProducts = productRepository.countByStockQuantity(0);
+        long totalProducts;
+        long availableProducts;
+        long unavailableProducts;
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+
+        if (merchantId != null) {
+            // 获取指定商家的统计
+            totalProducts = productRepository.countByCreatorId(merchantId);
+            availableProducts = productRepository.countByCreatorIdAndIsAvailable(merchantId, true);
+            unavailableProducts = totalProducts - availableProducts;
+
+            // 计算该商家的总销售额
+            List<Product> merchantProducts = productRepository.findByCreatorId(merchantId);
+            totalRevenue = merchantProducts.stream()
+                .map(product -> product.getPrice().multiply(BigDecimal.valueOf(product.getSalesCount())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            // 获取全局统计（保持向后兼容）
+            totalProducts = productRepository.count();
+            availableProducts = productRepository.countByIsAvailable(true);
+            unavailableProducts = totalProducts - availableProducts;
+
+            List<Product> allProducts = productRepository.findAll();
+            totalRevenue = allProducts.stream()
+                .map(product -> product.getPrice().multiply(BigDecimal.valueOf(product.getSalesCount())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
 
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("totalProducts", totalProducts);
         stats.put("availableProducts", availableProducts);
-        stats.put("outOfStockProducts", outOfStockProducts);
+        stats.put("unavailableProducts", unavailableProducts);
+        stats.put("totalRevenue", totalRevenue);
         stats.put("availableRate", totalProducts > 0 ? (double) availableProducts / totalProducts * 100 : 0);
 
         return stats;
+    }
+
+    /**
+     * 📊 获取商品统计信息（向后兼容方法）
+     *
+     * @return 统计信息Map
+     */
+    public java.util.Map<String, Object> getProductStatistics() {
+        return getProductStatistics(null);
     }
 
     // ==================== 🔧 私有辅助方法 ====================
