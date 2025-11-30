@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * 🛠️ 商品数据服务 - Product Data Service
@@ -58,12 +59,7 @@ public class ProductDataService {
     }
 
     /**
-     * 📋 安全更新商品规格数据
-     *
-     * 以可控的方式更新规格信息，避免直接操作嵌套结构
-     *
-     * @param product 商品实体
-     * @param specifications 规格数据Map
+     * 🔧 修复方法：安全的商品规格数据更新
      */
     public void updateSpecifications(Product product, Map<String, Object> specifications) {
         log.info("🔧 [ProductDataService] 开始更新商品规格数据: productId={}, specifications={}",
@@ -74,23 +70,111 @@ public class ProductDataService {
             return;
         }
 
-        // 获取当前的productData，如果为null则初始化
-        Map<String, Object> currentData = product.getProductData();
-        if (currentData == null) {
-            log.info("🔧 [ProductDataService] productData为null，初始化新的Map");
-            currentData = new HashMap<>();
-            product.setProductData(currentData);
+        // 🔧 关键修复：验证和转换规格数据
+        Map<String, List<String>> validatedSpecifications = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : specifications.entrySet()) {
+            String specName = entry.getKey();
+            Object specValues = entry.getValue();
+
+            log.info("🔧 [ProductDataService] 处理规格: specName={}, specValues={}, specValuesType={}",
+                     specName, specValues, specValues != null ? specValues.getClass().getSimpleName() : "null");
+
+            // 验证规格名称
+            if (specName == null || specName.trim().isEmpty()) {
+                log.warn("🔧 [ProductDataService] 跳过空的规格名称");
+                continue;
+            }
+
+            // 转换规格值为字符串列表
+            List<String> stringValues = convertToStringList(specValues);
+            if (stringValues == null || stringValues.isEmpty()) {
+                log.warn("🔧 [ProductDataService] 跳过空的规格值: specName={}", specName);
+                continue;
+            }
+
+            validatedSpecifications.put(specName.trim(), stringValues);
+            log.info("🔧 [ProductDataService] 规格处理成功: specName={}, stringValues={}", specName, stringValues);
         }
 
-        // 备份旧的规格数据用于日志
-        @SuppressWarnings("unchecked")
-        Map<String, Object> oldSpecifications = (Map<String, Object>) currentData.get("specifications");
+        if (validatedSpecifications.isEmpty()) {
+            log.warn("🔧 [ProductDataService] 没有有效的规格数据，跳过更新");
+            return;
+        }
 
-        // 更新规格数据
-        currentData.put("specifications", new HashMap<>(specifications));
+        // 🔧 关键修复：安全地更新JSONB数据
+        try {
+            Map<String, Object> currentData = product.getProductData();
+            if (currentData == null) {
+                currentData = new HashMap<>();
+            }
 
-        log.info("🔧 [ProductDataService] 规格数据更新完成: productId={}, oldSpecifications={}, newSpecifications={}",
-                product.getId(), oldSpecifications, specifications);
+            // 备份旧数据
+            @SuppressWarnings("unchecked")
+            Map<String, Object> oldSpecifications = (Map<String, Object>) currentData.get("specifications");
+
+            // 更新规格数据
+            currentData.put("specifications", new HashMap<>(validatedSpecifications));
+
+            // 🔧 关键修复：使用setter方法确保JSONB正确处理
+            product.setProductData(currentData);
+
+            log.info("🔧 [ProductDataService] 规格数据更新完成: productId={}, oldSpecifications={}, newSpecifications={}",
+                    product.getId(), oldSpecifications, validatedSpecifications);
+
+        } catch (Exception e) {
+            log.error("🔧 [ProductDataService] 规格数据更新失败: productId={}, specifications={}",
+                     product.getId(), validatedSpecifications, e);
+            throw new RuntimeException("规格数据更新失败", e);
+        }
+    }
+
+    /**
+     * 🔧 新增方法：将任意类型转换为字符串列表
+     */
+    private List<String> convertToStringList(Object values) {
+        if (values == null) {
+            return null;
+        }
+
+        // 处理List类型
+        if (values instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> objectList = (List<Object>) values;
+            List<String> stringList = new ArrayList<>();
+
+            for (Object item : objectList) {
+                if (item != null) {
+                    String strValue = item.toString().trim();
+                    if (!strValue.isEmpty()) {
+                        stringList.add(strValue);
+                    }
+                }
+            }
+
+            return stringList.isEmpty() ? null : stringList;
+        }
+
+        // 处理数组类型
+        if (values.getClass().isArray()) {
+            Object[] array = (Object[]) values;
+            List<String> stringList = new ArrayList<>();
+
+            for (Object item : array) {
+                if (item != null) {
+                    String strValue = item.toString().trim();
+                    if (!strValue.isEmpty()) {
+                        stringList.add(strValue);
+                    }
+                }
+            }
+
+            return stringList.isEmpty() ? null : stringList;
+        }
+
+        // 处理单个值（数字、字符串等）
+        String strValue = values.toString().trim();
+        return strValue.isEmpty() ? null : List.of(strValue);
     }
 
     /**
