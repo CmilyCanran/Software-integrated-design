@@ -1,19 +1,10 @@
 package com.cmliy.springweb.service;
 
-import com.cmliy.springweb.converter.ProductConverter;
-import com.cmliy.springweb.dto.ProductResponseDTO;
-import com.cmliy.springweb.dto.ProductDetailDTO;
-import com.cmliy.springweb.dto.ProductSummaryDTO;
-import com.cmliy.springweb.dto.ProductListItemDTO;
-import com.cmliy.springweb.dto.ProductCreateRequestDTO;
-import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
-import com.cmliy.springweb.dto.ProductQueryRequestDTO;
-import com.cmliy.springweb.model.Product;
-import com.cmliy.springweb.model.User;
-import com.cmliy.springweb.repository.ProductRepository;
-import com.cmliy.springweb.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,26 +13,35 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import com.cmliy.springweb.converter.ProductConverter;
+import com.cmliy.springweb.dto.ProductCreateRequestDTO;
+import com.cmliy.springweb.dto.ProductDetailDTO;
+import com.cmliy.springweb.dto.ProductListItemDTO;
+import com.cmliy.springweb.dto.ProductQueryRequestDTO;
+import com.cmliy.springweb.dto.ProductResponseDTO;
+import com.cmliy.springweb.dto.ProductSummaryDTO;
+import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
+import com.cmliy.springweb.model.Product;
+import com.cmliy.springweb.model.User;
+import com.cmliy.springweb.repository.ProductRepository;
+import com.cmliy.springweb.repository.UserRepository;
+
 import jakarta.persistence.criteria.Predicate;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 📦 商品服务 - Product Service
  *
  * 提供商品的完整业务逻辑处理，包括CRUD操作、查询、统计等
  * 集成DTO转换，确保数据传输的一致性和安全性
- *
- * @author Claude
- * @since 2025-11-22
+
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ProductService {
+public class ProductService extends BaseService {
 
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
@@ -113,26 +113,22 @@ public class ProductService {
      */
     @Transactional
     public ProductResponseDTO createProduct(ProductCreateRequestDTO requestDTO, Long creatorId) {
-        log.info("创建商品: name={}, creatorId={}", requestDTO.getProductName(), creatorId);
+        return executeWithLog("创建商品", () -> {
+            // 验证创建者存在
+            User creator = validateExists(userRepository.findById(creatorId), "创建者", creatorId);
 
-        // 验证创建者存在
-        User creator = userRepository.findById(creatorId)
-                .orElseThrow(() -> new RuntimeException("创建者不存在: " + creatorId));
+            // 检查商品名称是否已存在
+            validateUnique(productRepository.existsByProductName(requestDTO.getProductName()),
+                          "商品名称", requestDTO.getProductName());
 
-        // 检查商品名称是否已存在
-        if (productRepository.existsByProductName(requestDTO.getProductName())) {
-            throw new RuntimeException("商品名称已存在: " + requestDTO.getProductName());
-        }
+            // 转换DTO为实体
+            Product product = productConverter.toEntity(requestDTO, creator);
 
-        // 转换DTO为实体
-        Product product = productConverter.toEntity(requestDTO, creator);
+            // 保存商品
+            Product savedProduct = productRepository.save(product);
 
-        // 保存商品
-        Product savedProduct = productRepository.save(product);
-
-        log.info("商品创建成功: id={}, name={}", savedProduct.getId(), savedProduct.getProductName());
-
-        return productConverter.toResponseDTO(savedProduct);
+            return productConverter.toResponseDTO(savedProduct);
+        }, requestDTO.getProductName(), creatorId);
     }
 
     /**
@@ -145,26 +141,23 @@ public class ProductService {
      */
     @Transactional
     public ProductResponseDTO updateProduct(Long id, ProductUpdateRequestDTO requestDTO, Long updaterId) {
-        log.info("更新商品: id={}, updaterId={}", id, updaterId);
+        return executeWithLog("更新商品", () -> {
+            // 获取现有商品
+            Product product = validateExists(productRepository.findById(id), "商品", id);
 
-        // 获取现有商品
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("商品不存在: " + id));
+            // 检查商品名称是否与其他商品冲突（如果更改了名称）
+            if (requestDTO.getProductName() != null &&
+                !requestDTO.getProductName().equals(product.getProductName()) &&
+                productRepository.existsByProductName(requestDTO.getProductName())) {
+                validateUnique(true, "商品名称", requestDTO.getProductName());
+            }
 
-        // 检查商品名称是否与其他商品冲突（如果更改了名称）
-        if (requestDTO.getProductName() != null &&
-            !requestDTO.getProductName().equals(product.getProductName()) &&
-            productRepository.existsByProductName(requestDTO.getProductName())) {
-            throw new RuntimeException("商品名称已存在: " + requestDTO.getProductName());
-        }
+            // 更新商品信息
+            Product updatedProduct = productConverter.updateEntity(product, requestDTO);
+            Product savedProduct = productRepository.save(updatedProduct);
 
-        // 更新商品信息
-        Product updatedProduct = productConverter.updateEntity(product, requestDTO);
-        Product savedProduct = productRepository.save(updatedProduct);
-
-        log.info("商品更新成功: id={}, name={}", savedProduct.getId(), savedProduct.getProductName());
-
-        return productConverter.toResponseDTO(savedProduct);
+            return productConverter.toResponseDTO(savedProduct);
+        }, id, updaterId);
     }
 
     /**
@@ -175,14 +168,13 @@ public class ProductService {
      */
     @Transactional
     public void deleteProduct(Long id, Long deleterId) {
-        log.info("删除商品: id={}, deleterId={}", id, deleterId);
+        executeWithLog("删除商品", () -> {
+            // 验证商品存在
+            validateExists(productRepository.findById(id), "商品", id);
 
-        if (!productRepository.existsById(id)) {
-            throw new RuntimeException("商品不存在: " + id);
-        }
-
-        productRepository.deleteById(id);
-        log.info("商品删除成功: id={}", id);
+            // 删除商品
+            productRepository.deleteById(id);
+        }, id, deleterId);
     }
 
     /**
@@ -226,15 +218,17 @@ public class ProductService {
      */
     @Transactional
     public void increaseStock(Long id, Integer quantity) {
-        log.info("增加商品库存: id={}, quantity={}", id, quantity);
+        executeWithLog("增加商品库存", () -> {
+            // 验证数量为正数
+            validatePositive(quantity, "增加数量");
 
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("商品不存在: " + id));
+            // 验证商品存在
+            Product product = validateExists(productRepository.findById(id), "商品", id);
 
-        product.increaseStock(quantity);
-        productRepository.save(product);
-
-        log.info("商品库存增加成功: id={}, newStock={}", id, product.getStockQuantity());
+            // 增加库存
+            product.increaseStock(quantity);
+            productRepository.save(product);
+        }, id, quantity);
     }
 
     /**
@@ -246,22 +240,26 @@ public class ProductService {
      */
     @Transactional
     public boolean decreaseStock(Long id, Integer quantity) {
-        log.info("减少商品库存: id={}, quantity={}", id, quantity);
+        return executeWithLog("减少商品库存", () -> {
+            // 验证数量为正数
+            validatePositive(quantity, "减少数量");
 
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("商品不存在: " + id));
+            // 验证商品存在
+            Product product = validateExists(productRepository.findById(id), "商品", id);
 
-        boolean success = product.decreaseStock(quantity);
-        if (success) {
-            productRepository.save(product);
-            log.info("商品库存减少成功: id={}, newStock={}, newSales={}",
-                    id, product.getStockQuantity(), product.getSalesCount());
-        } else {
-            log.warn("商品库存不足，无法减少: id={}, requested={}, current={}",
-                    id, quantity, product.getStockQuantity());
-        }
+            // 减少库存
+            boolean success = product.decreaseStock(quantity);
+            if (success) {
+                productRepository.save(product);
+                log.info("商品库存减少成功: id={}, newStock={}, newSales={}",
+                        id, product.getStockQuantity(), product.getSalesCount());
+            } else {
+                log.warn("商品库存不足，无法减少: id={}, requested={}, current={}",
+                        id, quantity, product.getStockQuantity());
+            }
 
-        return success;
+            return success;
+        }, id, quantity);
     }
 
     /**
@@ -272,15 +270,14 @@ public class ProductService {
      */
     @Transactional
     public void toggleProductAvailability(Long id, Long operatorId) {
-        log.info("切换商品上架状态: id={}, operatorId={}", id, operatorId);
+        executeWithLog("切换商品上架状态", () -> {
+            // 验证商品存在
+            Product product = validateExists(productRepository.findById(id), "商品", id);
 
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("商品不存在: " + id));
-
-        product.setIsAvailable(!product.getIsAvailable());
-        productRepository.save(product);
-
-        log.info("商品状态切换成功: id={}, newStatus={}", id, product.getIsAvailable());
+            // 切换状态
+            product.setIsAvailable(!product.getIsAvailable());
+            productRepository.save(product);
+        }, id, operatorId);
     }
 
     /**

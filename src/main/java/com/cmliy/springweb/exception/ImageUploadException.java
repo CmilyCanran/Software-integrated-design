@@ -6,8 +6,7 @@ package com.cmliy.springweb.exception;
  * 这个异常类用于处理图片上传过程中的各种错误情况。
  * 继承自RuntimeException，是一个非受检异常。
  *
- * @author Claude
- * @since 2025-01-20
+
  */
 public class ImageUploadException extends RuntimeException {
 

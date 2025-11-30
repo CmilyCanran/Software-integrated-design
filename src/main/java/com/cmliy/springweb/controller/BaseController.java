@@ -1,14 +1,16 @@
 package com.cmliy.springweb.controller;
 
-import com.cmliy.springweb.common.ApiResponse;
-import com.cmliy.springweb.repository.UserRepository;
-import com.cmliy.springweb.util.JwtUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.cmliy.springweb.common.ApiResponse;
+import com.cmliy.springweb.repository.UserRepository;
+import com.cmliy.springweb.util.JwtUtil;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 🏗️ 基础控制器类
@@ -19,9 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * - 统一的日志记录
  *
  * 使用继承此基类来消除控制器间的代码重复
- *
- * @author Claude
- * @since 2025-11-30
+
  */
 @Slf4j
 @RequiredArgsConstructor

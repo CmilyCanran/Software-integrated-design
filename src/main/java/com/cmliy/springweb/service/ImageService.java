@@ -1,17 +1,7 @@
 package com.cmliy.springweb.service;
 
-import com.cmliy.springweb.exception.ImageUploadException;
-import lombok.extern.slf4j.Slf4j;
-import org.imgscalr.Scalr;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,14 +11,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.cmliy.springweb.exception.ImageUploadException;
+
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 🖼️ 图片服务 - Image Service
  *
  * 这个服务类处理图片的上传、存储、缩略图生成和管理功能。
  * 支持多种图片格式，自动生成缩略图，提供安全的文件命名。
- *
- * @author Claude
- * @since 2025-01-20
+
  */
 @Slf4j
 @Service

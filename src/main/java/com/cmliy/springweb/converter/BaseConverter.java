@@ -1,11 +1,11 @@
 package com.cmliy.springweb.converter;
 
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 🔄 基础转换器类
@@ -16,9 +16,7 @@ import java.util.stream.Collectors;
  * - 通用的转换模板方法
  *
  * 使用继承此基类来消除转换器间的代码重复
- *
- * @author Claude
- * @since 2025-11-30
+
  */
 @Slf4j
 public abstract class BaseConverter {

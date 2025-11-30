@@ -1,13 +1,15 @@
 package com.cmliy.springweb.service;
 
-import com.cmliy.springweb.model.Product;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
+
+import org.springframework.stereotype.Service;
+
+import com.cmliy.springweb.model.Product;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 🛠️ 商品数据服务 - Product Data Service
@@ -15,8 +17,7 @@ import java.util.ArrayList;
  * 专门处理Product实体的动态数据操作，分离业务逻辑与实体模型
  * 避免Hibernate脏检查机制的复杂性问题，提供安全的数据更新方式
  *
- * @author Claude
- * @since 2025-11-30
+
  */
 @Slf4j
 @Service

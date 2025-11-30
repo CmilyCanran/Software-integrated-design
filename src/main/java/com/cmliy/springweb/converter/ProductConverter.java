@@ -1,22 +1,22 @@
 package com.cmliy.springweb.converter;
 
-import com.cmliy.springweb.dto.ProductResponseDTO;
-import com.cmliy.springweb.dto.ProductDetailDTO;
-import com.cmliy.springweb.dto.ProductSummaryDTO;
-import com.cmliy.springweb.dto.ProductListItemDTO;
-import com.cmliy.springweb.dto.ProductCreateRequestDTO;
-import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
-import com.cmliy.springweb.model.Product;
-import com.cmliy.springweb.model.User;
-import com.cmliy.springweb.service.ProductDataService;
-
-// 🚀 Lombok注解 - 大幅简化样板代码
-import lombok.extern.slf4j.Slf4j;          // @Slf4j: 自动生成Logger实例
-import lombok.RequiredArgsConstructor;   // @RequiredArgsConstructor: 自动生成构造函数
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
+import com.cmliy.springweb.dto.ProductCreateRequestDTO;
+import com.cmliy.springweb.dto.ProductDetailDTO;
+import com.cmliy.springweb.dto.ProductListItemDTO;
+import com.cmliy.springweb.dto.ProductResponseDTO;
+import com.cmliy.springweb.dto.ProductSummaryDTO;
+import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
+import com.cmliy.springweb.model.Product;          // @Slf4j: 自动生成Logger实例
+import com.cmliy.springweb.model.User;   // @RequiredArgsConstructor: 自动生成构造函数
+import com.cmliy.springweb.service.ProductDataService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 🔄 商品转换器 - Product Converter (Lombok + BaseConverter优化版本)
@@ -34,8 +34,7 @@ import java.util.Map;
  * - safeConvertList(): 批量转换的统一逻辑
  * - 减少重复的null检查和异常处理代码
  *
- * @author Claude
- * @since 2025-11-22
+
  */
 @Slf4j
 @RequiredArgsConstructor  // 🚀 Lombok: 自动生成包含所有final字段的构造函数
