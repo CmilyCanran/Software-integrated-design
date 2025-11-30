@@ -23,7 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 商品图片HTTP访问映射 - 365天缓存
         registry.addResourceHandler("/uploads/images/**")
-                .addResourceLocations("file:D:/Code/Learn/Java/Spring/image/uploads/images/")
+                .addResourceLocations("file:D:\\Code\\Learn\\Java\\Spring\\image\\uploads\\images\\")
                 .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS));
     }
 }

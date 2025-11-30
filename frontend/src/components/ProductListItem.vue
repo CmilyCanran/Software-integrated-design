@@ -87,6 +87,7 @@ import StatusTag from './StatusTag.vue'
 import PriceDisplay from './PriceDisplay.vue'
 import StockIndicator from './StockIndicator.vue'
 import type { Product } from '@/types/product'
+import { processImageUrl } from '@/utils/imageUtils'
 
 // 定义props接口
 interface Props {
@@ -126,7 +127,7 @@ const emit = defineEmits<Emits>()
 const productImage = computed<string>(() => {
   // 优先使用主图片
   if (props.product.mainImageUrl) {
-    return props.product.mainImageUrl
+    return processImageUrl(props.product.mainImageUrl)
   }
 
   // 向后兼容：如果主图片不存在，使用默认图片

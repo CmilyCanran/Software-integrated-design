@@ -33,7 +33,7 @@
           <!-- 主图片展示 -->
           <div class="main-image-container">
             <ImageLoader
-              :src="product.mainImageUrl || '/images/placeholder-product.png'"
+              :src="processImageUrl(product.mainImageUrl)"
               :alt="product.productName"
               :placeholder="'/images/placeholder-product.png'"
               :fallback="'/images/placeholder-product.png'"
@@ -179,6 +179,7 @@ import StockIndicator from '@/components/StockIndicator.vue'
 import type { Product } from '@/types/product'
 import Header from '@/components/Header.vue'
 import { productAPI } from '@/api/product'
+import { processImageUrl } from '@/utils/imageUtils'
 
 // 路由相关
 const route = useRoute()
