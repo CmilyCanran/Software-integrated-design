@@ -5,19 +5,19 @@ import com.cmliy.springweb.model.User;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 🔄 用户转换器 - User Converter
  *
  * 负责User实体与DTO之间的转换
+ * 继承BaseConverter获得通用的转换功能
  * 统一管理用户数据的映射逻辑，确保数据一致性
  *
  * @author Claude
  * @since 2025-11-22
  */
 @Component
-public class UserConverter {
+public class UserConverter extends BaseConverter {
 
     /**
      * 🔄 User实体转UserDTO
@@ -26,16 +26,12 @@ public class UserConverter {
      * @return UserDTO
      */
     public UserDTO toDTO(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        return new UserDTO(
-            user.getId(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getRole()
-        );
+        return safeConvert(user, u -> new UserDTO(
+            u.getId(),
+            u.getUsername(),
+            u.getEmail(),
+            u.getRole()
+        ), "User");
     }
 
     /**
@@ -45,12 +41,7 @@ public class UserConverter {
      * @return UserDTO列表
      */
     public List<UserDTO> toDTOList(List<User> users) {
-        if (users == null || users.isEmpty()) {
-            return List.of();
-        }
-        return users.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        return safeConvertList(users, this::toDTO, "UserList");
     }
 
     /**
@@ -61,17 +52,23 @@ public class UserConverter {
      * @return User实体
      */
     public User toEntity(UserDTO userDTO) {
-        if (userDTO == null) {
-            return null;
-        }
+        return safeConvert(userDTO, dto -> {
+            User user = new User();
+            if (dto.getId() != null) {
+                user.setId(dto.getId());
+            }
+            if (dto.getUsername() != null) {
+                user.setUsername(dto.getUsername());
+            }
+            if (dto.getEmail() != null) {
+                user.setEmail(dto.getEmail());
+            }
+            if (dto.getRole() != null) {
+                user.setRole(dto.getRole());
+            }
 
-        User user = new User();
-        user.setId(userDTO.getId());
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        user.setRole(userDTO.getRole());
-
-        // 注意：密码和启用状态需要单独设置
-        return user;
+            // 注意：密码和启用状态需要单独设置
+            return user;
+        }, "UserDTO");
     }
 }
