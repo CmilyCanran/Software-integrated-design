@@ -258,7 +258,7 @@ export const productAPI = {
   // 上传商品图片
   uploadProductImage: (id: number, file: File): Promise<{ imageUrl: string }> => {
     const formData = new FormData()
-    formData.append('image', file)
+    formData.append('file', file)
 
     return api.post(`/products/${id}/image`, formData, {
       headers: {

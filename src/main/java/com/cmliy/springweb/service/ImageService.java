@@ -279,6 +279,32 @@ public class ImageService {
     // ==================== 🔧 私有方法 ====================
 
     /**
+     * 🗑️ 删除指定商品的所有现有图片
+     *
+     * @param productId 商品ID
+     * @param categoryPath 图片类别路径
+     */
+    private void deleteExistingProductImages(Long productId, Path categoryPath) {
+        try {
+            // 常见的图片扩展名
+            String[] imageExtensions = {"jpg", "jpeg", "png", "gif", "bmp", "webp"};
+
+            for (String extension : imageExtensions) {
+                String existingFilename = productId + "image." + extension;
+                Path existingImagePath = categoryPath.resolve(existingFilename);
+
+                if (Files.exists(existingImagePath)) {
+                    Files.delete(existingImagePath);
+                    log.info("删除旧商品图片: {}", existingImagePath);
+                }
+            }
+        } catch (IOException e) {
+            log.warn("删除旧商品图片时发生错误: productId={}", productId, e);
+            // 不抛出异常，继续执行新图片的上传
+        }
+    }
+
+    /**
      * 🔍 验证图片文件
      *
      * @param file 上传的文件
@@ -340,10 +366,12 @@ public class ImageService {
      *
      * @param category 图片类别
      * @param filename 文件名
-     * @return 图片URL
+     * @return 图片URL（带时间戳参数防止缓存）
      */
     private String buildImageUrl(String category, String filename) {
-        return String.format("/api/uploads/images/%s/%s", category, filename);
+        // 添加时间戳参数防止浏览器缓存
+        long timestamp = System.currentTimeMillis();
+        return String.format("/api/uploads/images/%s/%s?t=%d", category, filename, timestamp);
     }
 
     
@@ -431,7 +459,10 @@ public class ImageService {
             createDirectoryIfNotExists(categoryPath.toString());
             Path imagePath = categoryPath.resolve(safeFilename);
 
-            // 💾 保存原图（如果已存在则覆盖）
+            // 🗑️ 删除所有现有的商品图片（不同扩展名）
+            deleteExistingProductImages(productId, categoryPath);
+
+            // 💾 保存新图片
             file.transferTo(imagePath.toFile());
             log.info("商品图片保存成功: {}", imagePath);
 

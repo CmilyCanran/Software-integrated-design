@@ -80,11 +80,14 @@ request.interceptors.response.use(
     }
 
     // 错误日志记录
-    console.error('❌ 请求失败:', {
+    console.error('❌ 请求失败:', error)
+    console.error('❌ 详细错误信息:', {
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
-      message: error.message
+      statusText: error.response?.statusText,
+      message: error.message,
+      response: error.response?.data
     })
 
     return Promise.reject(error)
