@@ -9,6 +9,8 @@ import com.cmliy.springweb.dto.ProductCreateRequestDTO;
 import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
 import com.cmliy.springweb.dto.ProductQueryRequestDTO;
 import com.cmliy.springweb.service.ProductService;
+import com.cmliy.springweb.service.ImageService;
+import com.cmliy.springweb.service.ProductDataService;
 import com.cmliy.springweb.repository.UserRepository;
 import com.cmliy.springweb.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 
@@ -44,6 +47,8 @@ public class ProductController {
     private final ProductService productService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final ImageService imageService;
+    private final ProductDataService productDataService;
 
     /**
      * 📋 获取商品列表（分页）
@@ -467,5 +472,90 @@ public class ProductController {
             return "anonymous";
         }
         return authentication.getName();
+    }
+
+    // ==================== 🖼️ 图片管理端点 ====================
+
+    /**
+     * 📤 上传商品图片
+     *
+     * @param id 商品ID
+     * @param file 上传的图片文件
+     * @return 上传结果，包含图片URL
+     */
+    @PostMapping("/{id}/image")
+    @PreAuthorize("hasRole('SHOPER') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadProductImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+
+        log.info("上传商品图片请求: id={}, filename={}", id, file.getOriginalFilename());
+
+        try {
+            Long currentUserId = getCurrentUserId();
+
+            // 验证商品所有权
+            com.cmliy.springweb.model.Product product = productService.getProductByIdForUpdate(id, currentUserId)
+                    .orElseThrow(() -> new RuntimeException("商品不存在或无权限访问"));
+
+            // 上传图片（使用商品ID+image命名规则）
+            com.cmliy.springweb.service.ImageService.ImageUploadResult uploadResult = imageService.uploadProductImage(file, id);
+
+            // 更新商品图片数据
+            productDataService.updateProductImageData(product, uploadResult.getImageUrl());
+
+            // 保存商品
+            productService.saveProduct(product);
+
+            // 返回前端期望的格式
+            Map<String, String> responseData = Map.of("imageUrl", uploadResult.getImageUrl());
+            ApiResponse<Map<String, String>> response = ApiResponse.success(responseData, "图片上传成功");
+
+            return ResponseEntity.ok(response);
+
+        } catch (com.cmliy.springweb.exception.ImageUploadException e) {
+            log.error("图片上传失败: {}", e.getMessage());
+            ApiResponse<Map<String, String>> response = ApiResponse.error(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(response);
+        } catch (RuntimeException e) {
+            log.error("处理图片上传失败: {}", e.getMessage());
+            ApiResponse<Map<String, String>> response = ApiResponse.error(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 🗑️ 删除商品图片
+     *
+     * @param id 商品ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/{id}/image")
+    @PreAuthorize("hasRole('SHOPER') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteProductImage(@PathVariable Long id) {
+
+        log.info("删除商品图片请求: id={}", id);
+
+        try {
+            Long currentUserId = getCurrentUserId();
+
+            // 验证商品所有权
+            com.cmliy.springweb.model.Product product = productService.getProductByIdForUpdate(id, currentUserId)
+                    .orElseThrow(() -> new RuntimeException("商品不存在或无权限访问"));
+
+            // 清除商品图片数据
+            productDataService.updateProductImageData(product, null);
+
+            // 保存商品
+            productService.saveProduct(product);
+
+            ApiResponse<Void> response = ApiResponse.success(null, "图片删除成功");
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            log.error("删除图片失败: {}", e.getMessage());
+            ApiResponse<Void> response = ApiResponse.error(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

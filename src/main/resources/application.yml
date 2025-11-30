@@ -10,6 +10,7 @@ spring:
       mode: always
       encoding: UTF-8
       continue-on-error: false
+      data-locations: classpath:data.sql
 
   datasource:
     url: jdbc:postgresql://localhost:5432/clothes_db
@@ -40,9 +41,13 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 5MB
+      max-request-size: 5MB
       enabled: true
+
+  web:
+    resources:
+      static-locations: classpath:/static/,file:uploads/
 
 server:
   port: 8080
@@ -68,6 +73,9 @@ image:
       - image/jpeg
       - image/png
       - image/gif
-    generate-thumbnail: true
-    thumbnail-width: 300
-    thumbnail-height: 300
+
+# 应用图片配置
+app:
+  image:
+    storage:
+      path: D:\Code\Learn\Java\Spring\image\uploads\images

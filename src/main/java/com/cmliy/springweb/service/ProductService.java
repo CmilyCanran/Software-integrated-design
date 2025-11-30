@@ -433,4 +433,30 @@ public class ProductService {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
+    // ==================== 🔧 图片上传相关方法 ====================
+
+    /**
+     * 🔍 根据ID和用户ID获取商品（用于更新操作）
+     *
+     * @param id 商品ID
+     * @param userId 用户ID
+     * @return 商品信息（如果存在且属于该用户）
+     */
+    @Transactional(readOnly = true)
+    public Optional<Product> getProductByIdForUpdate(Long id, Long userId) {
+        return productRepository.findById(id)
+                .filter(product -> product.getCreator().getId().equals(userId));
+    }
+
+    /**
+     * 💾 保存商品
+     *
+     * @param product 商品实体
+     * @return 保存后的商品
+     */
+    @Transactional
+    public Product saveProduct(Product product) {
+        return productRepository.save(product);
+    }
 }

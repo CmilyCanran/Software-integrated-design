@@ -34,20 +34,13 @@ import java.util.UUID;
 @Service
 public class ImageService {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ImageService.class);
-
     /**
      * 📁 图片存储根目录
      */
     @Value("${app.image.storage.path:./uploads/images}")
     private String imageStoragePath;
 
-    /**
-     * 📁 缩略图存储目录
-     */
-    @Value("${app.image.thumbnail.path:./uploads/thumbnails}")
-    private String thumbnailPath;
-
+    
     /**
      * 📊 允许的图片格式
      */
@@ -56,16 +49,11 @@ public class ImageService {
     );
 
     /**
-     * 📏 最大文件大小（10MB）
+     * 📏 最大文件大小（5MB）
      */
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-    /**
-     * 🖼️ 缩略图尺寸
-     */
-    private static final int THUMBNAIL_WIDTH = 200;
-    private static final int THUMBNAIL_HEIGHT = 200;
-
+    
     /**
      * 🏷️ 日期时间格式化器
      */
@@ -79,9 +67,7 @@ public class ImageService {
     public void initialize() {
         try {
             createDirectoryIfNotExists(imageStoragePath);
-            createDirectoryIfNotExists(thumbnailPath);
             log.info("图片存储目录初始化完成: {}", imageStoragePath);
-            log.info("缩略图存储目录初始化完成: {}", thumbnailPath);
         } catch (IOException e) {
             log.error("初始化图片存储目录失败", e);
             throw new ImageUploadException("初始化图片存储目录失败", e);
@@ -118,20 +104,14 @@ public class ImageService {
             file.transferTo(imagePath.toFile());
             log.info("原图保存成功: {}", imagePath);
 
-            // 🖼️ 生成缩略图
-            String thumbnailFilename = generateThumbnail(imagePath, safeFilename, category);
-
             // 📊 获取文件信息
             long fileSize = Files.size(imagePath);
             String imageUrl = buildImageUrl(category, safeFilename);
-            String thumbnailUrl = buildThumbnailUrl(category, thumbnailFilename);
 
             // 📋 返回上传结果
             return new ImageUploadResult(
                     imageUrl,
-                    thumbnailUrl,
                     safeFilename,
-                    thumbnailFilename,
                     fileSize,
                     file.getContentType(),
                     LocalDateTime.now()
@@ -162,7 +142,7 @@ public class ImageService {
     /**
      * 🗑️ 删除图片
      *
-     * 删除原图和对应的缩略图。
+     * 删除原图。
      *
      * @param category 图片类别
      * @param filename 文件名
@@ -173,12 +153,6 @@ public class ImageService {
             Path imagePath = Paths.get(imageStoragePath, category, filename);
             Files.deleteIfExists(imagePath);
             log.info("原图删除成功: {}", imagePath);
-
-            // 🗑️ 删除缩略图
-            String thumbnailFilename = getThumbnailFilename(filename);
-            Path thumbnailFilePath = Paths.get(thumbnailPath, category, thumbnailFilename);
-            Files.deleteIfExists(thumbnailFilePath);
-            log.info("缩略图删除成功: {}", thumbnailFilePath);
 
         } catch (IOException e) {
             log.error("删除图片失败: category={}, filename={}", category, filename, e);
@@ -251,18 +225,11 @@ public class ImageService {
                     .atZone(java.time.ZoneId.systemDefault())
                     .toLocalDateTime();
 
-            String thumbnailFilename = getThumbnailFilename(filename);
-            boolean thumbnailExists = Files.exists(
-                    Paths.get(thumbnailPath, category, thumbnailFilename)
-            );
-
             return new ImageFileInfo(
                     filename,
-                    thumbnailFilename,
                     fileSize,
                     contentType,
-                    lastModified,
-                    thumbnailExists
+                    lastModified
             );
 
         } catch (IOException e) {
@@ -294,24 +261,6 @@ public class ImageService {
                                 return Files.deleteIfExists(path);
                             } catch (IOException e) {
                                 log.error("删除文件失败: {}", path, e);
-                                return false;
-                            }
-                        })
-                        .count();
-            }
-
-            // 🧹 清理缩略图
-            Path thumbnailRootPath = Paths.get(thumbnailPath);
-            if (Files.exists(thumbnailRootPath)) {
-                deletedCount += (int) Files.walk(thumbnailRootPath)
-                        .filter(path -> !Files.isDirectory(path))
-                        .filter(path -> isFileOlderThan(path, cutoffTime))
-                        .peek(path -> log.info("删除过期缩略图: {}", path))
-                        .map(path -> {
-                            try {
-                                return Files.deleteIfExists(path);
-                            } catch (IOException e) {
-                                log.error("删除缩略图文件失败: {}", path, e);
                                 return false;
                             }
                         })
@@ -384,53 +333,8 @@ public class ImageService {
         return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
     }
 
-    /**
-     * 🖼️ 生成缩略图
-     *
-     * @param imagePath 原图路径
-     * @param filename 原文件名
-     * @param category 图片类别
-     * @return 缩略图文件名
-     */
-    private String generateThumbnail(Path imagePath, String filename, String category) throws IOException {
-        String thumbnailFilename = getThumbnailFilename(filename);
-        Path categoryThumbnailPath = Paths.get(thumbnailPath, category);
-        createDirectoryIfNotExists(categoryThumbnailPath.toString());
-        Path thumbnailPath = categoryThumbnailPath.resolve(thumbnailFilename);
-
-        // 📖 读取原图
-        BufferedImage originalImage = ImageIO.read(imagePath.toFile());
-        if (originalImage == null) {
-            throw new ImageUploadException("无法读取原图: " + imagePath);
-        }
-
-        // 🖼️ 生成缩略图
-        BufferedImage thumbnail = Scalr.resize(originalImage, Scalr.Method.AUTOMATIC, Scalr.Mode.AUTOMATIC, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
-
-        // 💾 保存缩略图
-        String formatName = getFileExtension(filename);
-        ImageIO.write(thumbnail, formatName, thumbnailPath.toFile());
-
-        log.info("缩略图生成成功: {}", thumbnailPath);
-        return thumbnailFilename;
-    }
-
-    /**
-     * 🏷️ 获取缩略图文件名
-     *
-     * @param filename 原文件名
-     * @return 缩略图文件名
-     */
-    private String getThumbnailFilename(String filename) {
-        int dotIndex = filename.lastIndexOf('.');
-        if (dotIndex == -1) {
-            return "thumb_" + filename;
-        }
-        String name = filename.substring(0, dotIndex);
-        String extension = filename.substring(dotIndex + 1);
-        return "thumb_" + name + "." + extension;
-    }
-
+    
+    
     /**
      * 🔗 构建图片URL
      *
@@ -442,17 +346,7 @@ public class ImageService {
         return String.format("/uploads/images/%s/%s", category, filename);
     }
 
-    /**
-     * 🔗 构建缩略图URL
-     *
-     * @param category 图片类别
-     * @param filename 缩略图文件名
-     * @return 缩略图URL
-     */
-    private String buildThumbnailUrl(String category, String filename) {
-        return String.format("/uploads/thumbnails/%s/%s", category, filename);
-    }
-
+    
     /**
      * ⏰ 检查文件是否过期
      *
@@ -480,20 +374,15 @@ public class ImageService {
      */
     public static class ImageUploadResult {
         private final String imageUrl;
-        private final String thumbnailUrl;
         private final String filename;
-        private final String thumbnailFilename;
         private final long fileSize;
         private final String contentType;
         private final LocalDateTime uploadTime;
 
-        public ImageUploadResult(String imageUrl, String thumbnailUrl, String filename,
-                               String thumbnailFilename, long fileSize, String contentType,
+        public ImageUploadResult(String imageUrl, String filename, long fileSize, String contentType,
                                LocalDateTime uploadTime) {
             this.imageUrl = imageUrl;
-            this.thumbnailUrl = thumbnailUrl;
             this.filename = filename;
-            this.thumbnailFilename = thumbnailFilename;
             this.fileSize = fileSize;
             this.contentType = contentType;
             this.uploadTime = uploadTime;
@@ -501,9 +390,7 @@ public class ImageService {
 
         // Getter方法
         public String getImageUrl() { return imageUrl; }
-        public String getThumbnailUrl() { return thumbnailUrl; }
         public String getFilename() { return filename; }
-        public String getThumbnailFilename() { return thumbnailFilename; }
         public long getFileSize() { return fileSize; }
         public String getContentType() { return contentType; }
         public LocalDateTime getUploadTime() { return uploadTime; }
@@ -523,33 +410,71 @@ public class ImageService {
     }
 
     /**
+     * 📦 上传商品图片（使用商品ID+image命名规则）
+     *
+     * @param file 上传的文件
+     * @param productId 商品ID
+     * @return 图片上传结果
+     */
+    public ImageUploadResult uploadProductImage(MultipartFile file, Long productId) {
+        // 🔍 验证文件
+        validateImageFile(file);
+
+        try {
+            // 🏷️ 使用商品ID+image的命名规则
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = getFileExtension(originalFilename);
+            String safeFilename = productId + "image." + fileExtension;
+
+            // 📁 构建存储路径
+            Path categoryPath = Paths.get(imageStoragePath, "products");
+            createDirectoryIfNotExists(categoryPath.toString());
+            Path imagePath = categoryPath.resolve(safeFilename);
+
+            // 💾 保存原图（如果已存在则覆盖）
+            file.transferTo(imagePath.toFile());
+            log.info("商品图片保存成功: {}", imagePath);
+
+            // 📊 获取文件信息
+            long fileSize = Files.size(imagePath);
+            String imageUrl = buildImageUrl("products", safeFilename);
+
+            // 📋 返回上传结果
+            return new ImageUploadResult(
+                    imageUrl,
+                    safeFilename,
+                    fileSize,
+                    file.getContentType(),
+                    LocalDateTime.now()
+            );
+
+        } catch (IOException e) {
+            log.error("商品图片上传失败", e);
+            throw new ImageUploadException("商品图片上传失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * 📋 图片文件信息类
      */
     public static class ImageFileInfo {
         private final String filename;
-        private final String thumbnailFilename;
         private final long fileSize;
         private final String contentType;
         private final LocalDateTime lastModified;
-        private final boolean thumbnailExists;
 
-        public ImageFileInfo(String filename, String thumbnailFilename, long fileSize,
-                           String contentType, LocalDateTime lastModified, boolean thumbnailExists) {
+        public ImageFileInfo(String filename, long fileSize, String contentType, LocalDateTime lastModified) {
             this.filename = filename;
-            this.thumbnailFilename = thumbnailFilename;
             this.fileSize = fileSize;
             this.contentType = contentType;
             this.lastModified = lastModified;
-            this.thumbnailExists = thumbnailExists;
         }
 
         // Getter方法
         public String getFilename() { return filename; }
-        public String getThumbnailFilename() { return thumbnailFilename; }
         public long getFileSize() { return fileSize; }
         public String getContentType() { return contentType; }
         public LocalDateTime getLastModified() { return lastModified; }
-        public boolean isThumbnailExists() { return thumbnailExists; }
 
         /**
          * 📊 获取格式化的文件大小
