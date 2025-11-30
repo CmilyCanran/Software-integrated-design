@@ -136,6 +136,10 @@
                 <div v-if="formData.mainImageUrl" class="current-image">
                   <img :src="processImageUrl(formData.mainImageUrl)" alt="商品主图" />
                   <div class="image-actions">
+                    <el-button type="primary" size="small" @click="triggerImageUpload">
+                      <el-icon><Upload /></el-icon>
+                      更换图片
+                    </el-button>
                     <el-button type="danger" size="small" @click="removeImage">
                       <el-icon><Delete /></el-icon>
                       删除图片
@@ -145,19 +149,23 @@
 
                 <div v-else class="upload-area">
                   <el-upload
-                    :action="uploadAction"
                     :show-file-list="false"
-                    :on-success="handleImageSuccess"
-                    :on-error="handleImageError"
-                    :before-upload="beforeImageUpload"
+                    :http-request="handleManualUpload"
                     :multiple="false"
                     accept="image/*"
+                    :disabled="isUploading"
                   >
                     <div class="upload-placeholder">
                       <el-icon size="48"><Plus /></el-icon>
                       <p>点击上传商品主图</p>
                     </div>
                   </el-upload>
+
+                  <!-- 上传进度指示器 -->
+                  <div v-if="isUploading" class="upload-progress">
+                    <el-progress :percentage="uploadProgress" :show-text="true" />
+                    <span>上传中... {{ uploadProgress }}%</span>
+                  </div>
                 </div>
               </div>
               <div class="upload-tips">
@@ -182,9 +190,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete, Upload } from '@element-plus/icons-vue'
 import type { Product, ProductCreateRequest, ProductUpdateRequest } from '@/types/product'
 import { processImageUrl } from '@/utils/imageUtils'
+import { productAPI } from '@/api/product'
 
 // 属性定义
 const props = defineProps<{
@@ -200,6 +209,10 @@ const emit = defineEmits<{
 
 // 加载状态
 const loading = ref(false)
+
+// 上传状态管理
+const isUploading = ref(false)
+const uploadProgress = ref(0)
 
 // 表单引用
 const productFormRef = ref()
@@ -435,11 +448,7 @@ const buildProductData = () => {
 
   return productData
 }
-const uploadAction = computed(() => {
-  return props.isEdit && props.product
-    ? `/api/products/${props.product.id}/image`
-    : '/api/products/upload'
-})
+// uploadAction 已移除 - 现在使用认证的 productAPI.uploadProductImage() 方法
 
 // 图片上传前验证
 const beforeImageUpload = (file: File) => {
@@ -458,36 +467,146 @@ const beforeImageUpload = (file: File) => {
   return true
 }
 
-// 图片上传成功处理
-// 注意：uploadFile 和 uploadFileList 参数是 Element Plus Upload 组件回调函数的标准参数
-// 虽然当前实现中未使用这些参数，但需要保留以符合组件API规范
-const handleImageSuccess = (response: any, uploadFile: any, uploadFileList: any[]) => {
-  // 只使用response参数记录上传成功的响应
-  // uploadFile: 当前上传的文件对象
-  // uploadFileList: 当前的文件列表
-  console.log('图片上传成功:', response, uploadFile)
-  ElMessage.success('图片上传成功')
-  // 更新主图片URL
-  if (response && response.imageUrl) {
+// 手动上传处理器（带认证）
+const handleManualUpload = async (options: any) => {
+  const file = options.file
+  console.log('🔍 [DEBUG] handleManualUpload 开始', { file: file.name, size: file.size })
+
+  if (!file) {
+    console.log('❌ [DEBUG] 文件为空')
+    options.onError(new Error('文件为空'))
+    return
+  }
+
+  // 验证商品是否存在（编辑模式）
+  console.log('🔍 [DEBUG] 检查商品信息', { isEdit: props.isEdit, product: props.product })
+  if (props.isEdit && !props.product?.id) {
+    console.log('❌ [DEBUG] 商品ID不存在')
+    ElMessage.error('请先保存商品信息')
+    options.onError(new Error('请先保存商品信息'))
+    return
+  }
+
+  // 文件验证（使用现有逻辑）
+  console.log('🔍 [DEBUG] 开始文件验证')
+  if (!beforeImageUpload(file)) {
+    console.log('❌ [DEBUG] 文件验证失败')
+    options.onError(new Error('文件验证失败'))
+    return
+  }
+
+  console.log('✅ [DEBUG] 文件验证通过，开始上传')
+  isUploading.value = true
+  uploadProgress.value = 0
+
+  try {
+    // 使用认证的 API 方法
+    console.log('🔍 [DEBUG] 调用API上传', { productId: props.product!.id })
+    const response = await productAPI.uploadProductImage(props.product!.id, file)
+    console.log('✅ [DEBUG] API调用成功', response)
+
+    // 更新表单数据中的图片 URL
     formData.mainImageUrl = response.imageUrl
+    ElMessage.success('图片上传成功')
+    options.onSuccess(response)
+
+  } catch (error: any) {
+    console.error('❌ [DEBUG] 图片上传失败:', error)
+
+    // 处理特定的认证错误
+    if (error.response?.status === 401) {
+      ElMessage.error('认证失败，请重新登录')
+    } else {
+      ElMessage.error(error.response?.data?.message || '图片上传失败')
+    }
+    options.onError(error)
+  } finally {
+    isUploading.value = false
+    uploadProgress.value = 0
   }
 }
 
-// 图片上传失败处理
-// 注意：uploadFile 和 uploadFileList 参数是 Element Plus Upload 组件回调函数的标准参数
-// 虽然当前实现中未使用这些参数，但需要保留以符合组件API规范
-const handleImageError = (error: any, uploadFile: any, uploadFileList: any[]) => {
-  // 只使用error参数记录错误信息
-  // uploadFile: 上传失败的文件对象
-  // uploadFileList: 当前的文件列表
+// 图片上传成功处理（已简化 - 成功处理在 handleManualUpload 中）
+const handleImageSuccess = (response: any) => {
+  console.log('图片上传成功:', response)
+  // 成功处理现在在 handleManualUpload 中完成
+}
+
+// 图片上传失败处理（已简化 - 错误处理在 handleManualUpload 中）
+const handleImageError = (error: any) => {
   console.error('图片上传失败:', error)
-  ElMessage.error('图片上传失败，请重试')
+  // 错误处理现在在 handleManualUpload 中完成
 }
 
 // 删除图片
 const removeImage = () => {
   formData.mainImageUrl = ''
   ElMessage.success('图片已删除，可以重新上传')
+}
+
+// 触发图片更换（点击"更换图片"按钮时调用）
+const triggerImageUpload = () => {
+  if (isUploading.value) {
+    ElMessage.warning('正在上传中，请稍候')
+    return
+  }
+
+  // 验证商品是否存在（编辑模式）
+  if (props.isEdit && !props.product?.id) {
+    ElMessage.error('请先保存商品信息')
+    return
+  }
+
+  // 创建文件输入元素来选择图片
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.accept = 'image/*'
+  fileInput.style.display = 'none'
+
+  fileInput.onchange = async (event: any) => {
+    const file = event.target.files[0]
+    if (file) {
+      // 文件验证
+      if (!beforeImageUpload(file)) {
+        return
+      }
+
+      isUploading.value = true
+      uploadProgress.value = 0
+
+      try {
+        console.log('🔍 [DEBUG] 更换图片上传开始', { file: file.name, productId: props.product!.id })
+
+        // 使用认证的 API 方法上传
+        const response = await productAPI.uploadProductImage(props.product!.id, file)
+        console.log('✅ [DEBUG] 更换图片上传成功', response)
+
+        // 更新表单数据中的图片 URL
+        formData.mainImageUrl = response.imageUrl
+        ElMessage.success('图片更换成功')
+
+      } catch (error: any) {
+        console.error('❌ [DEBUG] 更换图片上传失败:', error)
+
+        // 处理特定的认证错误
+        if (error.response?.status === 401) {
+          ElMessage.error('认证失败，请重新登录')
+        } else {
+          ElMessage.error(error.response?.data?.message || '图片更换失败')
+        }
+      } finally {
+        isUploading.value = false
+        uploadProgress.value = 0
+      }
+    }
+
+    // 清理临时元素
+    document.body.removeChild(fileInput)
+  }
+
+  // 添加到DOM并触发点击
+  document.body.appendChild(fileInput)
+  fileInput.click()
 }
 
 // 🔧 后端验证错误的智能处理
@@ -759,6 +878,19 @@ watch(() => specifications.value, (newSpecs) => {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
+}
+
+/* 上传进度样式 */
+.upload-progress {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.upload-progress span {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #409eff;
 }
 
 @media (max-width: 768px) {
