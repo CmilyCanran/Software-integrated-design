@@ -1,5 +1,6 @@
 package com.cmliy.springweb.service;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -153,6 +154,55 @@ public abstract class BaseService {
     }
 
     /**
+     * 🎯 执行带日志的操作（支持IOException）
+     *
+     * 专门用于处理可能抛出IOException的操作，如文件操作。
+     * 将检查异常转换为运行时异常，便于lambda表达式使用。
+     *
+     * @param operation 操作名称
+     * @param supplier 操作执行器（可能抛出IOException）
+     * @param params 操作参数
+     * @return 操作结果
+     */
+    protected <T> T executeWithLogAndIO(String operation, IOSupplier<T> supplier, Object... params) {
+        logOperationStart(operation, params);
+        try {
+            T result = supplier.get();
+            logOperationSuccess(operation, result);
+            return result;
+        } catch (IOException e) {
+            logOperationFailed(operation, e.getMessage());
+            throw new RuntimeException("IO操作失败: " + e.getMessage(), e);
+        } catch (Exception e) {
+            logOperationFailed(operation, e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * 🎯 执行带日志的操作（支持IOException，无返回值）
+     *
+     * 专门用于处理可能抛出IOException的操作，如文件操作。
+     *
+     * @param operation 操作名称
+     * @param runnable 操作执行器（可能抛出IOException）
+     * @param params 操作参数
+     */
+    protected void executeWithLogAndIO(String operation, IORunnable runnable, Object... params) {
+        logOperationStart(operation, params);
+        try {
+            runnable.run();
+            logOperationSuccess(operation, "完成");
+        } catch (IOException e) {
+            logOperationFailed(operation, e.getMessage());
+            throw new RuntimeException("IO操作失败: " + e.getMessage(), e);
+        } catch (Exception e) {
+            logOperationFailed(operation, e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
      * 🎯 执行带日志的操作（无返回值）
      *
      * @param operation 操作名称
@@ -211,5 +261,25 @@ public abstract class BaseService {
             org.springframework.data.domain.Sort.Direction.ASC;
         return org.springframework.data.domain.PageRequest.of(
             page, size, org.springframework.data.domain.Sort.by(direction, sortBy));
+    }
+
+    // ==================== 📋 函数式接口 ====================
+
+    /**
+     * 🔄 支持IOException的Supplier接口
+     *
+     * @param <T> 返回值类型
+     */
+    @FunctionalInterface
+    public interface IOSupplier<T> {
+        T get() throws IOException;
+    }
+
+    /**
+     * 🔄 支持IOException的Runnable接口
+     */
+    @FunctionalInterface
+    public interface IORunnable {
+        void run() throws IOException;
     }
 }
