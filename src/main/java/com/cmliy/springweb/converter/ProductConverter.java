@@ -9,128 +9,152 @@ import com.cmliy.springweb.dto.ProductUpdateRequestDTO;
 import com.cmliy.springweb.model.Product;
 import com.cmliy.springweb.model.User;
 import com.cmliy.springweb.service.ProductDataService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+
+// 🚀 Lombok注解 - 大幅简化样板代码
+import lombok.extern.slf4j.Slf4j;          // @Slf4j: 自动生成Logger实例
+import lombok.RequiredArgsConstructor;   // @RequiredArgsConstructor: 自动生成构造函数
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * 🔄 商品转换器 - Product Converter
+ * 🔄 商品转换器 - Product Converter (Lombok + BaseConverter优化版本)
  *
  * 负责Product实体与各种DTO之间的转换
  * 统一管理商品数据的映射逻辑，确保数据一致性
+ *
+ * 🚀 Lombok优化展示：
+ * - @Slf4j: 自动生成Logger实例，无需手动创建
+ * - @RequiredArgsConstructor: 自动生成包含所有final字段的构造函数
+ * - 继承BaseConverter: 获得统一的转换工具方法
+ *
+ * 🚀 BaseConverter集成优势：
+ * - safeConvert(): 单个对象转换的空值安全和异常处理
+ * - safeConvertList(): 批量转换的统一逻辑
+ * - 减少重复的null检查和异常处理代码
  *
  * @author Claude
  * @since 2025-11-22
  */
 @Slf4j
+@RequiredArgsConstructor  // 🚀 Lombok: 自动生成包含所有final字段的构造函数
 @Component
-public class ProductConverter {
-
-    @Autowired
-    private ProductDataService productDataService;
+public class ProductConverter extends BaseConverter {  // 🚀 继承BaseConverter获得统一转换方法
 
     /**
-     * 🔄 Product实体转ProductResponseDTO
+     * 🏗️ 商品数据服务
+     *
+     * 🚀 Lombok的@RequiredArgsConstructor会自动生成构造函数注入
+     * final关键字：表示这个字段一旦初始化就不能再修改，确保线程安全
+     */
+    private final ProductDataService productDataService;
+
+    // 🚀 Lombok生成的构造函数等效代码：
+    // public ProductConverter(ProductDataService productDataService) {
+    //     this.productDataService = productDataService;
+    // }
+
+    /**
+     * 🔄 Product实体转ProductResponseDTO (BaseController优化版本)
+     *
+     * 🚀 优化亮点：
+     * - 使用BaseConverter的safeConvert()方法确保空值安全和异常处理
+     * - 保持完整业务逻辑的同时增加安全性
      *
      * @param product 商品实体
      * @return ProductResponseDTO
      */
     public ProductResponseDTO toResponseDTO(Product product) {
-        if (product == null) {
-            return null;
-        }
+        return safeConvert(product, p -> {
+            ProductResponseDTO dto = new ProductResponseDTO();
+            dto.setId(p.getId());
+            dto.setProductName(p.getProductName());
+            dto.setDescription(p.getDescription());
+            dto.setPrice(p.getPrice());
+            dto.setSalesCount(p.getSalesCount());
+            dto.setDiscount(p.getDiscount());
+            dto.setStockQuantity(p.getStockQuantity());
+            dto.setIsAvailable(p.getIsAvailable());
 
-        ProductResponseDTO dto = new ProductResponseDTO();
-        dto.setId(product.getId());
-        dto.setProductName(product.getProductName());
-        dto.setDescription(product.getDescription());
-        dto.setPrice(product.getPrice());
-        dto.setSalesCount(product.getSalesCount());
-        dto.setDiscount(product.getDiscount());
-        dto.setStockQuantity(product.getStockQuantity());
-        dto.setIsAvailable(product.getIsAvailable());
+            // 创建者信息
+            if (p.getCreator() != null) {
+                dto.setCreatorId(p.getCreator().getId());
+                dto.setCreatorUsername(p.getCreator().getUsername());
+            }
 
-        // 创建者信息
-        if (product.getCreator() != null) {
-            dto.setCreatorId(product.getCreator().getId());
-            dto.setCreatorUsername(product.getCreator().getUsername());
-        }
+            // 图片信息
+            dto.setMainImageUrl(p.getMainImage());
+            dto.setImageUrls(p.getImageUrls());
 
-        // 图片信息
-        dto.setMainImageUrl(product.getMainImage());
-        dto.setImageUrls(product.getImageUrls());
+            // 统一规格信息 - 只返回specifications
+            dto.setSpecifications(p.getAllSpecifications());
 
-        // 统一规格信息 - 只返回specifications
-        dto.setSpecifications(product.getAllSpecifications());
+            // 格式化价格
+            dto.setFormattedPrice(p.getFormattedPrice());
+            dto.setFormattedDiscountedPrice(p.getFormattedDiscountedPrice());
+            dto.setStockStatus(p.getStockStatus());
 
-        // 格式化价格
-        dto.setFormattedPrice(product.getFormattedPrice());
-        dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
-        dto.setStockStatus(product.getStockStatus());
+            // 时间戳
+            dto.setCreatedAt(p.getCreatedAt());
+            dto.setUpdatedAt(p.getUpdatedAt());
 
-        // 时间戳
-        dto.setCreatedAt(product.getCreatedAt());
-        dto.setUpdatedAt(product.getUpdatedAt());
-
-        return dto;
+            return dto;
+        });
     }
 
     /**
-     * 🔄 Product实体转ProductDetailDTO
+     * 🔄 Product实体转ProductDetailDTO (BaseConverter优化版本)
+     *
+     * 🚀 优化亮点：
+     * - 使用BaseConverter的safeConvert()方法确保空值安全和异常处理
      *
      * @param product 商品实体
      * @return ProductDetailDTO
      */
     public ProductDetailDTO toDetailDTO(Product product) {
-        if (product == null) {
-            return null;
-        }
+        return safeConvert(product, p -> {
+            ProductDetailDTO dto = new ProductDetailDTO();
+            dto.setId(p.getId());
+            dto.setProductName(p.getProductName());
+            dto.setDescription(p.getDescription());
+            dto.setPrice(p.getPrice());
+            dto.setSalesCount(p.getSalesCount());
+            dto.setDiscount(p.getDiscount());
+            dto.setStockQuantity(p.getStockQuantity());
+            dto.setIsAvailable(p.getIsAvailable());
 
-        ProductDetailDTO dto = new ProductDetailDTO();
-        dto.setId(product.getId());
-        dto.setProductName(product.getProductName());
-        dto.setDescription(product.getDescription());
-        dto.setPrice(product.getPrice());
-        dto.setSalesCount(product.getSalesCount());
-        dto.setDiscount(product.getDiscount());
-        dto.setStockQuantity(product.getStockQuantity());
-        dto.setIsAvailable(product.getIsAvailable());
+            // 创建者信息
+            if (p.getCreator() != null) {
+                dto.setCreatorId(p.getCreator().getId());
+                dto.setCreatorUsername(p.getCreator().getUsername());
+            }
 
-        // 创建者信息
-        if (product.getCreator() != null) {
-            dto.setCreatorId(product.getCreator().getId());
-            dto.setCreatorUsername(product.getCreator().getUsername());
-        }
+            // 详细图片信息
+            dto.setMainImageUrl(p.getMainImage());
+            dto.setImageUrls(p.getImageUrls());
+            dto.setThumbnails(p.getThumbnails());
+            dto.setTotalImages(p.getTotalImages());
 
-        // 详细图片信息
-        dto.setMainImageUrl(product.getMainImage());
-        dto.setImageUrls(product.getImageUrls());
-        dto.setThumbnails(product.getThumbnails());
-        dto.setTotalImages(product.getTotalImages());
+            // 统一规格信息 - 只返回specifications
+            dto.setSpecifications(p.getAllSpecifications());
 
-        // 统一规格信息 - 只返回specifications
-        dto.setSpecifications(product.getAllSpecifications());
+            // 价格信息
+            dto.setFormattedPrice(p.getFormattedPrice());
+            dto.setFormattedDiscountedPrice(p.getFormattedDiscountedPrice());
+            dto.setDiscountDisplay(p.getDiscountDisplay());
+            dto.setDiscountAmount(p.getDiscountAmount());
+            dto.setStockStatus(p.getStockStatus());
 
-        // 价格信息
-        dto.setFormattedPrice(product.getFormattedPrice());
-        dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
-        dto.setDiscountDisplay(product.getDiscountDisplay());
-        dto.setDiscountAmount(product.getDiscountAmount());
-        dto.setStockStatus(product.getStockStatus());
+            // 变体信息
+            dto.setVariants(getVariantsFromProductData(p));
 
-        // 变体信息
-        dto.setVariants(getVariantsFromProductData(product));
+            // 时间戳
+            dto.setCreatedAt(p.getCreatedAt());
+            dto.setUpdatedAt(p.getUpdatedAt());
 
-        // 时间戳
-        dto.setCreatedAt(product.getCreatedAt());
-        dto.setUpdatedAt(product.getUpdatedAt());
-
-        return dto;
+            return dto;
+        });
     }
 
     /**
@@ -303,33 +327,31 @@ public class ProductConverter {
     }
 
     /**
-     * 🔄 批量转换Product实体列表为ProductResponseDTO列表
+     * 🔄 批量转换Product实体列表为ProductResponseDTO列表 (BaseConverter优化版本)
+     *
+     * 🚀 优化亮点：
+     * - 使用BaseConverter的safeConvertList()方法确保空值安全和异常处理
+     * - 统一批量转换逻辑，减少重复代码
      *
      * @param products 商品实体列表
      * @return ProductResponseDTO列表
      */
     public List<ProductResponseDTO> toResponseDTOList(List<Product> products) {
-        if (products == null || products.isEmpty()) {
-            return List.of();
-        }
-        return products.stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
+        return safeConvertList(products, this::toResponseDTO, "ProductResponseDTO列表");
     }
 
     /**
-     * 🔄 批量转换Product实体列表为ProductListItemDTO列表
+     * 🔄 批量转换Product实体列表为ProductListItemDTO列表 (BaseConverter优化版本)
+     *
+     * 🚀 优化亮点：
+     * - 使用BaseConverter的safeConvertList()方法确保空值安全和异常处理
+     * - 统一批量转换逻辑，减少重复代码
      *
      * @param products 商品实体列表
      * @return ProductListItemDTO列表
      */
     public List<ProductListItemDTO> toListItemDTOList(List<Product> products) {
-        if (products == null || products.isEmpty()) {
-            return List.of();
-        }
-        return products.stream()
-                .map(this::toListItemDTO)
-                .collect(Collectors.toList());
+        return safeConvertList(products, this::toListItemDTO, "ProductListItemDTO列表");
     }
 
     // ==================== 🔧 私有辅助方法 ====================
