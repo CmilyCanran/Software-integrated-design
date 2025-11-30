@@ -469,25 +469,62 @@ const toggleProductStatus = async (product: Product) => {
 
 // 处理表单保存
 const handleFormSave = async (formData: ProductCreateRequest | ProductUpdateRequest) => {
+  console.log('🔍 [DEBUG] ProductManagement - 开始处理表单保存')
+  console.log('🔍 [DEBUG] ProductManagement - 编辑模式:', isEditing.value)
+  console.log('🔍 [DEBUG] ProductManagement - 编辑商品ID:', editingProduct.value?.id)
+  console.log('🔍 [DEBUG] ProductManagement - 接收到的表单数据:', formData)
+  console.log('🔍 [DEBUG] ProductManagement - 表单数据关键字段:')
+  console.log('  - 商品名称:', formData.productName)
+  console.log('  - 价格:', formData.price, '(类型:', typeof formData.price, ')')
+  console.log('  - 库存:', formData.stockQuantity, '(类型:', typeof formData.stockQuantity, ')')
+  console.log('  - 折扣:', formData.discount, '(类型:', typeof formData.discount, ')')
+  console.log('  - 是否上架:', formData.isAvailable, '(类型:', typeof formData.isAvailable, ')')
+  console.log('  - 规格:', formData.specifications)
+  console.log('  - 主图URL:', formData.mainImageUrl)
+  console.log('  - 描述:', formData.description)
+
   try {
     if (isEditing.value && editingProduct.value) {
       // 编辑模式
+      console.log('🔍 [DEBUG] ProductManagement - 开始更新商品, ID:', editingProduct.value.id)
+      console.log('🔍 [DEBUG] ProductManagement - 调用productStore.updateProduct')
+
       await productStore.updateProduct(
         editingProduct.value.id,
         formData as ProductUpdateRequest
       )
+
+      console.log('🔍 [DEBUG] ProductManagement - productStore.updateProduct调用成功')
       ElMessage.success('商品更新成功')
     } else {
       // 创建模式
+      console.log('🔍 [DEBUG] ProductManagement - 开始创建商品')
+      console.log('🔍 [DEBUG] ProductManagement - 调用productStore.createProduct')
+
       await productStore.createProduct(formData as ProductCreateRequest)
+
+      console.log('🔍 [DEBUG] ProductManagement - productStore.createProduct调用成功')
       ElMessage.success('商品创建成功')
     }
 
+    console.log('🔍 [DEBUG] ProductManagement - 关闭表单对话框')
     closeFormDialog()
+
+    console.log('🔍 [DEBUG] ProductManagement - 重新加载产品列表')
     await loadProducts() // 重新加载数据
+
+    console.log('🔍 [DEBUG] ProductManagement - 重新加载统计数据')
     await loadProductStats() // 重新加载统计数据
+
+    console.log('🔍 [DEBUG] ProductManagement - 表单保存处理完成')
   } catch (error) {
-    console.error('❌ 保存失败:', error)
+    console.error('❌ [DEBUG] ProductManagement - 保存失败:', error)
+    console.error('❌ [DEBUG] ProductManagement - 错误详情:', {
+      message: error?.message,
+      stack: error?.stack,
+      response: error?.response?.data,
+      status: error?.response?.status
+    })
     ElMessage.error('保存失败，请重试')
   }
 }

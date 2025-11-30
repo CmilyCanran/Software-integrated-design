@@ -53,7 +53,36 @@ export const productAPI = {
 
   // 更新商品
   updateProduct: (id: number, data: ProductUpdateRequest): Promise<Product> => {
+    console.log('🔍 [DEBUG] ProductAPI - 开始更新商品请求')
+    console.log('🔍 [DEBUG] ProductAPI - 请求URL:', `/products/${id}`)
+    console.log('🔍 [DEBUG] ProductAPI - 商品ID:', id)
+    console.log('🔍 [DEBUG] ProductAPI - 请求数据:', data)
+    console.log('🔍 [DEBUG] ProductAPI - 请求数据详情:')
+    console.log('  - 商品名称:', data.productName)
+    console.log('  - 价格:', data.price, '(类型:', typeof data.price, ')')
+    console.log('  - 库存:', data.stockQuantity, '(类型:', typeof data.stockQuantity, ')')
+    console.log('  - 折扣:', data.discount, '(类型:', typeof data.discount, ')')
+    console.log('  - 是否上架:', data.isAvailable, '(类型:', typeof data.isAvailable, ')')
+    console.log('  - 规格:', data.specifications)
+    console.log('  - 主图URL:', data.mainImageUrl)
+    console.log('  - 描述:', data.description)
+
     return api.put(`/products/${id}`, data)
+      .then((response) => {
+        console.log('🔍 [DEBUG] ProductAPI - 更新商品请求成功')
+        console.log('🔍 [DEBUG] ProductAPI - 响应数据:', response)
+        return response
+      })
+      .catch((error) => {
+        console.error('❌ [DEBUG] ProductAPI - 更新商品请求失败:', error)
+        console.error('❌ [DEBUG] ProductAPI - 错误详情:', {
+          message: error?.message,
+          stack: error?.stack,
+          response: error?.response?.data,
+          status: error?.response?.status
+        })
+        throw error
+      })
   },
 
   // 删除商品
