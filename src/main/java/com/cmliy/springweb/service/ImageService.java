@@ -343,7 +343,7 @@ public class ImageService {
      * @return 图片URL
      */
     private String buildImageUrl(String category, String filename) {
-        return String.format("/uploads/images/%s/%s", category, filename);
+        return String.format("/api/uploads/images/%s/%s", category, filename);
     }
 
     

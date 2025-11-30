@@ -134,7 +134,7 @@
               <!-- 🔧 图片预览和上传 -->
               <div class="image-preview-area">
                 <div v-if="formData.mainImageUrl" class="current-image">
-                  <img :src="formData.mainImageUrl" alt="商品主图" />
+                  <img :src="processImageUrl(formData.mainImageUrl)" alt="商品主图" />
                   <div class="image-actions">
                     <el-button type="danger" size="small" @click="removeImage">
                       <el-icon><Delete /></el-icon>
@@ -184,6 +184,7 @@ import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import type { Product, ProductCreateRequest, ProductUpdateRequest } from '@/types/product'
+import { processImageUrl } from '@/utils/imageUtils'
 
 // 属性定义
 const props = defineProps<{

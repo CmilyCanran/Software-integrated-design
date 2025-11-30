@@ -24,7 +24,8 @@
       "Bash(mvn clean compile:*)",
       "Bash(taskkill:*)",
       "Bash(node:*)",
-      "Bash(python -m json.tool:*)"
+      "Bash(python -m json.tool:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
