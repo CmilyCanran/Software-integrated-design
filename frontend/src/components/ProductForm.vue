@@ -306,6 +306,85 @@ const removeSpecificationValue = (specIndex: number, valueIndex: number) => {
   spec.values.splice(valueIndex, 1)
 }
 
+// 验证规格数据完整性
+const validateSpecificationsData = () => {
+  const validSpecs = specifications.value.filter(spec =>
+    spec.name.trim() !== '' || spec.values.length > 0
+  )
+
+  // 如果有规格数据，进行详细验证
+  if (validSpecs.length > 0) {
+    for (let i = 0; i < specifications.value.length; i++) {
+      const spec = specifications.value[i]
+
+      // 检查规格名称
+      if (!spec.name.trim()) {
+        ElMessage.error(`第 ${i + 1} 个规格的名称不能为空`)
+        return false
+      }
+
+      // 检查规格值
+      if (spec.values.length === 0) {
+        ElMessage.error(`规格 "${spec.name}" 至少需要一个值`)
+        return false
+      }
+
+      // 检查规格值是否为空
+      const hasEmptyValue = spec.values.some(value => !value.trim())
+      if (hasEmptyValue) {
+        ElMessage.error(`规格 "${spec.name}" 包含空的值`)
+        return false
+      }
+
+      // 检查重复的规格值
+      const uniqueValues = new Set(spec.values.map(v => v.trim()))
+      if (uniqueValues.size !== spec.values.length) {
+        ElMessage.error(`规格 "${spec.name}" 包含重复的值`)
+        return false
+      }
+    }
+
+    // 检查重复的规格名称
+    const specNames = specifications.value
+      .filter(spec => spec.name.trim())
+      .map(spec => spec.name.trim())
+
+    const uniqueNames = new Set(specNames)
+    if (uniqueNames.size !== specNames.length) {
+      ElMessage.error('存在重复的规格名称')
+      return false
+    }
+  }
+
+  return true
+}
+
+// 统一的数据加载方法 - 兼容多种后端响应格式
+const loadSpecifications = (product: any) => {
+  // 尝试从多个可能的字段获取规格数据
+  let specs = null
+
+  // 优先从直接的 specifications 字段获取
+  if (product.specifications && typeof product.specifications === 'object') {
+    specs = product.specifications
+  }
+  // 备选：从 productData.specifications 获取
+  else if (product.productData?.specifications && typeof product.productData.specifications === 'object') {
+    specs = product.productData.specifications
+  }
+
+  if (specs && typeof specs === 'object') {
+    specifications.value = Object.entries(specs)
+      .map(([name, values]) => ({
+        name: name || '',
+        values: Array.isArray(values) ? [...values] : []
+      }))
+      .filter(spec => spec.name) // 过滤空名称
+  } else {
+    specifications.value = [{ name: '', values: [] }]
+  }
+}
+
 // 构建规格数据用于提交
 const buildSpecificationsData = () => {
   const specs: Record<string, string[]> = {}
@@ -319,16 +398,9 @@ const buildSpecificationsData = () => {
   return specs
 }
 
-// 构建完整的productData对象
+// 构建完整的productData对象（不包含specifications，避免重复提交）
 const buildProductData = () => {
-  const specificationsData = buildSpecificationsData()
-
   const productData: Record<string, any> = {}
-
-  // 只有当有规格数据时才添加specifications字段
-  if (Object.keys(specificationsData).length > 0) {
-    productData.specifications = specificationsData
-  }
 
   // 添加其他可能需要的产品数据字段
   if (formData.mainImageUrl) {
@@ -337,7 +409,6 @@ const buildProductData = () => {
     }
   }
 
-  console.log('🔍 [DEBUG] ProductForm - 构建的productData:', productData)
   return productData
 }
 const uploadAction = computed(() => {
@@ -391,62 +462,43 @@ const handleImageError = (error: any, uploadFile: any, uploadFileList: any[]) =>
 
 // 处理表单保存
 const handleSave = async () => {
-  console.log('🔍 [DEBUG] ProductForm - 开始处理表单保存')
-
   if (!productFormRef.value) {
-    console.error('❌ [DEBUG] ProductForm - productFormRef.value 为空')
+    console.error('ProductForm - 表单引用为空')
     return
   }
 
   try {
-    console.log('🔍 [DEBUG] ProductForm - 开始表单验证')
     await productFormRef.value.validate()
-    console.log('🔍 [DEBUG] ProductForm - 表单验证通过')
-
     loading.value = true
 
     // 构建规格数据
-    console.log('🔍 [DEBUG] ProductForm - 开始构建规格数据')
     const specificationsData = buildSpecificationsData()
-    console.log('🔍 [DEBUG] ProductForm - 构建的规格数据:', specificationsData)
 
     // 确保价格和库存是数字类型，并添加数值验证
-    console.log('🔍 [DEBUG] ProductForm - 原始价格数据:', formData.price, '类型:', typeof formData.price)
-    console.log('🔍 [DEBUG] ProductForm - 原始库存数据:', formData.stockQuantity, '类型:', typeof formData.stockQuantity)
-    console.log('🔍 [DEBUG] ProductForm - 原始折扣数据:', formData.discount, '类型:', typeof formData.discount)
-
     const price = Number(formData.price)
     const stockQuantity = Number(formData.stockQuantity)
     const discount = Number(formData.discount || 0)
 
-    console.log('🔍 [DEBUG] ProductForm - 转换后价格:', price, '类型:', typeof price)
-    console.log('🔍 [DEBUG] ProductForm - 转换后库存:', stockQuantity, '类型:', typeof stockQuantity)
-    console.log('🔍 [DEBUG] ProductForm - 转换后折扣:', discount, '类型:', typeof discount)
-
     // 数值验证
     if (isNaN(price) || price <= 0) {
-      console.error('❌ [DEBUG] ProductForm - 价格验证失败:', { price, isNaN: isNaN(price), lessThanZero: price <= 0 })
       ElMessage.error('请输入有效的商品价格')
       return
     }
     if (isNaN(stockQuantity) || stockQuantity < 0) {
-      console.error('❌ [DEBUG] ProductForm - 库存验证失败:', { stockQuantity, isNaN: isNaN(stockQuantity), lessThanZero: stockQuantity < 0 })
       ElMessage.error('请输入有效的库存数量')
       return
     }
     if (isNaN(discount) || discount < 0 || discount > 100) {
-      console.error('❌ [DEBUG] ProductForm - 折扣验证失败:', { discount, isNaN: isNaN(discount), lessThanZero: discount < 0, greaterThan100: discount > 100 })
       ElMessage.error('请输入有效的折扣率（0-100）')
       return
     }
 
-    console.log('🔍 [DEBUG] ProductForm - 数值验证通过')
+    // 规格数据验证
+    if (!validateSpecificationsData()) {
+      return // 验证失败，停止提交
+    }
 
-    // 构建提交数据 - 规格作为平铺字段发送
-    console.log('🔍 [DEBUG] ProductForm - 开始构建提交数据')
-    console.log('🔍 [DEBUG] ProductForm - formData原始内容:', formData)
-
-    // 构建完整的productData对象
+    // 构建提交数据
     const productData = buildProductData()
 
     const submitData = {
@@ -454,32 +506,17 @@ const handleSave = async () => {
       price,
       stockQuantity,
       discount,
-      specifications: specificationsData, // ✅ 平铺规格字段
-      productData: productData // ✅ 使用构建的productData对象
+      specifications: specificationsData, // 只提交这一层规格数据
+      productData: productData // productData中不包含specifications，避免重复
     } as ProductCreateRequest | ProductUpdateRequest
 
-    console.log('🔍 [DEBUG] ProductForm - 最终提交数据:', submitData)
-    console.log('🔍 [DEBUG] ProductForm - 提交数据关键字段详情:')
-    console.log('  - 商品名称:', submitData.productName)
-    console.log('  - 价格:', submitData.price, '(类型:', typeof submitData.price, ')')
-    console.log('  - 库存:', submitData.stockQuantity, '(类型:', typeof submitData.stockQuantity, ')')
-    console.log('  - 折扣:', submitData.discount, '(类型:', typeof submitData.discount, ')')
-    console.log('  - 是否上架:', submitData.isAvailable, '(类型:', typeof submitData.isAvailable, ')')
-    console.log('  - 规格:', submitData.specifications)
-    console.log('  - productData:', submitData.productData)
-    console.log('  - 主图URL:', submitData.mainImageUrl)
-    console.log('  - 描述:', submitData.description)
-
-    console.log('🔍 [DEBUG] ProductForm - 发送save事件')
     emit('save', submitData)
-    console.log('🔍 [DEBUG] ProductForm - save事件发送完成')
 
   } catch (error) {
-    console.error('❌ [DEBUG] ProductForm - 表单验证失败:', error)
+    console.error('ProductForm - 表单验证失败:', error)
     ElMessage.error('请检查表单填写是否正确')
   } finally {
     loading.value = false
-    console.log('🔍 [DEBUG] ProductForm - loading状态已重置')
   }
 }
 
@@ -515,16 +552,8 @@ watch(() => props.product, (newProduct) => {
       mainImageUrl: newProduct.mainImageUrl || '',
     })
 
-    // 填充规格数据
-    const specs = newProduct.productData?.specifications
-    if (specs && typeof specs === 'object') {
-      specifications.value = Object.entries(specs).map(([name, values]) => ({
-        name,
-        values: Array.isArray(values) ? values : []
-      }))
-    } else {
-      specifications.value = [{ name: '', values: [] }]
-    }
+    // 填充规格数据 - 兼容多种后端响应格式
+    loadSpecifications(newProduct)
 
     // 填充图片数据
     if (newProduct.mainImageUrl) {
