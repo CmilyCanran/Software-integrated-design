@@ -85,7 +85,6 @@ public class ProductConverter extends BaseConverter {  // 🚀 继承BaseConvert
 
             // 图片信息
             dto.setMainImageUrl(p.getMainImage());
-            dto.setImageUrls(p.getImageUrls());
 
             // 统一规格信息 - 只返回specifications
             dto.setSpecifications(p.getAllSpecifications());
@@ -132,7 +131,6 @@ public class ProductConverter extends BaseConverter {  // 🚀 继承BaseConvert
 
             // 详细图片信息
             dto.setMainImageUrl(p.getMainImage());
-            dto.setImageUrls(p.getImageUrls());
             dto.setThumbnails(p.getThumbnails());
             dto.setTotalImages(p.getTotalImages());
 
@@ -248,11 +246,6 @@ public class ProductConverter extends BaseConverter {  // 🚀 继承BaseConvert
             productDataService.updateProductImageData(product, requestDTO.getMainImageUrl());
         }
 
-        // 设置图片列表
-        if (requestDTO.getImageUrls() != null && !requestDTO.getImageUrls().isEmpty()) {
-            productDataService.updateImageUrls(product, requestDTO.getImageUrls());
-        }
-
         // 统一设置规格属性 - 所有属性都通过specifications处理
         if (requestDTO.getSpecifications() != null && !requestDTO.getSpecifications().isEmpty()) {
             productDataService.updateSpecifications(product, requestDTO.getSpecifications());
@@ -296,11 +289,6 @@ public class ProductConverter extends BaseConverter {  // 🚀 继承BaseConvert
         // 更新主图片
         if (requestDTO.getMainImageUrl() != null) {
             productDataService.updateProductImageData(product, requestDTO.getMainImageUrl());
-        }
-
-        // 更新图片列表
-        if (requestDTO.getImageUrls() != null) {
-            productDataService.updateImageUrls(product, requestDTO.getImageUrls());
         }
 
         // 更新规格信息 - 使用ProductDataService安全处理

@@ -209,15 +209,6 @@ public class Product {
         return (String) imageData.get("main_image");
     }
 
-    /**
-     * 📋 获取所有图片URL
-     */
-    @SuppressWarnings("unchecked")
-    public List<String> getImageUrls() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.getOrDefault("image_data", new java.util.HashMap<>());
-        return (List<String>) imageData.getOrDefault("gallery", new java.util.ArrayList<>());
-    }
 
     /**
      * 🖼️ 获取缩略图信息

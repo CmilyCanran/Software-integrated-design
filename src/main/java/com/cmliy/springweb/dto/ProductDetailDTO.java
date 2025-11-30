@@ -84,12 +84,7 @@ public class ProductDetailDTO {
      */
     private String mainImageUrl;
 
-    /**
-     * 📸 图片URL列表 - 商品所有展示图片
-     * 数据来源：Product实体的getImageUrls()方法
-     */
-    private List<String> imageUrls;
-
+    
     /**
      * 🖼️ 缩略图信息 - 商品缩略图映射
      * 数据来源：Product实体的getThumbnails()方法

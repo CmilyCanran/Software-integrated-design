@@ -177,46 +177,6 @@ public class ProductDataService {
         return strValue.isEmpty() ? null : List.of(strValue);
     }
 
-    /**
-     * 🖼️ 设置商品图片URL列表
-     *
-     * 批量设置商品的图片URL，用于商品相册功能
-     *
-     * @param product 商品实体
-     * @param imageUrls 图片URL列表
-     */
-    public void updateImageUrls(Product product, List<String> imageUrls) {
-        log.info("🔧 [ProductDataService] 开始更新商品图片URL列表: productId={}, imageUrlsCount={}",
-                product.getId(), imageUrls != null ? imageUrls.size() : 0);
-
-        if (imageUrls == null || imageUrls.isEmpty()) {
-            log.info("🔧 [ProductDataService] 图片URL列表为空，跳过更新");
-            return;
-        }
-
-        // 获取当前的productData，如果为null则初始化
-        Map<String, Object> currentData = product.getProductData();
-        if (currentData == null) {
-            log.info("🔧 [ProductDataService] productData为null，初始化新的Map");
-            currentData = new HashMap<>();
-            product.setProductData(currentData);
-        }
-
-        // 安全地更新image_data结构
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>)
-                currentData.computeIfAbsent("image_data", k -> {
-                    log.info("🔧 [ProductDataService] 创建新的image_data结构");
-                    return new HashMap<>();
-                });
-
-        List<String> oldImageUrls = (List<String>) imageData.get("gallery");
-        imageData.put("gallery", imageUrls);
-        imageData.put("total_images", imageUrls.size());
-
-        log.info("🔧 [ProductDataService] 图片URL列表更新完成: productId={}, oldCount={}, newCount={}",
-                product.getId(), oldImageUrls != null ? oldImageUrls.size() : 0, imageUrls.size());
-    }
 
     /**
      * 🏷️ 更新商品分类信息

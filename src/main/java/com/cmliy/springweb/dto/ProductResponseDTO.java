@@ -85,12 +85,7 @@ public class ProductResponseDTO {
      */
     private String mainImageUrl;
 
-    /**
-     * 📸 图片URL列表 - 商品所有展示图片
-     * 数据来源：Product实体的getImageUrls()方法
-     */
-    private List<String> imageUrls;
-
+    
     /**
      * 📋 商品规格 - 商品规格属性（颜色、尺寸等）
      * 数据来源：Product实体的getAllSpecifications()方法
