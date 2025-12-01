@@ -1,5 +1,6 @@
 package com.cmliy.springweb.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.Map;
  * 仅包含前端需要的基本信息，避免暴露敏感数据
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductResponseDTO {

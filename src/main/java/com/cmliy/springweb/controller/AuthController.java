@@ -10,6 +10,8 @@ import com.cmliy.springweb.security.CustomUserDetailsService; // 导入自定义
 import com.cmliy.springweb.dto.LoginResponseDTO;            // 导入登录响应DTO
 import com.cmliy.springweb.dto.RegisterResponseDTO;         // 导入注册响应DTO
 import com.cmliy.springweb.dto.UserDTO;                     // 导入用户信息DTO
+import com.cmliy.springweb.converter.UserConverter;         // 导入用户转换器
+import com.cmliy.springweb.util.DtoConverterUtils;         // 导入DTO转换工具类
 import org.springframework.beans.factory.annotation.Autowired; // 导入Spring依赖注入注解
 import org.springframework.http.ResponseEntity;               // 导入Spring HTTP响应实体类
 import org.springframework.security.authentication.AuthenticationManager; // 导入Spring Security认证管理器
@@ -105,7 +107,9 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
                          JwtUtil jwtUtil,
                          AuthenticationManager authenticationManager,
                          PasswordEncoder passwordEncoder,
-                         CustomUserDetailsService userDetailsService) {
+                         CustomUserDetailsService userDetailsService,
+                         UserConverter userConverter,
+                         DtoConverterUtils dtoConverter) {
         // 🚀 调用父类构造函数，传递基类需要的字段
         super(userRepository, jwtUtil);
 
@@ -113,6 +117,8 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
+        this.userConverter = userConverter;
+        this.dtoConverter = dtoConverter;
     }
 
     // ===== 依赖注入的字段 (Lombok简化版) =====
@@ -145,6 +151,20 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
      */
     private final CustomUserDetailsService userDetailsService; // 🚀 Lombok会自动生成构造函数注入
 
+    /**
+     * 🔄 用户转换器
+     *
+     * 负责User实体与UserDTO之间的转换，支持Builder模式。
+     */
+    private final UserConverter userConverter; // 🚀 用户实体与DTO转换器
+
+    /**
+     * 🛠️ DTO转换工具
+     *
+     * 通用DTO转换工具，支持Builder模式和ModelMapper。
+     */
+    private final DtoConverterUtils dtoConverter; // 🚀 通用DTO转换工具
+
     // 🚀 Lombok生成的构造函数等效代码（包含基类字段）：
     // public AuthController(
     //     // 基类需要的字段
@@ -166,13 +186,14 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
     // }
 
     /**
-     * 🔐 用户登录接口 (Lombok + BaseController优化版本)
+     * 🔐 用户登录接口 (Lombok + BaseController + Converter优化版本)
      *
      * 处理用户登录请求，验证用户凭据并生成JWT令牌。
      *
      * 🚀 优化亮点：
      * - 使用BaseController的success()和error()方法简化响应构建
-     * - 使用@Slf4j的log替代手动logger
+     * - 使用UserConverter替代手动DTO创建
+     * - 使用Builder模式创建响应DTO
      * - 保持完整功能的同时大幅简化代码
      *
      * 登录流程详解：
@@ -180,7 +201,8 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
      * 2. 使用AuthenticationManager验证凭据
      * 3. 设置Spring Security安全上下文
      * 4. 生成JWT访问令牌
-     * 5. 返回用户信息和令牌
+     * 5. 使用UserConverter转换用户信息
+     * 6. 使用Builder模式创建响应DTO
      *
      * @PostMapping: Spring Web注解，将HTTP POST请求映射到这个方法
      *              "/login": 这个方法处理 /auth/login 路径的请求
@@ -219,25 +241,20 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
                 token = jwtUtil.generateToken(userDetails);
             }
 
-            // 👤 第七步：创建UserDTO对象
+            // 👤 第七步：使用UserConverter转换用户信息（替代手动DTO创建）
             UserDTO userDTO = null;
             if (user != null) {
-                userDTO = new UserDTO(
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getRole()
-                );
+                userDTO = userConverter.toDTO(user);
             }
 
-            // 📊 第八步：创建LoginResponseDTO对象
-            LoginResponseDTO loginResponseDTO = new LoginResponseDTO(
-                token,
-                "Bearer",
-                jwtUtil.getExpiration(),
-                userDTO,
-                LocalDateTime.now().toString()
-            );
+            // 📊 第八步：使用Builder模式创建LoginResponseDTO对象
+            LoginResponseDTO loginResponseDTO = LoginResponseDTO.builder()
+                .token(token)
+                .tokenType("Bearer")
+                .expiresIn(jwtUtil.getExpiration())
+                .user(userDTO)
+                .timestamp(LocalDateTime.now().toString())
+                .build();
 
             // 🚀 第九步：使用BaseController的success()方法 - 大幅简化！
             return success(loginResponseDTO, "登录成功");
@@ -328,20 +345,21 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
     }
 
     /**
-     * 👤 获取当前用户信息接口 (Lombok + BaseController优化版本)
+     * 👤 获取当前用户信息接口 (Lombok + BaseController + Converter优化版本)
      *
      * 处理获取当前认证用户信息的请求。
      * 这个接口需要用户已经通过JWT认证，会返回当前用户的完整信息。
      *
      * 🚀 优化亮点：
      * - 使用BaseController的success()和error()方法，代码从13行缩减到3行
+     * - 使用UserConverter替代手动DTO创建
      * - 简化异常处理逻辑
      * - 保持完整业务逻辑
      *
      * 用户信息获取流程：
      * 1. 从Spring Security上下文中获取当前认证的用户名
      * 2. 从数据库查询完整的用户信息
-     * 3. 转换为UserDTO并返回
+     * 3. 使用UserConverter转换为UserDTO并返回
      *
      * @GetMapping: Spring Web注解，将HTTP GET请求映射到这个方法
      *              "/userinfo": 这个方法处理 /auth/userinfo 路径的请求
@@ -371,13 +389,8 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
 
             User user = userOpt.get();
 
-            // 👤 第四步：创建UserDTO对象
-            UserDTO userDTO = new UserDTO(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole()
-            );
+            // 👤 第四步：使用UserConverter转换用户信息（替代手动DTO创建）
+            UserDTO userDTO = userConverter.toDTO(user);
 
             // 🚀 第五步：使用BaseController的success()方法 - 一行搞定！
             return success(userDTO, "获取用户信息成功");

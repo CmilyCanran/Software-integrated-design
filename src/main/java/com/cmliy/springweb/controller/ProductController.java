@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cmliy.springweb.common.ApiResponse;
+import com.cmliy.springweb.converter.ProductConverter;
 import com.cmliy.springweb.dto.ProductCreateRequestDTO;
 import com.cmliy.springweb.dto.ProductDetailDTO;
 import com.cmliy.springweb.dto.ProductListItemDTO;
@@ -31,6 +32,8 @@ import com.cmliy.springweb.service.ImageService;
 import com.cmliy.springweb.service.ProductDataService;
 import com.cmliy.springweb.service.ProductService;
 import com.cmliy.springweb.util.JwtUtil;
+
+import java.time.LocalDateTime;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -51,16 +54,19 @@ public class ProductController extends BaseController {
     private final ProductService productService;
     private final ImageService imageService;
     private final ProductDataService productDataService;
+    private final ProductConverter productConverter;
 
     public ProductController(ProductService productService,
                            ImageService imageService,
                            ProductDataService productDataService,
+                           ProductConverter productConverter,
                            UserRepository userRepository,
                            JwtUtil jwtUtil) {
         super(userRepository, jwtUtil);
         this.productService = productService;
         this.imageService = imageService;
         this.productDataService = productDataService;
+        this.productConverter = productConverter;
     }
 
     /**
@@ -120,7 +126,17 @@ public class ProductController extends BaseController {
         try {
             Long currentUserId = getCurrentUserId();
             ProductResponseDTO product = productService.createProduct(requestDTO, currentUserId);
-            return ResponseEntity.status(201).body(success(product, "商品创建成功").getBody());
+
+            // 🚀 使用Builder模式创建响应
+            ApiResponse<ProductResponseDTO> response = ApiResponse.<ProductResponseDTO>builder()
+                    .success(true)
+                    .message("商品创建成功")
+                    .data(product)
+                    .code(201)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            return ResponseEntity.status(201).body(response);
 
         } catch (RuntimeException e) {
             log.error("创建商品失败: {}", e.getMessage());
@@ -172,6 +188,7 @@ public class ProductController extends BaseController {
             log.info("🔍 [DEBUG] productService.updateProduct调用成功");
             log.info("🔍 [DEBUG] 返回的商品信息: {}", product);
 
+            // 🚀 使用工厂方法创建响应（已集成Builder模式）
             ApiResponse<ProductResponseDTO> response = ApiResponse.success(product, "商品更新成功");
             log.info("🔍 [DEBUG] 构建成功响应: {}", response);
             return ResponseEntity.ok(response);

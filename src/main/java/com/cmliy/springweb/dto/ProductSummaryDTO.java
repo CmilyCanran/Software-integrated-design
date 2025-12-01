@@ -1,5 +1,6 @@
 package com.cmliy.springweb.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
  * 用于商品列表页面展示，包含精简的商品信息
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductSummaryDTO {

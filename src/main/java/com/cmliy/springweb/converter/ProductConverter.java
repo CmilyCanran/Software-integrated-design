@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor  // 🚀 Lombok: 自动生成包含所有final字段的构造函数
 @Component
-public class ProductConverter extends BaseConverter {  // 🚀 继承BaseConverter获得统一转换方法
+public class ProductConverter extends BaseConverter<Product, ProductResponseDTO> {  // 🚀 继承BaseConverter获得统一转换方法
 
     /**
      * 🏗️ 商品数据服务
@@ -53,6 +53,53 @@ public class ProductConverter extends BaseConverter {  // 🚀 继承BaseConvert
     // public ProductConverter(ProductDataService productDataService) {
     //     this.productDataService = productDataService;
     // }
+
+    /**
+     * 🔄 标准Entity到DTO转换
+     * 委派给专门的toResponseDTO方法处理
+     *
+     * @param product 实体对象
+     * @return ProductResponseDTO对象
+     */
+    @Override
+    public ProductResponseDTO toDTO(Product product) {
+        return toResponseDTO(product);
+    }
+
+    /**
+     * 🔄 标准DTO到Entity转换
+     * 基础转换，实际业务中应使用专门的toEntity方法
+     *
+     * @param dto ProductResponseDTO对象
+     * @return Product实体
+     */
+    @Override
+    public Product toEntity(ProductResponseDTO dto) {
+        if (dto == null) return null;
+
+        // 使用通用转换工具进行基础转换
+        return dtoConverter.toEntity(dto, Product.class);
+    }
+
+    /**
+     * 🔧 获取DTO类型（用于通用转换）
+     *
+     * @return ProductResponseDTO类
+     */
+    @Override
+    protected Class<ProductResponseDTO> getDTOClass() {
+        return ProductResponseDTO.class;
+    }
+
+    /**
+     * 🔧 获取实体类型（用于通用转换）
+     *
+     * @return Product类
+     */
+    @Override
+    protected Class<Product> getEntityClass() {
+        return Product.class;
+    }
 
     /**
      * 🔄 Product实体转ProductResponseDTO (BaseController优化版本)

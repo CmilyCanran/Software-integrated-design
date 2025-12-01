@@ -1,5 +1,6 @@
 package com.cmliy.springweb.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
  * 用于接收前端商品查询的请求参数
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductQueryRequestDTO {
