@@ -8,6 +8,10 @@ import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 /**
  * 🔧 基础服务类 - Base Service
  *
@@ -253,14 +257,10 @@ public abstract class BaseService {
      * @param sortDirection 排序方向（ASC/DESC）
      * @return Pageable对象
      */
-    protected org.springframework.data.domain.Pageable buildPageable(
-            int page, int size, String sortBy, String sortDirection) {
-        org.springframework.data.domain.Sort.Direction direction =
-            "DESC".equalsIgnoreCase(sortDirection) ?
-            org.springframework.data.domain.Sort.Direction.DESC :
-            org.springframework.data.domain.Sort.Direction.ASC;
-        return org.springframework.data.domain.PageRequest.of(
-            page, size, org.springframework.data.domain.Sort.by(direction, sortBy));
+    protected Pageable buildPageable(int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = "DESC".equalsIgnoreCase(sortDirection) ?
+            Sort.Direction.DESC : Sort.Direction.ASC;
+        return PageRequest.of(page, size, Sort.by(direction, sortBy));
     }
 
     // ==================== 📋 函数式接口 ====================

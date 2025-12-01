@@ -5,6 +5,10 @@ package com.cmliy.springweb.model;
 import jakarta.persistence.*;                           // 导入JPA（Jakarta Persistence API）所有注解
 import org.hibernate.annotations.CreationTimestamp;    // 导入Hibernate创建时间戳注解
 import org.hibernate.annotations.UpdateTimestamp;      // 导入Hibernate更新时间戳注解
+import lombok.Data;                                     // 导入Lombok @Data注解
+import lombok.Builder;                                  // 导入Lombok @Builder注解
+import lombok.NoArgsConstructor;                       // 导入Lombok @NoArgsConstructor注解
+import lombok.AllArgsConstructor;                      // 导入Lombok @AllArgsConstructor注解
 
 import java.time.LocalDateTime;                         // 导入Java 8日期时间类，用于处理日期和时间
 
@@ -34,6 +38,10 @@ import java.time.LocalDateTime;                         // 导入Java 8日期时
  * - @GeneratedValue: 配置主键生成策略
  * - @CreationTimestamp/@UpdateTimestamp: Hibernate时间戳注解
  */
+@Data                                      // @Data注解：Lombok自动生成getter、setter、toString、equals、hashCode
+@Builder                                   // @Builder注解：Lombok支持Builder模式创建对象
+@NoArgsConstructor                         // @NoArgsConstructor注解：Lombok生成无参构造函数
+@AllArgsConstructor                        // @AllArgsConstructor注解：Lombok生成全参构造函数
 @Entity // @Entity注解：声明这是一个JPA实体类，Hibernate会自动管理其数据库映射
 @Table(name = "users", indexes = { // @Table注解：定义数据库表的元数据
     @Index(name = "idx_username", columnList = "username"), // 创建用户名索引：提高按用户名查询的性能
@@ -143,41 +151,4 @@ public class User { // public class: 定义公共类，其他类可以访问
     @Column(name = "updated_at", nullable = false) // 定义更新时间列
     private LocalDateTime updatedAt; // updatedAt: 更新时间，LocalDateTime类型
 
-    // 🏗️ 默认构造函数
-    // JPA规范要求实体类必须有无参构造函数
-    public User() { // 无参构造函数：JPA反射创建对象时使用
-    }
-
-    // 📝 带参构造函数
-    // 便捷构造函数，用于快速创建用户对象
-    public User(String username, String email, String password, String role) { // 带参构造函数
-        this.username = username; // this.username: 引用当前对象的username字段
-        this.email = email;       // this.email: 引用当前对象的email字段
-        this.password = password; // this.password: 引用当前对象的password字段
-        this.role = role;         // this.role: 引用当前对象的role字段
-    }
-
-    // ===== Getter方法 =====
-    // Getter方法：用于获取私有字段的值，遵循JavaBean规范
-
-    public Long getId() { return id; } // 获取用户ID
-    public String getUsername() { return username; } // 获取用户名
-    public String getEmail() { return email; } // 获取邮箱
-    public String getPassword() { return password; } // 获取密码
-    public String getRole() { return role; } // 获取角色
-    public Boolean getEnabled() { return enabled; } // 获取启用状态
-    public LocalDateTime getCreatedAt() { return createdAt; } // 获取创建时间
-    public LocalDateTime getUpdatedAt() { return updatedAt; } // 获取更新时间
-
-    // ===== Setter方法 =====
-    // Setter方法：用于设置私有字段的值，遵循JavaBean规范
-
-    public void setId(Long id) { this.id = id; } // 设置用户ID
-    public void setUsername(String username) { this.username = username; } // 设置用户名
-    public void setEmail(String email) { this.email = email; } // 设置邮箱
-    public void setPassword(String password) { this.password = password; } // 设置密码
-    public void setRole(String role) { this.role = role; } // 设置角色
-    public void setEnabled(Boolean enabled) { this.enabled = enabled; } // 设置启用状态
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; } // 设置创建时间
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; } // 设置更新时间
 }

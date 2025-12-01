@@ -1,5 +1,6 @@
 package com.cmliy.springweb.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.Map;
  * 用于商品详情页面展示，包含完整的商品信息
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductDetailDTO {
