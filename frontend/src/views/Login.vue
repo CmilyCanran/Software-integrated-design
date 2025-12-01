@@ -42,6 +42,8 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { authAPI } from '@/api/auth'
 import { ElMessage } from 'element-plus'
+import { handleError } from '@/utils/errorHandler'
+import type { LoginRequest, LoginResponse } from '@/types'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -63,79 +65,174 @@ const loginRules = {
     ]
 }
 
-const handleLogin = async () => {
-    if (!loginFormRef.value) return
+/**
+ * 📝 表单验证函数
+ *
+ * 💡 学习目标：
+ * - 理解表单验证的重要性
+ * - 学习如何封装验证逻辑
+ * - 掌握异步验证的处理方式
+ *
+ * @returns 验证是否通过
+ */
+const validateForm = async (): Promise<boolean> => {
+    if (!loginFormRef.value) return false
 
     try {
+        // 触发表单验证
         await loginFormRef.value.validate()
+        return true
+    } catch (error) {
+        // 验证失败，返回false
+        console.warn('表单验证失败:', error)
+        return false
+    }
+}
 
+/**
+ * 🔐 执行登录API调用
+ *
+ * 💡 学习目标：
+ * - 学习如何封装API调用逻辑
+ * - 理解登录请求的数据结构
+ * - 掌握异步API调用的错误处理
+ *
+ * @param credentials - 登录凭据
+ * @returns 登录响应数据
+ */
+const performLogin = async (credentials: LoginRequest): Promise<LoginResponse> => {
+    // 调用登录API
+    const response = await authAPI.login(credentials)
+
+    // 🔍 调试：打印API响应数据
+    console.log('🔍 登录API响应:', response)
+
+    return response
+}
+
+/**
+ * ✅ 处理登录成功
+ *
+ * 💡 学习目标：
+ * - 学习如何处理成功响应
+ * - 理解状态管理的工作流程
+ * - 掌握页面导航的方法
+ *
+ * @param response - 登录响应数据
+ */
+const handleLoginSuccess = (response: LoginResponse): void => {
+    // 🔍 验证数据结构
+    // 因为request.ts响应拦截器已经提取了data部分，
+    // 所以response直接就是包含token和user的对象
+    if (!response || !response.token || !response.user) {
+        console.error('❌ 数据结构错误:', {
+            hasToken: !!response?.token,
+            hasUser: !!response?.user,
+            fullData: response
+        })
+        throw new Error('登录数据格式错误')
+    }
+
+    // 更新认证状态
+    authStore.login(response)
+
+    // 🔍 验证store状态
+    console.log('🔍 登录后store状态:', {
+        token: authStore.token,
+        userInfo: authStore.userInfo,
+        isLoggedIn: authStore.isLoggedIn
+    })
+
+    // 显示成功消息并跳转
+    ElMessage.success('登录成功')
+    router.push('/dashboard')
+}
+
+/**
+ * ❌ 处理登录错误
+ *
+ * 💡 学习目标：
+ * - 学习如何统一处理错误
+ * - 理解不同类型错误的处理方式
+ * - 掌握用户友好的错误消息显示
+ *
+ * @param error - 错误对象
+ */
+const handleLoginError = (error: unknown): void => {
+    // 使用统一的错误处理工具
+    const appError = handleError(error, {
+        showToast: false,  // 我们自己处理消息显示
+        customMessage: '登录失败'
+    })
+
+    // 🔍 记录详细的错误信息（调试用）
+    console.error('❌ 登录失败详细信息:', {
+        code: appError.code,
+        message: appError.message,
+        details: appError.details
+    })
+
+    // 根据错误代码显示不同的用户友好消息
+    switch (appError.code) {
+        case 'UNAUTHORIZED':
+            ElMessage.error('用户名或密码错误')
+            break
+        case 'SERVER_ERROR':
+            ElMessage.error('服务器内部错误，请稍后重试')
+            break
+        case 'NETWORK_ERROR':
+        case 'TIMEOUT_ERROR':
+            ElMessage.error('网络连接失败，请检查网络')
+            break
+        default:
+            // 显示统一的错误消息
+            ElMessage.error(appError.message || '登录失败，请重试')
+    }
+}
+
+/**
+ * 🎯 主要的登录处理函数
+ *
+ * 💡 学习目标：
+ * - 学习如何将复杂逻辑拆分为小函数
+ * - 理解函数职责单一原则
+ * - 掌握异步操作的流程控制
+ */
+const handleLogin = async (): Promise<void> => {
+    // 验证表单
+    const isValid = await validateForm()
+    if (!isValid) return
+
+    try {
+        // 设置加载状态
         authStore.setLoading(true)
 
-        const response = await authAPI.login({
+        // 执行登录
+        const response = await performLogin({
             username: loginForm.username,
             password: loginForm.password
         })
 
-        // 🔍 调试：打印API响应数据
-        console.log('🔍 登录API响应:', response)
-
-        // 🔍 验证数据结构
-        // 因为request.js响应拦截器已经提取了data部分，
-        // 所以response直接就是包含token和user的对象
-        if (!response || !response.token || !response.user) {
-            console.error('❌ 数据结构错误:', {
-                hasToken: !!response?.token,
-                hasUser: !!response?.user,
-                fullData: response
-            })
-            ElMessage.error('登录数据格式错误，请联系管理员')
-            return
-        }
-
-        authStore.login(response)
-
-        // 🔍 验证store状态
-        console.log('🔍 登录后store状态:', {
-            token: authStore.token,
-            userInfo: authStore.userInfo,
-            isLoggedIn: authStore.isLoggedIn
-        })
-
-        ElMessage.success('登录成功')
-        router.push('/dashboard')
+        // 处理登录成功
+        await handleLoginSuccess(response)
 
     } catch (error) {
-        // 类型守卫：检查是否为AxiosError
-        const isAxiosError = (err: unknown): err is import('axios').AxiosError => {
-            return err !== null && typeof err === 'object' && 'response' in err
-        }
-
-        console.error('❌ 登录失败详细信息:', {
-            message: error instanceof Error ? error.message : '未知错误',
-            response: isAxiosError(error) ? error.response?.data : undefined,
-            status: isAxiosError(error) ? error.response?.status : undefined,
-            config: isAxiosError(error) ? error.config : undefined
-        })
-
-        // 🔍 根据不同错误类型显示不同信息
-        if (isAxiosError(error) && error.response?.status === 401) {
-            ElMessage.error('用户名或密码错误')
-        } else if (isAxiosError(error) && error.response?.status === 500) {
-            ElMessage.error('服务器内部错误，请稍后重试')
-        } else if (error instanceof Error && error.message.includes('Network Error')) {
-            ElMessage.error('网络连接失败，请检查网络')
-        } else {
-            ElMessage.error(
-                (isAxiosError(error) && error.response?.data?.message) ||
-                (error instanceof Error ? error.message : '登录失败，请重试')
-            )
-        }
+        // 处理登录错误
+        handleLoginError(error)
     } finally {
+        // 重置加载状态
         authStore.setLoading(false)
     }
 }
 
-const goToRegister = () => {
+/**
+ * 🔗 跳转到注册页面
+ *
+ * 💡 学习目标：
+ * - 学习Vue Router的基本使用
+ * - 理解页面导航的实现方式
+ */
+const goToRegister = (): void => {
     router.push('/register')
 }
 </script>

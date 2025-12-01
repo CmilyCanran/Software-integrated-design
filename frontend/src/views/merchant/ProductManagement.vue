@@ -261,6 +261,10 @@ import ProductForm from '@/components/ProductForm.vue'
 import Header from '@/components/Header.vue'
 import type { Product, ProductCreateRequest, ProductUpdateRequest } from '@/types/product'
 import dayjs from 'dayjs'
+// 导入组合式函数
+import { useProductSearch } from '@/composables/useProductSearch'
+import { useProductPagination } from '@/composables/useProductPagination'
+import { useProductCrud } from '@/composables/useProductCrud'
 
 // 状态管理
 const productStore = useProductStore()
@@ -271,19 +275,81 @@ const productStats = computed(() => productStore.productStats)
 const pagination = computed(() => productStore.pagination)
 const loading = computed(() => productStore.loading)
 
-// 搜索和筛选状态
-const searchQuery = ref('')
-const categoryFilter = ref('')
-const statusFilter = ref('')
+// 数据加载方法 - 必须在组合式函数之前定义
+const loadProducts = async () => {
+  try {
+    await productStore.fetchMerchantProducts({
+      page: currentPage.value - 1, // Convert to 0-based for backend
+      size: pageSize.value,
+      keyword: searchQuery.value,
+      isAvailable: statusFilter.value ?
+        (statusFilter.value === 'available') : undefined,
+      category: categoryFilter.value || undefined
+    })
+  } catch (error) {
+    console.error('加载商品列表失败:', error)
+  }
+}
 
-// 分页状态
-const currentPage = ref(1)
-const pageSize = ref(12)
+const loadProductStats = async () => {
+  try {
+    await productStore.fetchProductStats()
+  } catch (error) {
+    console.error('加载商品统计失败:', error)
+  }
+}
 
-// 对话框状态
-const formDialogVisible = ref(false)
-const isEditing = ref(false)
-const editingProduct = ref<Product | null>(null)
+// 使用组合式函数重构搜索和分页逻辑
+const {
+  searchQuery,
+  categoryFilter,
+  statusFilter,
+  handleSearch,
+  handleSearchClear,
+  handleFilterChange
+} = useProductSearch(loadProducts)
+
+const {
+  currentPage,
+  pageSize,
+  handlePageChange,
+  handleSizeChange
+} = useProductPagination(loadProducts)
+
+// 使用组合式函数重构CRUD操作
+const {
+  formDialogVisible,
+  isEditing,
+  editingProduct,
+  openCreateDialog,
+  handleCreate,
+  openEditDialog: openEditDialogFromCrud,
+  handleUpdate,
+  confirmDelete,
+  toggleProductStatus,
+  closeFormDialog
+} = useProductCrud({
+  onCreateSuccess: () => {
+    // 产品创建成功后的处理
+    loadProducts()
+    loadProductStats()
+  },
+  onUpdateSuccess: () => {
+    // 产品更新成功后的处理
+    loadProducts()
+    loadProductStats()
+  },
+  onDeleteSuccess: () => {
+    // 产品删除成功后的处理
+    loadProducts()
+    loadProductStats()
+  },
+  onStatusChangeSuccess: () => {
+    // 产品状态切换成功后的处理
+    loadProducts()
+    loadProductStats()
+  }
+})
 
 // 快速操作按钮配置接口
 interface QuickAction {
@@ -311,76 +377,9 @@ const merchantQuickActions: QuickAction[] = [
   }
 ]
 
-// 数据加载方法
-const loadProducts = async () => {
-  try {
-    await productStore.fetchMerchantProducts({
-      page: currentPage.value - 1, // Convert to 0-based for backend
-      size: pageSize.value,
-      keyword: searchQuery.value,
-      isAvailable: statusFilter.value ?
-        (statusFilter.value === 'available') : undefined,
-      category: categoryFilter.value || undefined
-    })
-  } catch (error) {
-    console.error('加载商品列表失败:', error)
-  }
-}
-
-const loadProductStats = async () => {
-  try {
-    await productStore.fetchProductStats()
-  } catch (error) {
-    console.error('加载商品统计失败:', error)
-  }
-}
-
 // 日期格式化
 const formatDate = (date: string) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
-}
-
-// 防抖搜索实现
-let searchTimer: NodeJS.Timeout | null = null
-
-const handleSearch = () => {
-  currentPage.value = 1 // 重置到第一页
-
-  // 清除之前的定时器
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-  }
-
-  // 设置新的定时器
-  searchTimer = setTimeout(async () => {
-    await loadProducts()
-  }, 300) // 300ms防抖延迟
-}
-
-// 清除搜索
-const handleSearchClear = async () => {
-  searchQuery.value = ''
-  currentPage.value = 1
-  await loadProducts()
-}
-
-// 筛选条件变化处理
-const handleFilterChange = async () => {
-  currentPage.value = 1 // 重置到第一页
-  await loadProducts()
-}
-
-// 页面变化处理
-const handlePageChange = async (page: number) => {
-  currentPage.value = page
-  await loadProducts()
-}
-
-// 页面大小变化处理
-const handleSizeChange = async (size: number) => {
-  pageSize.value = size
-  currentPage.value = 1
-  await loadProducts()
 }
 
 // 查看商品详情
@@ -389,115 +388,25 @@ const viewProductDetail = (product: Product) => {
   ElMessage.info(`查看商品: ${product.productName}`)
 }
 
-// 打开创建商品对话框
-const openCreateDialog = () => {
-  isEditing.value = false
-  editingProduct.value = null
-  formDialogVisible.value = true
-}
-
-// 打开编辑商品对话框
-const openEditDialog = async (product: Product) => {
-  try {
-    // 通过API获取完整的商品详情（包括规格数据）
-    const fullProduct = await productStore.fetchProduct(product.id)
-
-    isEditing.value = true
-    editingProduct.value = fullProduct
-    formDialogVisible.value = true
-  } catch (error) {
-    console.error('获取商品详情失败:', error)
-    ElMessage.error('获取商品详情失败，请重试')
-  }
-}
-
-// 关闭表单对话框
-const closeFormDialog = () => {
-  formDialogVisible.value = false
-  isEditing.value = false
-  editingProduct.value = null
-}
-
-// 确认删除商品
-const confirmDelete = async (product: Product) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除商品 "${product.productName}" 吗？此操作不可恢复。`,
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-
-    await productStore.deleteProduct(product.id)
-    ElMessage.success('商品删除成功')
-    await loadProducts() // 重新加载数据
-    await loadProductStats() // 重新加载统计数据
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      console.error('删除商品失败:', error)
-      ElMessage.error('删除失败，请重试')
-    } else {
-      ElMessage.info('已取消删除')
-    }
-  }
-}
-
-// 切换商品状态
-const toggleProductStatus = async (product: Product) => {
-  try {
-    const newStatus = !product.isAvailable
-    const action = newStatus ? '上架' : '下架'
-
-    await ElMessageBox.confirm(
-      `确定要${action}商品 "${product.productName}" 吗？`,
-      `${action}确认`,
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-
-    await productStore.toggleProductStatus(product.id, newStatus)
-    ElMessage.success(`商品${action}成功`)
-    await loadProducts() // 重新加载数据
-    await loadProductStats() // 重新加载统计数据
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      console.error(`${action}商品失败:`, error)
-      ElMessage.error(`${action}失败，请重试`)
-    } else {
-      ElMessage.info(`已取消${action}`)
-    }
-  }
-}
-
-// 处理表单保存
+// 处理表单保存 - 使用组合式函数重构
 const handleFormSave = async (formData: ProductCreateRequest | ProductUpdateRequest) => {
   try {
     if (isEditing.value && editingProduct.value) {
-      // 编辑模式
-      await productStore.updateProduct(
-        editingProduct.value.id,
-        formData as ProductUpdateRequest
-      )
-      ElMessage.success('商品更新成功')
+      // 编辑模式 - 使用组合式函数的更新方法
+      await handleUpdate(editingProduct.value.id, formData as ProductUpdateRequest)
     } else {
-      // 创建模式
-      await productStore.createProduct(formData as ProductCreateRequest)
-      ElMessage.success('商品创建成功')
+      // 创建模式 - 使用组合式函数的创建方法
+      await handleCreate(formData as ProductCreateRequest)
     }
-
-    closeFormDialog()
-    await loadProducts() // 重新加载数据
-    await loadProductStats() // 重新加载统计数据
   } catch (error) {
     console.error('保存失败:', error)
     ElMessage.error('保存失败，请重试')
   }
+}
+
+// 打开编辑商品对话框 - 使用组合式函数
+const openEditDialog = async (product: Product) => {
+  await openEditDialogFromCrud(product)
 }
 
 // 页面挂载时初始化

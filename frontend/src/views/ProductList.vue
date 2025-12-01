@@ -191,7 +191,7 @@ import SearchBox from '@/components/SearchBox.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import ProductListItem from '@/components/ProductListItem.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
-import type { Product } from '@/types/product'
+import type { Product, PaginatedResponse } from '@/types'
 import Header from '@/components/Header.vue'
 import { productAPI } from '@/api/product'
 
