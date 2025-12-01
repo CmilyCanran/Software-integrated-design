@@ -6,6 +6,7 @@ import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse,
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import type { ApiResponse } from '@/types'
+import { handleError } from '@/utils/errorHandler'
 
 // ============================================================================
 // Axios实例创建：配置默认请求参数
@@ -63,34 +64,37 @@ request.interceptors.response.use(
   },
   // 响应失败拦截
   (error) => {
-    // HTTP状态码处理
+    // 🔍 第一步：使用统一的错误处理工具
+    // 避免重复显示toast，因为我们会在下面统一处理
+    const appError = handleError(error, { showToast: false })
+
+    // 🔍 第二步：保持特殊的业务逻辑处理
+    // 401错误需要重新登录 - 这是特殊的业务逻辑
     if (error.response?.status === 401) {
       console.warn('⚠️ 认证失效，需要重新登录')
       const authStore = useAuthStore()
       authStore.logout()
       window.location.href = '/login'
-    } else if (error.response?.status === 403) {
-      ElMessage.error('权限不足，无法访问此资源')
-    } else if (error.response?.status === 404) {
-      ElMessage.error('请求的资源不存在')
-    } else if (error.response?.status >= 500) {
-      ElMessage.error('服务器内部错误，请稍后重试')
-    } else {
-      ElMessage.error(error.message || '网络错误')
+      // 401错误已经处理完成，不需要再显示错误消息
+      return Promise.reject(appError)
     }
 
-    // 错误日志记录
-    console.error('❌ 请求失败:', error)
-    console.error('❌ 详细错误信息:', {
+    // 🔍 第三步：统一显示错误消息
+    // 对于非401错误，显示标准化的错误消息
+    ElMessage.error(appError.message)
+
+    // 🔍 第四步：记录详细的调试信息
+    // 保持原有的详细日志记录，便于调试
+    console.error('❌ 请求失败详情:', {
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
-      statusText: error.response?.statusText,
-      message: error.message,
-      response: error.response?.data
+      message: appError.message,
+      details: appError.details
     })
 
-    return Promise.reject(error)
+    // 返回标准化的错误对象
+    return Promise.reject(appError)
   }
 )
 
