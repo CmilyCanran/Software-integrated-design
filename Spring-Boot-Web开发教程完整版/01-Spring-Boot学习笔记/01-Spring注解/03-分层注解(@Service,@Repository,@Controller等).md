@@ -591,6 +591,163 @@ public class OrderRepository {
 | **Service** | 业务逻辑处理，事务管理 | `@Service` | 不直接操作数据库，不处理HTTP |
 | **Repository** | 数据库操作，异常翻译 | `@Repository` | 只做数据访问，不包含业务逻辑 |
 
+### 🏗️ Service层继承模式（新增）
+
+#### BaseService继承架构
+
+在现代Spring Boot项目中，我们推荐使用**BaseService继承模式**来统一Service层的架构设计：
+
+```java
+// BaseService - 抽象基类，提供通用工具方法
+@Slf4j
+@RequiredArgsConstructor
+public abstract class BaseService {
+
+    // 统一日志记录
+    protected <T> T executeWithLog(String operation, Supplier<T> supplier, Object... params) {
+        // 标准化的日志记录逻辑
+    }
+
+    // 数据验证工具
+    protected <T> T validateExists(Optional<T> optional, String entityName, Object id) {
+        // 统一的存在性验证
+    }
+
+    protected void validateUnique(Boolean exists, String entityName, Object value) {
+        // 统一的唯一性验证
+    }
+}
+
+// 具体的Service继承BaseService
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class OrderService extends BaseService {
+
+    private final OrderRepository orderRepository;
+    private final PaymentService paymentService;
+
+    @Override
+    public Order createOrder(CreateOrderRequest request) {
+        return executeWithLog("创建订单", () -> {
+            // 使用BaseService的验证方法
+            User user = validateExists(userRepository.findById(request.getUserId()), "用户", request.getUserId());
+
+            // 业务逻辑处理
+            Order order = new Order();
+            // ... 订单创建逻辑
+
+            return orderRepository.save(order);
+        }, request.getUserId(), request.getTotalAmount());
+    }
+}
+```
+
+#### BaseService继承模式的优势
+
+**1. 代码复用**：
+- 消除重复的日志记录代码
+- 统一的数据验证逻辑
+- 标准化的异常处理
+
+**2. 一致性保证**：
+- 所有Service使用统一的日志格式
+- 一致的验证和异常处理策略
+- 标准化的方法命名规范
+
+**3. 可维护性提升**：
+- 通用逻辑集中管理
+- 修改日志格式只需调整BaseService
+- 新增验证方法自动适用于所有Service
+
+#### Lombok注解与继承结合
+
+```java
+// ✅ 推荐：保持Lombok注解一致性
+@Slf4j  // 子类也需要日志功能
+@Service
+@RequiredArgsConstructor  // 与BaseService保持一致
+@Transactional(readOnly = true)  // 默认只读事务
+public class UserService extends BaseService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    // 查询方法：继承只读事务设置
+    public UserDTO getUser(Long id) {
+        return executeWithLog("查询用户", () -> {
+            User user = validateExists(userRepository.findById(id), "用户", id);
+            return UserDTO.from(user);
+        }, id);
+    }
+
+    // 更新方法：覆盖事务设置
+    @Transactional  // 需要写事务
+    public UserDTO updateUser(Long id, UserUpdateDTO dto) {
+        return executeInTransaction("更新用户", () -> {
+            User user = validateExists(userRepository.findById(id), "用户", id);
+            // 更新逻辑...
+            return UserDTO.from(userRepository.save(user));
+        });
+    }
+}
+```
+
+#### 抽象Service类设计原则
+
+**设计原则**：
+
+1. **只包含通用逻辑**：BaseService应该只包含所有Service都需要的基础功能
+2. **保持轻量级**：避免在BaseService中添加过多复杂逻辑
+3. **提供灵活性**：工具方法应该足够灵活，适应不同业务场景
+4. **保持向后兼容**：新增功能不应该破坏现有代码
+
+**适用场景**：
+- 多个Service有共同的日志记录需求
+- 需要统一的数据验证逻辑
+- 项目中存在大量重复的Service基础代码
+- 团队协作需要统一的编码规范
+
+**不适用场景**：
+- 简单的CRUD项目，Service逻辑很少
+- 每个Service都有完全不同的基础需求
+- 项目规模很小，不值得引入额外复杂性
+
+#### 进阶：项目特定的BaseService
+
+对于复杂项目，可以创建项目特定的BaseService：
+
+```java
+// 项目特定的BaseService
+public abstract class ProjectBaseService extends BaseService {
+
+    @Autowired
+    protected CurrentUserService currentUserService;
+
+    // 项目特定的验证方法
+    protected User getCurrentUser() {
+        return currentUserService.getCurrentUser()
+            .orElseThrow(() -> new BusinessException("用户未登录"));
+    }
+
+    // 项目特定的工具方法
+    protected void validateProjectAccess(Long projectId) {
+        if (!currentUserService.hasProjectAccess(projectId)) {
+            throw new BusinessException("没有项目访问权限");
+        }
+    }
+}
+
+// 具体的业务Service继承项目特定的BaseService
+@Service
+@RequiredArgsConstructor
+public class TaskService extends ProjectBaseService {
+    // 自动获得BaseService和ProjectBaseService的所有功能
+}
+```
+
+通过合理使用BaseService继承模式，可以构建出更加**标准化**、**可维护**、**易于测试**的Service层架构，为项目的长期发展奠定坚实基础。
+
 ---
 
 ## 常见问题解答

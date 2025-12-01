@@ -1,5 +1,6 @@
 package com.cmliy.springweb.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
  * 用于商品列表项展示，包含最精简的商品信息
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductListItemDTO {

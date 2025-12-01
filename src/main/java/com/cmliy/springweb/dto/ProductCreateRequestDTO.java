@@ -1,6 +1,7 @@
 package com.cmliy.springweb.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
  * 用于接收前端创建商品的请求数据
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductCreateRequestDTO {
