@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
-public class ProductDataService {
+public class ProductDataService extends BaseService {
 
     /**
      * 🖼️ 安全更新商品图片数据
@@ -33,78 +33,65 @@ public class ProductDataService {
      * @param mainImageUrl 主图片URL
      */
     public void updateProductImageData(Product product, String mainImageUrl) {
-        log.info("🔧 [ProductDataService] 开始更新商品图片数据: productId={}, mainImageUrl={}",
-                product.getId(), mainImageUrl);
+        executeWithLog("更新商品图片数据", () -> {
+            // 获取当前的productData，如果为null则初始化
+            Map<String, Object> currentData = product.getProductData();
+            if (currentData == null) {
+                currentData = new HashMap<>();
+                product.setProductData(currentData);
+            }
 
-        // 获取当前的productData，如果为null则初始化
-        Map<String, Object> currentData = product.getProductData();
-        if (currentData == null) {
-            log.info("🔧 [ProductDataService] productData为null，初始化新的Map");
-            currentData = new HashMap<>();
-            product.setProductData(currentData);
-        }
+            // 安全地更新image_data结构
+            @SuppressWarnings("unchecked")
+            Map<String, Object> imageData = (Map<String, Object>)
+                    currentData.computeIfAbsent("image_data", k -> new HashMap<>());
 
-        // 安全地更新image_data结构
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>)
-                currentData.computeIfAbsent("image_data", k -> {
-                    log.info("🔧 [ProductDataService] 创建新的image_data结构");
-                    return new HashMap<>();
-                });
+            String oldMainImage = (String) imageData.get("main_image");
+            imageData.put("main_image", mainImageUrl);
 
-        String oldMainImage = (String) imageData.get("main_image");
-        imageData.put("main_image", mainImageUrl);
-
-        log.info("🔧 [ProductDataService] 图片数据更新完成: productId={}, oldMainImage={}, newMainImage={}",
-                product.getId(), oldMainImage, mainImageUrl);
+            return null; // void方法返回null
+        }, product.getId(), mainImageUrl);
     }
 
     /**
      * 🔧 修复方法：安全的商品规格数据更新
      */
     public void updateSpecifications(Product product, Map<String, Object> specifications) {
-        log.info("🔧 [ProductDataService] 开始更新商品规格数据: productId={}, specifications={}",
-                product.getId(), specifications);
-
-        if (specifications == null || specifications.isEmpty()) {
-            log.info("🔧 [ProductDataService] 规格数据为空，跳过更新");
-            return;
-        }
-
-        // 🔧 关键修复：验证和转换规格数据
-        Map<String, List<String>> validatedSpecifications = new HashMap<>();
-
-        for (Map.Entry<String, Object> entry : specifications.entrySet()) {
-            String specName = entry.getKey();
-            Object specValues = entry.getValue();
-
-            log.info("🔧 [ProductDataService] 处理规格: specName={}, specValues={}, specValuesType={}",
-                     specName, specValues, specValues != null ? specValues.getClass().getSimpleName() : "null");
-
-            // 验证规格名称
-            if (specName == null || specName.trim().isEmpty()) {
-                log.warn("🔧 [ProductDataService] 跳过空的规格名称");
-                continue;
+        executeWithLog("更新商品规格数据", () -> {
+            if (specifications == null || specifications.isEmpty()) {
+                log.info("规格数据为空，跳过更新");
+                return null;
             }
 
-            // 转换规格值为字符串列表
-            List<String> stringValues = convertToStringList(specValues);
-            if (stringValues == null || stringValues.isEmpty()) {
-                log.warn("🔧 [ProductDataService] 跳过空的规格值: specName={}", specName);
-                continue;
+            // 🔧 关键修复：验证和转换规格数据
+            Map<String, List<String>> validatedSpecifications = new HashMap<>();
+
+            for (Map.Entry<String, Object> entry : specifications.entrySet()) {
+                String specName = entry.getKey();
+                Object specValues = entry.getValue();
+
+                // 验证规格名称
+                if (specName == null || specName.trim().isEmpty()) {
+                    log.warn("跳过空的规格名称");
+                    continue;
+                }
+
+                // 转换规格值为字符串列表
+                List<String> stringValues = convertToStringList(specValues);
+                if (stringValues == null || stringValues.isEmpty()) {
+                    log.warn("跳过空的规格值: specName={}", specName);
+                    continue;
+                }
+
+                validatedSpecifications.put(specName.trim(), stringValues);
             }
 
-            validatedSpecifications.put(specName.trim(), stringValues);
-            log.info("🔧 [ProductDataService] 规格处理成功: specName={}, stringValues={}", specName, stringValues);
-        }
+            if (validatedSpecifications.isEmpty()) {
+                log.warn("没有有效的规格数据，跳过更新");
+                return null;
+            }
 
-        if (validatedSpecifications.isEmpty()) {
-            log.warn("🔧 [ProductDataService] 没有有效的规格数据，跳过更新");
-            return;
-        }
-
-        // 🔧 关键修复：安全地更新JSONB数据
-        try {
+            // 🔧 关键修复：安全地更新JSONB数据
             Map<String, Object> currentData = product.getProductData();
             if (currentData == null) {
                 currentData = new HashMap<>();
@@ -120,14 +107,8 @@ public class ProductDataService {
             // 🔧 关键修复：使用setter方法确保JSONB正确处理
             product.setProductData(currentData);
 
-            log.info("🔧 [ProductDataService] 规格数据更新完成: productId={}, oldSpecifications={}, newSpecifications={}",
-                    product.getId(), oldSpecifications, validatedSpecifications);
-
-        } catch (Exception e) {
-            log.error("🔧 [ProductDataService] 规格数据更新失败: productId={}, specifications={}",
-                     product.getId(), validatedSpecifications, e);
-            throw new RuntimeException("规格数据更新失败", e);
-        }
+            return null; // void方法返回null
+        }, product.getId(), specifications);
     }
 
     /**
@@ -186,35 +167,29 @@ public class ProductDataService {
      * @param category 商品分类
      */
     public void updateCategory(Product product, String category) {
-        log.info("🔧 [ProductDataService] 开始更新商品分类: productId={}, category={}",
-                product.getId(), category);
+        executeWithLog("更新商品分类", () -> {
+            if (category == null || category.trim().isEmpty()) {
+                log.info("分类为空，跳过更新");
+                return null;
+            }
 
-        if (category == null || category.trim().isEmpty()) {
-            log.info("🔧 [ProductDataService] 分类为空，跳过更新");
-            return;
-        }
+            // 获取当前的productData，如果为null则初始化
+            Map<String, Object> currentData = product.getProductData();
+            if (currentData == null) {
+                currentData = new HashMap<>();
+                product.setProductData(currentData);
+            }
 
-        // 获取当前的productData，如果为null则初始化
-        Map<String, Object> currentData = product.getProductData();
-        if (currentData == null) {
-            log.info("🔧 [ProductDataService] productData为null，初始化新的Map");
-            currentData = new HashMap<>();
-            product.setProductData(currentData);
-        }
+            // 更新分类信息到规格中
+            @SuppressWarnings("unchecked")
+            Map<String, Object> specifications = (Map<String, Object>)
+                    currentData.computeIfAbsent("specifications", k -> new HashMap<>());
 
-        // 更新分类信息到规格中
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>)
-                currentData.computeIfAbsent("specifications", k -> {
-                    log.info("🔧 [ProductDataService] 创建新的specifications结构");
-                    return new HashMap<>();
-                });
+            String oldCategory = (String) specifications.get("category");
+            specifications.put("category", category.trim());
 
-        String oldCategory = (String) specifications.get("category");
-        specifications.put("category", category.trim());
-
-        log.info("🔧 [ProductDataService] 分类更新完成: productId={}, oldCategory={}, newCategory={}",
-                product.getId(), oldCategory, category.trim());
+            return null; // void方法返回null
+        }, product.getId(), category);
     }
 
     /**
