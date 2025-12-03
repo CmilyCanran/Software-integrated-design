@@ -538,26 +538,38 @@ const handleImageError = (error: any) => {
   // 错误处理现在在 handleManualUpload 中完成
 }
 
-// 删除图片
-const removeImage = () => {
-  formData.mainImageUrl = ''
-  ElMessage.success('图片已删除，可以重新上传')
+// 删除图片 - 立即执行软删除
+const removeImage = async () => {
+  if (!props.product?.id) {
+    ElMessage.error('商品信息不存在')
+    return
+  }
+
+  try {
+    isUploading.value = true
+    await productAPI.deleteProductImage(props.product.id)
+    formData.mainImageUrl = ''
+    ElMessage.success('图片已删除')
+  } catch (error: any) {
+    console.error('删除图片失败:', error)
+    ElMessage.error(error.response?.data?.message || '图片删除失败')
+  } finally {
+    isUploading.value = false
+  }
 }
 
 // 触发图片更换（点击"更换图片"按钮时调用）
 const triggerImageUpload = () => {
   if (isUploading.value) {
-    ElMessage.warning('正在上传中，请稍候')
+    ElMessage.warning('正在操作中，请稍候')
     return
   }
 
-  // 验证商品是否存在（编辑模式）
-  if (props.isEdit && !props.product?.id) {
+  if (!props.product?.id) {
     ElMessage.error('请先保存商品信息')
     return
   }
 
-  // 创建文件输入元素来选择图片
   const fileInput = document.createElement('input')
   fileInput.type = 'file'
   fileInput.accept = 'image/*'
@@ -565,46 +577,32 @@ const triggerImageUpload = () => {
 
   fileInput.onchange = async (event: any) => {
     const file = event.target.files[0]
-    if (file) {
-      // 文件验证
-      if (!beforeImageUpload(file)) {
-        return
-      }
-
+    if (file && beforeImageUpload(file)) {
       isUploading.value = true
-      uploadProgress.value = 0
 
       try {
-        console.log('🔍 [DEBUG] 更换图片上传开始', { file: file.name, productId: props.product!.id })
+        // 1. 如果有现有图片，先删除
+        if (formData.mainImageUrl) {
+          await productAPI.deleteProductImage(props.product!.id)
+          console.log('旧图片删除成功')
+        }
 
-        // 使用认证的 API 方法上传
+        // 2. 上传新图片
         const response = await productAPI.uploadProductImage(props.product!.id, file)
-        console.log('✅ [DEBUG] 更换图片上传成功', response)
-
-        // 更新表单数据中的图片 URL
         formData.mainImageUrl = response.imageUrl
-        ElMessage.success('图片更换成功')
+        ElMessage.success('图片更新成功')
 
       } catch (error: any) {
-        console.error('❌ [DEBUG] 更换图片上传失败:', error)
-
-        // 处理特定的认证错误
-        if (error.response?.status === 401) {
-          ElMessage.error('认证失败，请重新登录')
-        } else {
-          ElMessage.error(error.response?.data?.message || '图片更换失败')
-        }
+        console.error('图片更新失败:', error)
+        ElMessage.error(error.response?.data?.message || '图片更新失败')
       } finally {
         isUploading.value = false
-        uploadProgress.value = 0
       }
     }
 
-    // 清理临时元素
     document.body.removeChild(fileInput)
   }
 
-  // 添加到DOM并触发点击
   document.body.appendChild(fileInput)
   fileInput.click()
 }

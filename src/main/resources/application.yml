@@ -36,7 +36,7 @@ spring:
 
   web:
     resources:
-      static-locations: classpath:/static/,file:uploads/
+      static-locations: classpath:/static/,file:D:/Code/Learn/Java/Spring/image/uploads/
 
 # 基础配置（所有环境共享）
 server:
