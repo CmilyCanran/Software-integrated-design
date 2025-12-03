@@ -1,21 +1,31 @@
 package com.cmliy.springweb.model;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -209,26 +219,6 @@ public class Product {
         return (String) imageData.get("main_image");
     }
 
-
-    /**
-     * 🖼️ 获取缩略图信息
-     */
-    @SuppressWarnings("unchecked")
-    public Map<String, String> getThumbnails() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.getOrDefault("image_data", new java.util.HashMap<>());
-        return (Map<String, String>) imageData.get("thumbnails");
-    }
-
-    /**
-     * 📊 获取图片总数
-     */
-    @SuppressWarnings("unchecked")
-    public Integer getTotalImages() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> imageData = (Map<String, Object>) productData.getOrDefault("image_data", new java.util.HashMap<>());
-        return (Integer) imageData.getOrDefault("total_images", 0);
-    }
 
     // ==================== 📋 规格相关只读方法 ====================
 
