@@ -79,34 +79,4 @@ public class ProductUpdateRequestDTO {
      * 前端数据来源：规格表单
      */
     private Map<String, Object> specifications;
-
-    /**
-     * 🏷️ 商品类别 - 商品类别
-     * 前端数据来源：类别选择器
-     */
-    private String category;
-
-    /**
-     * 🏷️ 商品品牌 - 商品品牌
-     * 前端数据来源：品牌输入框
-     */
-    private String brand;
-
-    /**
-     * 🎨 商品颜色 - 商品颜色
-     * 前端数据来源：颜色选择器
-     */
-    private String color;
-
-    /**
-     * 📏 商品尺寸 - 商品尺寸
-     * 前端数据来源：尺寸输入框
-     */
-    private String size;
-
-    /**
-     * 📊 扩展属性 - 其他扩展属性
-     * 前端数据来源：扩展属性表单
-     */
-    private Map<String, Object> extendedAttributes;
 }

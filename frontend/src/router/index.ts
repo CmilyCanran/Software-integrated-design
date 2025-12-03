@@ -98,6 +98,17 @@ const router = createRouter({
       } as RouteMeta
     },
 
+    // 商家商品详情页面路由（商家专用，动态ID参数）
+    {
+      path: '/merchant/product/:id',
+      name: 'MerchantProductDetail',
+      component: () => import('../views/merchant/ProductDetail.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: ['SHOPER', 'ADMIN'],
+        title: '商品详情'
+      } as RouteMeta
+    },
 
     // 组件测试页面路由（隐藏页面，只能手动访问）
     {

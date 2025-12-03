@@ -1,5 +1,6 @@
 <template>
-  <Header page-title="商品详情" />
+  <!-- 只在没有传入props时显示Header，避免重复显示 -->
+  <Header v-if="!props.product" page-title="商品详情" />
   <div class="product-detail">
 
     <!-- 加载状态 -->
@@ -100,7 +101,7 @@
           </div>
 
           <!-- 数量选择 -->
-          <div class="quantity-section">
+          <div v-if="!hideShoppingCart" class="quantity-section">
             <h4>数量</h4>
             <div class="quantity-controls">
               <el-input-number
@@ -114,7 +115,7 @@
           </div>
 
           <!-- 操作按钮 -->
-          <div class="action-section">
+          <div v-if="!hideShoppingCart" class="action-section">
             <el-button
               type="primary"
               size="large"
@@ -184,6 +185,17 @@ import { processImageUrl } from '@/utils/imageUtils'
 // 路由相关
 const route = useRoute()
 const router = useRouter()
+
+// Props定义
+interface Props {
+  product?: Product | null  // 可选的商品数据，用于商家模式
+  hideShoppingCart?: boolean  // 隐藏购物车功能
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  product: null,
+  hideShoppingCart: false
+})
 
 // 响应式数据
 const loading = ref<boolean>(true)
@@ -291,11 +303,16 @@ const loadProduct = async () => {
   loading.value = true
 
   try {
-    // 从路由参数获取产品ID
-    const productId = Number(route.params.id)
+    // 如果是通过props传入的商品数据，直接使用
+    if (props.product) {
+      product.value = props.product
+    } else {
+      // 从路由参数获取产品ID
+      const productId = Number(route.params.id)
 
-    // 调用后端API获取产品详情
-    product.value = await productAPI.getProduct(productId)
+      // 调用后端API获取产品详情
+      product.value = await productAPI.getProduct(productId)
+    }
 
     // 清空属性选择
     selectedAttributes.value = {}
@@ -320,6 +337,13 @@ watch(() => route.params.id, () => {
     loadProduct()
   }
 })
+
+// 监听props变化
+watch(() => props.product, () => {
+  if (props.product) {
+    loadProduct()
+  }
+}, { immediate: true })
 
 // 返回商品列表页面
 const handleBack = () => {

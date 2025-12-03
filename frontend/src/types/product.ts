@@ -42,10 +42,6 @@ export interface Product {
   // 后端DTO字段 - 单张主图
   mainImageUrl?: string
   specifications?: Record<string, string[]>  // 统一的动态规格字段，键为规格名，值为规格值数组
-  category?: string
-  brand?: string
-  color?: string
-  size?: string
   tags?: string[]
 }
 
@@ -63,10 +59,6 @@ export interface ProductCreateRequest {
   productData?: Record<string, any>       // Map<String, Object>
   mainImageUrl?: string                   // 单张主图
   specifications?: ProductSpecifications  // Map<String, Object>
-  category?: string                       // 商品类别
-  brand?: string                          // 商品品牌
-  color?: string                          // 商品颜色
-  size?: string                           // 商品尺寸
   extendedAttributes?: Record<string, any> // Map<String, Object>
 }
 
@@ -82,10 +74,6 @@ export interface ProductUpdateRequest {
   productData?: Record<string, any>
   mainImageUrl?: string
   specifications?: ProductSpecifications
-  category?: string
-  brand?: string
-  color?: string
-  size?: string
   extendedAttributes?: Record<string, any>
 }
 
@@ -189,10 +177,6 @@ export const PRODUCT_VALIDATION_RULES: ProductValidationRules = {
 
 // 🔧 新增：扩展字段类型定义
 export interface ProductExtendedFields {
-  category?: string      // 商品类别
-  brand?: string         // 商品品牌
-  color?: string         // 商品颜色
-  size?: string          // 商品尺寸
   extendedAttributes?: Record<string, any>  // 其他扩展属性
 }
 
