@@ -23,7 +23,7 @@ VALUES (
   120,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["白色", "黑色", "灰色", "蓝色", "粉色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["纯棉"], "分类": ["服装"], "品牌": ["基础款"], "适合季节": ["春夏", "四季"], "领型": ["圆领"], "袖长": ["短袖"], "适合场合": ["日常", "休闲", "运动"]}, "image_data": {"main_image": "/uploads/images/products/1image.png"}}'::jsonb,
+  '{"specifications": {"颜色": ["白色", "黑色", "灰色", "蓝色", "粉色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["纯棉"], "分类": ["服装"], "品牌": ["基础款"], "适合季节": ["春夏", "四季"], "领型": ["圆领"], "袖长": ["短袖"], "适合场合": ["日常", "休闲", "运动"]}, "image_data": {"main_image": "/uploads/images/products/1image20251203120000.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -39,7 +39,7 @@ VALUES (
   85,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["黑色", "裸色", "红色", "银色"], "尺寸": ["35", "36", "37", "38", "39", "40"], "材质": ["PU皮", "真皮"], "分类": ["鞋类"], "品牌": ["优雅坊"], "适合季节": ["四季"], "鞋跟高度": ["8cm", "10cm", "12cm"], "适合场合": ["商务", "晚宴", "约会"]}, "image_data": {"main_image": "/uploads/images/products/2image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["黑色", "裸色", "红色", "银色"], "尺寸": ["35", "36", "37", "38", "39", "40"], "材质": ["PU皮", "真皮"], "分类": ["鞋类"], "品牌": ["优雅坊"], "适合季节": ["四季"], "鞋跟高度": ["8cm", "10cm", "12cm"], "适合场合": ["商务", "晚宴", "约会"]}, "image_data": {"main_image": "/uploads/images/products/2image20251203120001.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -55,7 +55,7 @@ VALUES (
   95,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["深蓝色", "浅蓝色", "黑色", "灰色"], "尺寸": ["28", "29", "30", "31", "32", "33", "34"], "材质": ["牛仔布", "弹力牛仔"], "分类": ["服装"], "品牌": ["牛仔经典"], "适合季节": ["春秋", "四季"], "裤型": ["修身", "直筒"], "适合场合": ["日常", "休闲", "聚会"]}, "image_data": {"main_image": "/uploads/images/products/3image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["深蓝色", "浅蓝色", "黑色", "灰色"], "尺寸": ["28", "29", "30", "31", "32", "33", "34"], "材质": ["牛仔布", "弹力牛仔"], "分类": ["服装"], "品牌": ["牛仔经典"], "适合季节": ["春秋", "四季"], "裤型": ["修身", "直筒"], "适合场合": ["日常", "休闲", "聚会"]}, "image_data": {"main_image": "/uploads/images/products/3image20251203120003.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -71,7 +71,7 @@ VALUES (
   150,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["白色", "黑色", "灰色", "蓝色"], "尺寸": ["39", "40", "41", "42", "43", "44", "45"], "材质": ["网面", "合成革", "橡胶底"], "分类": ["鞋类"], "品牌": ["舒适步"], "适合季节": ["春夏", "四季"], "鞋底类型": ["缓震底", "防滑底"], "适合场合": ["休闲", "运动", "日常"]}, "image_data": {"main_image": "/uploads/images/products/4image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["白色", "黑色", "灰色", "蓝色"], "尺寸": ["39", "40", "41", "42", "43", "44", "45"], "材质": ["网面", "合成革", "橡胶底"], "分类": ["鞋类"], "品牌": ["舒适步"], "适合季节": ["春夏", "四季"], "鞋底类型": ["缓震底", "防滑底"], "适合场合": ["休闲", "运动", "日常"]}, "image_data": {"main_image": "/uploads/images/products/4image20251203120004.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -87,7 +87,7 @@ VALUES (
   60,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["黑色", "深蓝色", "咖啡色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["羽绒服", "防水面料"], "分类": ["服装"], "品牌": ["暖冬"], "适合季节": ["冬季"], "充绒量": ["200g", "250g", "300g"], "长度": ["长款", "超长款"], "适合场合": ["日常", "户外", "旅行"]}, "image_data": {"main_image": "/uploads/images/products/5image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["黑色", "深蓝色", "咖啡色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["羽绒服", "防水面料"], "分类": ["服装"], "品牌": ["暖冬"], "适合季节": ["冬季"], "充绒量": ["200g", "250g", "300g"], "长度": ["长款", "超长款"], "适合场合": ["日常", "户外", "旅行"]}, "image_data": {"main_image": "/uploads/images/products/5image20251203120005.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -103,7 +103,7 @@ VALUES (
   200,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["黑色", "灰色", "米色", "粉色"], "尺寸": ["均码"], "材质": ["毛绒", "羊毛混纺"], "分类": ["配饰"], "品牌": ["温暖家"], "适合季节": ["冬季"], "套装内容": ["帽子", "围巾", "手套", "袜子", "护膝"], "适合场合": ["户外", "日常", "运动"]}, "image_data": {"main_image": "/uploads/images/products/6image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["黑色", "灰色", "米色", "粉色"], "尺寸": ["均码"], "材质": ["毛绒", "羊毛混纺"], "分类": ["配饰"], "品牌": ["温暖家"], "适合季节": ["冬季"], "套装内容": ["帽子", "围巾", "手套", "袜子", "护膝"], "适合场合": ["户外", "日常", "运动"]}, "image_data": {"main_image": "/uploads/images/products/6image20251203120006.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -119,7 +119,7 @@ VALUES (
   110,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["黑色", "蓝色", "红色", "军绿色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["轻薄羽绒服", "尼龙面料"], "分类": ["服装"], "品牌": ["轻暖"], "适合季节": ["秋冬", "初春"], "充绒量": ["150g", "180g"], "版型": ["修身", "宽松"], "适合场合": ["日常", "休闲", "旅行"]}, "image_data": {"main_image": "/uploads/images/products/7image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["黑色", "蓝色", "红色", "军绿色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["轻薄羽绒服", "尼龙面料"], "分类": ["服装"], "品牌": ["轻暖"], "适合季节": ["秋冬", "初春"], "充绒量": ["150g", "180g"], "版型": ["修身", "宽松"], "适合场合": ["日常", "休闲", "旅行"]}, "image_data": {"main_image": "/uploads/images/products/7image20251203120007.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -135,7 +135,7 @@ VALUES (
   180,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["蓝色", "黑色", "卡其色"], "尺寸": ["均码", "可调节"], "材质": ["牛仔布", "棉"], "分类": ["配饰"], "品牌": ["牛仔风"], "适合季节": ["春夏", "四季"], "帽檐宽度": ["宽檐", "窄檐"], "适合场合": ["休闲", "户外", "时尚"]}, "image_data": {"main_image": "/uploads/images/products/8image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["蓝色", "黑色", "卡其色"], "尺寸": ["均码", "可调节"], "材质": ["牛仔布", "棉"], "分类": ["配饰"], "品牌": ["牛仔风"], "适合季节": ["春夏", "四季"], "帽檐宽度": ["宽檐", "窄檐"], "适合场合": ["休闲", "户外", "时尚"]}, "image_data": {"main_image": "/uploads/images/products/8image20251203120008.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -151,7 +151,7 @@ VALUES (
   140,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["白色上衣+蓝色裤子", "白色上衣+黑色裤子", "浅蓝色套装"], "尺寸": ["150cm", "160cm", "170cm", "180cm"], "材质": ["棉涤混纺"], "分类": ["服装"], "品牌": ["青春园"], "适合季节": ["春秋", "四季"], "套装类型": ["上衣+裤子"], "适合场合": ["校园", "日常", "活动"]}, "image_data": {"main_image": "/uploads/images/products/9image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["白色上衣+蓝色裤子", "白色上衣+黑色裤子", "浅蓝色套装"], "尺寸": ["150cm", "160cm", "170cm", "180cm"], "材质": ["棉涤混纺"], "分类": ["服装"], "品牌": ["青春园"], "适合季节": ["春秋", "四季"], "套装类型": ["上衣+裤子"], "适合场合": ["校园", "日常", "活动"]}, "image_data": {"main_image": "/uploads/images/products/9image20251203120009.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -167,7 +167,7 @@ VALUES (
   90,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["米白色", "粉色", "浅蓝色", "黑色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["羽绒服", "防风面料"], "分类": ["服装"], "品牌": ["都市丽人"], "适合季节": ["冬季"], "充绒量": ["180g", "220g"], "衣长": ["短款"], "适合场合": ["日常", "购物", "聚会"]}, "image_data": {"main_image": "/uploads/images/products/10image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["米白色", "粉色", "浅蓝色", "黑色"], "尺寸": ["S", "M", "L", "XL"], "材质": ["羽绒服", "防风面料"], "分类": ["服装"], "品牌": ["都市丽人"], "适合季节": ["冬季"], "充绒量": ["180g", "220g"], "衣长": ["短款"], "适合场合": ["日常", "购物", "聚会"]}, "image_data": {"main_image": "/uploads/images/products/10image202512031200010.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -183,7 +183,7 @@ VALUES (
   250,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["米色", "灰色", "驼色", "酒红色", "深蓝色"], "尺寸": ["均码"], "材质": ["羊毛", "兔毛混纺"], "分类": ["配饰"], "品牌": ["温暖织"], "适合季节": ["秋冬", "初春"], "编织方式": ["手工编织", "机器编织"], "适合场合": ["日常", "户外", "休闲"]}, "image_data": {"main_image": "/uploads/images/products/11image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["米色", "灰色", "驼色", "酒红色", "深蓝色"], "尺寸": ["均码"], "材质": ["羊毛", "兔毛混纺"], "分类": ["配饰"], "品牌": ["温暖织"], "适合季节": ["秋冬", "初春"], "编织方式": ["手工编织", "机器编织"], "适合场合": ["日常", "户外", "休闲"]}, "image_data": {"main_image": "/uploads/images/products/11image202512031200011.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -199,7 +199,7 @@ VALUES (
   120,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["黑色", "深棕色"], "尺寸": ["39", "40", "41", "42", "43", "44"], "材质": ["头层牛皮", "猪皮内里"], "分类": ["鞋类"], "品牌": ["商务名品"], "适合季节": ["四季"], "鞋底材质": ["牛皮底", "橡胶底"], "适合场合": ["商务", "正式", "会议"]}, "image_data": {"main_image": "/uploads/images/products/12image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["黑色", "深棕色"], "尺寸": ["39", "40", "41", "42", "43", "44"], "材质": ["头层牛皮", "猪皮内里"], "分类": ["鞋类"], "品牌": ["商务名品"], "适合季节": ["四季"], "鞋底材质": ["牛皮底", "橡胶底"], "适合场合": ["商务", "正式", "会议"]}, "image_data": {"main_image": "/uploads/images/products/12image202512031200012.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -215,7 +215,7 @@ VALUES (
   220,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["黑色", "白色", "海军蓝", "红色", "绿色"], "尺寸": ["均码", "可调节"], "材质": ["纯棉", "帆布"], "分类": ["配饰"], "品牌": ["运动风"], "适合季节": ["春夏", "四季"], "帽檐样式": ["平檐", "弯檐"], "适合场合": ["运动", "户外", "休闲"]}, "image_data": {"main_image": "/uploads/images/products/13image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["黑色", "白色", "海军蓝", "红色", "绿色"], "尺寸": ["均码", "可调节"], "材质": ["纯棉", "帆布"], "分类": ["配饰"], "品牌": ["运动风"], "适合季节": ["春夏", "四季"], "帽檐样式": ["平檐", "弯檐"], "适合场合": ["运动", "户外", "休闲"]}, "image_data": {"main_image": "/uploads/images/products/13image202512031200013.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -231,7 +231,7 @@ VALUES (
   100,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["粉色碎花", "蓝色碎花", "黄色碎花", "紫色碎花"], "尺寸": ["S", "M", "L", "XL"], "材质": ["雪纺", "涤纶"], "分类": ["服装"], "品牌": ["花语"], "适合季节": ["夏季"], "裙长": ["及膝", "过膝"], "袖长": ["短袖"], "适合场合": ["约会", "聚会", "度假"]}, "image_data": {"main_image": "/uploads/images/products/14image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["粉色碎花", "蓝色碎花", "黄色碎花", "紫色碎花"], "尺寸": ["S", "M", "L", "XL"], "材质": ["雪纺", "涤纶"], "分类": ["服装"], "品牌": ["花语"], "适合季节": ["夏季"], "裙长": ["及膝", "过膝"], "袖长": ["短袖"], "适合场合": ["约会", "聚会", "度假"]}, "image_data": {"main_image": "/uploads/images/products/14image202512031200014.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -247,7 +247,7 @@ VALUES (
   130,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["米白色", "驼色", "燕麦色", "深灰色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["羊毛混纺", "羊绒"], "分类": ["服装"], "品牌": ["暖意"], "适合季节": ["秋冬", "初春"], "领型": ["圆领", "V领"], "袖长": ["长袖"], "适合场合": ["日常", "办公", "休闲"]}, "image_data": {"main_image": "/uploads/images/products/15image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["米白色", "驼色", "燕麦色", "深灰色"], "尺寸": ["S", "M", "L", "XL", "XXL"], "材质": ["羊毛混纺", "羊绒"], "分类": ["服装"], "品牌": ["暖意"], "适合季节": ["秋冬", "初春"], "领型": ["圆领", "V领"], "袖长": ["长袖"], "适合场合": ["日常", "办公", "休闲"]}, "image_data": {"main_image": "/uploads/images/products/15image202512031200015.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -263,7 +263,7 @@ VALUES (
   280,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["格子图案", "条纹图案", "纯色", "波点图案"], "尺寸": ["180cm长", "200cm长"], "材质": ["涤纶", "丝巾", "棉"], "分类": ["配饰"], "品牌": ["时尚配"], "适合季节": ["春秋", "四季"], "图案类型": ["几何", "花卉", "抽象"], "适合场合": ["日常", "办公", "聚会"]}, "image_data": {"main_image": "/uploads/images/products/16image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["格子图案", "条纹图案", "纯色", "波点图案"], "尺寸": ["180cm长", "200cm长"], "材质": ["涤纶", "丝巾", "棉"], "分类": ["配饰"], "品牌": ["时尚配"], "适合季节": ["春秋", "四季"], "图案类型": ["几何", "花卉", "抽象"], "适合场合": ["日常", "办公", "聚会"]}, "image_data": {"main_image": "/uploads/images/products/16image202512031200016.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );
@@ -279,7 +279,7 @@ VALUES (
   160,
   true,
   (SELECT id FROM users WHERE username = 'shoper'),
-  '{"specifications": {"颜色": ["黑红配色", "蓝白配色", "灰橙配色", "全黑配色"], "尺寸": ["38", "39", "40", "41", "42", "43", "44", "45"], "材质": ["网面", "TPU", "橡胶底"], "分类": ["鞋类"], "品牌": ["极速"], "适合季节": ["四季"], "鞋底科技": ["缓震科技", "防滑科技"], "运动类型": ["跑步", "训练", "综合"], "适合场合": ["运动", "健身", "户外"]}, "image_data": {"main_image": "/uploads/images/products/17image.jpg"}}'::jsonb,
+  '{"specifications": {"颜色": ["黑红配色", "蓝白配色", "灰橙配色", "全黑配色"], "尺寸": ["38", "39", "40", "41", "42", "43", "44", "45"], "材质": ["网面", "TPU", "橡胶底"], "分类": ["鞋类"], "品牌": ["极速"], "适合季节": ["四季"], "鞋底科技": ["缓震科技", "防滑科技"], "运动类型": ["跑步", "训练", "综合"], "适合场合": ["运动", "健身", "户外"]}, "image_data": {"main_image": "/uploads/images/products/17image202512031200017.jpg"}}'::jsonb,
   NOW(),
   NOW()
 );

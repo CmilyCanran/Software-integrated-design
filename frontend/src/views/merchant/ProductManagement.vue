@@ -278,7 +278,7 @@ const loading = computed(() => productStore.loading)
 // 数据加载方法 - 必须在组合式函数之前定义
 const loadProducts = async () => {
   try {
-    await productStore.fetchMerchantProducts({
+    const response = await productStore.fetchMerchantProducts({
       page: currentPage.value - 1, // Convert to 0-based for backend
       size: pageSize.value,
       keyword: searchQuery.value,
@@ -286,8 +286,23 @@ const loadProducts = async () => {
         (statusFilter.value === 'available') : undefined,
       category: categoryFilter.value || undefined
     })
+
+    // 更新分页组合式函数中的数据
+    updatePaginationData({
+      total: response.total || 0,
+      page: (response.page || 0) + 1, // Convert from 0-based to 1-based
+      size: response.size || pageSize.value,
+      totalPages: response.totalPages || 1
+    })
   } catch (error) {
     console.error('加载商品列表失败:', error)
+    // 出错时重置分页数据
+    updatePaginationData({
+      total: 0,
+      page: 1,
+      size: pageSize.value,
+      totalPages: 1
+    })
   }
 }
 
@@ -312,8 +327,10 @@ const {
 const {
   currentPage,
   pageSize,
+  totalPages,
   handlePageChange,
-  handleSizeChange
+  handleSizeChange,
+  updatePaginationData
 } = useProductPagination(loadProducts)
 
 // 使用组合式函数重构CRUD操作

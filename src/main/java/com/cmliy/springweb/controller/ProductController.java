@@ -461,7 +461,7 @@ public class ProductController extends BaseController {
             com.cmliy.springweb.model.Product product = productService.getProductByIdForUpdate(id, currentUserId)
                     .orElseThrow(() -> new RuntimeException("商品不存在或无权限访问"));
 
-            // 上传图片（使用商品ID+image命名规则）
+            // 上传图片（使用商品ID+image+时间戳命名规则）
             com.cmliy.springweb.service.ImageService.ImageUploadResult uploadResult = imageService.uploadProductImage(file, id);
 
             // 更新商品图片数据
@@ -488,7 +488,7 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 🗑️ 删除商品图片
+     * 🗑️ 删除商品图片（软删除）
      *
      * @param id 商品ID
      * @return 删除结果
@@ -506,6 +506,15 @@ public class ProductController extends BaseController {
             com.cmliy.springweb.model.Product product = productService.getProductByIdForUpdate(id, currentUserId)
                     .orElseThrow(() -> new RuntimeException("商品不存在或无权限访问"));
 
+            // 获取当前图片文件名
+            String currentImageUrl = product.getMainImage();
+            String currentFilename = extractFilenameFromUrl(currentImageUrl);
+
+            // 软删除图片文件
+            if (currentFilename != null) {
+                imageService.softDeleteProductImage(id, currentFilename);
+            }
+
             // 清除商品图片数据
             productDataService.updateProductImageData(product, null);
 
@@ -520,5 +529,16 @@ public class ProductController extends BaseController {
             ApiResponse<Void> response = ApiResponse.error(e.getMessage(), 400);
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    /**
+     * 🔧 从URL中提取文件名
+     *
+     * @param imageUrl 图片URL
+     * @return 文件名
+     */
+    private String extractFilenameFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty()) return null;
+        return imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
     }
 }
