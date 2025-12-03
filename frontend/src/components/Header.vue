@@ -26,11 +26,6 @@
 
       <!-- 右侧：用户信息和操作 -->
       <div class="header-right">
-        <!-- 通知图标 -->
-        <el-badge :value="notificationCount" class="right-badge">
-          <el-button circle icon="Bell" @click="handleNotifications" />
-        </el-badge>
-
         <!-- 购物车图标 -->
         <el-badge v-if="showCart" :value="cartItemCount" class="right-badge">
           <el-button circle icon="ShoppingCart" @click="handleCart" />
@@ -96,14 +91,12 @@ import {
 // Props 定义
 interface Props {
   pageTitle?: string
-  notificationCount?: number
   showCart?: boolean
   cartItemCount?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pageTitle: '',
-  notificationCount: 0,
   showCart: false,
   cartItemCount: 0
 })
@@ -111,7 +104,6 @@ const props = withDefaults(defineProps<Props>(), {
 // 显式引用 props 以满足 TypeScript 检查
 // 这些值在模板中被使用
 const pageTitle = props.pageTitle
-const notificationCount = props.notificationCount
 
 // 状态管理
 const router = useRouter()
@@ -146,10 +138,6 @@ const handleCommand = (command: string) => {
       router.push('/login')
       break
   }
-}
-
-const handleNotifications = () => {
-  ElMessage.info('通知功能开发中...')
 }
 
 const handleCart = () => {

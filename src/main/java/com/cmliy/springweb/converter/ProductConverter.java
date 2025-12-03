@@ -177,8 +177,16 @@ public class ProductConverter extends BaseConverter<Product, ProductResponseDTO>
 
             // 详细图片信息
             dto.setMainImageUrl(p.getMainImage());
-            dto.setThumbnails(p.getThumbnails());
-            dto.setTotalImages(p.getTotalImages());
+
+            // 从 productData 中提取图片数据
+            @SuppressWarnings("unchecked")
+            Map<String, Object> imageData = (Map<String, Object>) p.getProductData().getOrDefault("image_data", new java.util.HashMap<>());
+            @SuppressWarnings("unchecked")
+            Map<String, String> thumbnails = (Map<String, String>) imageData.getOrDefault("thumbnails", new java.util.HashMap<>());
+            Integer totalImages = (Integer) imageData.getOrDefault("total_images", 0);
+
+            dto.setThumbnails(thumbnails);
+            dto.setTotalImages(totalImages);
 
             // 统一规格信息 - 只返回specifications
             dto.setSpecifications(p.getAllSpecifications());
