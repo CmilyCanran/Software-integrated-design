@@ -58,6 +58,11 @@ public class ImageService extends BaseService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     /**
+     * 🏷️ 图片文件专用时间戳格式化器
+     */
+    private static final DateTimeFormatter IMAGE_TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+    /**
      * 📋 初始化方法
      *
      * 确保存储目录存在，如果不存在则创建。
@@ -273,32 +278,6 @@ public class ImageService extends BaseService {
     // ==================== 🔧 私有方法 ====================
 
     /**
-     * 🗑️ 删除指定商品的所有现有图片
-     *
-     * @param productId 商品ID
-     * @param categoryPath 图片类别路径
-     */
-    private void deleteExistingProductImages(Long productId, Path categoryPath) {
-        try {
-            // 常见的图片扩展名
-            String[] imageExtensions = {"jpg", "jpeg", "png", "gif", "bmp", "webp"};
-
-            for (String extension : imageExtensions) {
-                String existingFilename = productId + "image." + extension;
-                Path existingImagePath = categoryPath.resolve(existingFilename);
-
-                if (Files.exists(existingImagePath)) {
-                    Files.delete(existingImagePath);
-                    log.info("删除旧商品图片: {}", existingImagePath);
-                }
-            }
-        } catch (IOException e) {
-            log.warn("删除旧商品图片时发生错误: productId={}", productId, e);
-            // 不抛出异常，继续执行新图片的上传
-        }
-    }
-
-    /**
      * 🔍 验证图片文件
      *
      * @param file 上传的文件
@@ -432,7 +411,7 @@ public class ImageService extends BaseService {
     }
 
     /**
-     * 📦 上传商品图片（使用商品ID+image命名规则）
+     * 📦 上传商品图片（使用商品ID+image+时间戳命名规则）
      *
      * @param file 上传的文件
      * @param productId 商品ID
@@ -443,18 +422,16 @@ public class ImageService extends BaseService {
             // 🔍 验证文件
             validateImageFile(file);
 
-            // 🏷️ 使用商品ID+image的命名规则
+            // 🏷️ 使用商品ID+image+时间戳的命名规则
             String originalFilename = file.getOriginalFilename();
             String fileExtension = getFileExtension(originalFilename);
-            String safeFilename = productId + "image." + fileExtension;
+            String timestamp = LocalDateTime.now().format(IMAGE_TIMESTAMP_FORMATTER);
+            String safeFilename = productId + "image" + timestamp + "." + fileExtension;
 
             // 📁 构建存储路径
             Path categoryPath = Paths.get(imageStoragePath, "products");
             createDirectoryIfNotExists(categoryPath.toString());
             Path imagePath = categoryPath.resolve(safeFilename);
-
-            // 🗑️ 删除所有现有的商品图片（不同扩展名）
-            deleteExistingProductImages(productId, categoryPath);
 
             // 💾 保存新图片
             file.transferTo(imagePath.toFile());
@@ -474,6 +451,36 @@ public class ImageService extends BaseService {
             );
 
         }, file.getOriginalFilename(), productId);
+    }
+
+    /**
+     * 🗑️ 软删除商品图片（重命名为删除格式）
+     *
+     * @param productId 商品ID
+     * @param currentFilename 当前图片文件名
+     */
+    public void softDeleteProductImage(Long productId, String currentFilename) {
+        executeWithLogAndIO("软删除商品图片", () -> {
+            if (currentFilename == null || currentFilename.isEmpty()) {
+                return; // 没有图片需要删除
+            }
+
+            // 提取文件扩展名
+            String fileExtension = getFileExtension(currentFilename);
+            String timestamp = LocalDateTime.now().format(IMAGE_TIMESTAMP_FORMATTER);
+            String deleteFilename = productId + "del" + timestamp + "." + fileExtension;
+
+            Path categoryPath = Paths.get(imageStoragePath, "products");
+            Path oldImagePath = categoryPath.resolve(currentFilename);
+            Path newImagePath = categoryPath.resolve(deleteFilename);
+
+            if (Files.exists(oldImagePath)) {
+                Files.move(oldImagePath, newImagePath);
+                log.info("图片软删除成功: {} -> {}", oldImagePath, newImagePath);
+            } else {
+                log.warn("要删除的图片文件不存在: {}", oldImagePath);
+            }
+        });
     }
 
     /**
