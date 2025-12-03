@@ -27,8 +27,13 @@
       <!-- 右侧：用户信息和操作 -->
       <div class="header-right">
         <!-- 通知图标 -->
-        <el-badge :value="notificationCount" class="notification-badge">
+        <el-badge :value="notificationCount" class="right-badge">
           <el-button circle icon="Bell" @click="handleNotifications" />
+        </el-badge>
+
+        <!-- 购物车图标 -->
+        <el-badge v-if="showCart" :value="cartItemCount" class="right-badge">
+          <el-button circle icon="ShoppingCart" @click="handleCart" />
         </el-badge>
 
         <!-- 用户信息下拉菜单 -->
@@ -92,11 +97,15 @@ import {
 interface Props {
   pageTitle?: string
   notificationCount?: number
+  showCart?: boolean
+  cartItemCount?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pageTitle: '',
-  notificationCount: 0
+  notificationCount: 0,
+  showCart: false,
+  cartItemCount: 0
 })
 
 // 显式引用 props 以满足 TypeScript 检查
@@ -142,6 +151,10 @@ const handleCommand = (command: string) => {
 const handleNotifications = () => {
   ElMessage.info('通知功能开发中...')
 }
+
+const handleCart = () => {
+  ElMessage.info('购物车功能开发中...')
+}
 </script>
 
 <style scoped>
@@ -186,12 +199,13 @@ const handleNotifications = () => {
   gap: 16px;
 }
 
-.notification-badge {
+.right-badge {
   margin-right: 8px;
 }
-  .back-button {
-  margin-right: 16px;;
-  }
+
+.back-button {
+  margin-right: 16px;
+}
 
 .user-dropdown {
   display: flex;
@@ -244,7 +258,7 @@ const handleNotifications = () => {
 }
 
 @media (max-width: 480px) {
-  .notification-badge {
+  .right-badge {
     display: none;
   }
 }

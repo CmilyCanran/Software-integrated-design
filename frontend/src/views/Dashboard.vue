@@ -1,6 +1,10 @@
 <template>
   <div class="dashboard-container">
-    <Header page-title="仪表板" />
+    <Header
+      page-title="仪表板"
+      :showCart="isUserRole"
+      :cartItemCount="cartItemCount"
+    />
     <el-container>
       <el-main>
         <!-- 统计卡片 -->
@@ -144,6 +148,17 @@ const router = useRouter()
 // 计算属性
 const isMerchant = computed(() => {
   return authStore.userInfo?.role === 'SHOPER' || authStore.userInfo?.role === 'ADMIN'
+})
+
+// 计算属性：判断是否为普通用户
+const isUserRole = computed(() => {
+  return authStore.userInfo?.role === 'USER'
+})
+
+// 计算属性：购物车商品数量（模拟数据，后续可接入真实的购物车状态管理）
+const cartItemCount = computed(() => {
+  // TODO: 后续接入真实的购物车状态管理
+  return 0
 })
 
 // 工具方法
