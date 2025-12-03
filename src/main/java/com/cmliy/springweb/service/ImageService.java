@@ -93,7 +93,7 @@ public class ImageService extends BaseService {
 
             // 🏷️ 生成安全的文件名
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = getFileExtension(originalFilename);
+            String fileExtension = getFileExtension(originalFilename, "jpg");
             String timestamp = LocalDateTime.now().format(DATE_TIME_FORMATTER);
             String uuid = UUID.randomUUID().toString().substring(0, 8);
             String safeFilename = String.format("%s_%s_%s.%s", category, timestamp, uuid, fileExtension);
@@ -147,16 +147,12 @@ public class ImageService extends BaseService {
      * @param filename 文件名
      */
     public void deleteImage(String category, String filename) {
-        try {
+        executeWithLogAndIO("删除图片", () -> {
             // 🗑️ 删除原图
             Path imagePath = Paths.get(imageStoragePath, category, filename);
             Files.deleteIfExists(imagePath);
             log.info("原图删除成功: {}", imagePath);
-
-        } catch (IOException e) {
-            log.error("删除图片失败: category={}, filename={}", category, filename, e);
-            throw new ImageUploadException("删除图片失败: " + e.getMessage(), e);
-        }
+        }, category, filename);
     }
 
     /**
@@ -237,44 +233,7 @@ public class ImageService extends BaseService {
         }
     }
 
-    /**
-     * 🧹 清理过期图片
-     *
-     * 删除指定时间之前的所有图片。
-     *
-     * @param cutoffTime 截止时间
-     * @return 删除的图片数量
-     */
-    public int cleanupOldImages(LocalDateTime cutoffTime) {
-        try {
-            Path rootPath = Paths.get(imageStoragePath);
-            int deletedCount = 0;
-
-            if (Files.exists(rootPath)) {
-                deletedCount += (int) Files.walk(rootPath)
-                        .filter(path -> !Files.isDirectory(path))
-                        .filter(path -> isFileOlderThan(path, cutoffTime))
-                        .peek(path -> log.info("删除过期图片: {}", path))
-                        .map(path -> {
-                            try {
-                                return Files.deleteIfExists(path);
-                            } catch (IOException e) {
-                                log.error("删除文件失败: {}", path, e);
-                                return false;
-                            }
-                        })
-                        .count();
-            }
-
-            log.info("清理过期图片完成，删除数量: {}", deletedCount);
-            return deletedCount;
-
-        } catch (IOException e) {
-            log.error("清理过期图片失败", e);
-            throw new ImageUploadException("清理过期图片失败: " + e.getMessage(), e);
-        }
-    }
-
+    
     // ==================== 🔧 私有方法 ====================
 
     /**
@@ -306,32 +265,8 @@ public class ImageService extends BaseService {
         }
     }
 
-    /**
-     * 📁 创建目录（如果不存在）
-     *
-     * @param path 目录路径
-     */
-    private void createDirectoryIfNotExists(String path) throws IOException {
-        Path directoryPath = Paths.get(path);
-        if (!Files.exists(directoryPath)) {
-            Files.createDirectories(directoryPath);
-            log.info("创建目录: {}", directoryPath);
-        }
-    }
-
-    /**
-     * 📄 获取文件扩展名
-     *
-     * @param filename 文件名
-     * @return 文件扩展名（小写）
-     */
-    private String getFileExtension(String filename) {
-        if (filename == null || filename.lastIndexOf('.') == -1) {
-            return "jpg"; // 默认扩展名
-        }
-        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-    }
-
+    
+    
     
     
     /**
@@ -348,26 +283,7 @@ public class ImageService extends BaseService {
     }
 
     
-    /**
-     * ⏰ 检查文件是否过期
-     *
-     * @param filePath 文件路径
-     * @param cutoffTime 截止时间
-     * @return 过期返回true，否则返回false
-     */
-    private boolean isFileOlderThan(Path filePath, LocalDateTime cutoffTime) {
-        try {
-            LocalDateTime fileTime = Files.getLastModifiedTime(filePath)
-                    .toInstant()
-                    .atZone(java.time.ZoneId.systemDefault())
-                    .toLocalDateTime();
-            return fileTime.isBefore(cutoffTime);
-        } catch (IOException e) {
-            log.error("检查文件时间失败: {}", filePath, e);
-            return false;
-        }
-    }
-
+    
     // ==================== 📋 内部类 ====================
 
     /**
@@ -424,7 +340,7 @@ public class ImageService extends BaseService {
 
             // 🏷️ 使用商品ID+image+时间戳的命名规则
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = getFileExtension(originalFilename);
+            String fileExtension = getFileExtension(originalFilename, "jpg");
             String timestamp = LocalDateTime.now().format(IMAGE_TIMESTAMP_FORMATTER);
             String safeFilename = productId + "image" + timestamp + "." + fileExtension;
 
@@ -466,7 +382,7 @@ public class ImageService extends BaseService {
             }
 
             // 提取文件扩展名
-            String fileExtension = getFileExtension(currentFilename);
+            String fileExtension = getFileExtension(currentFilename, "jpg");
             String timestamp = LocalDateTime.now().format(IMAGE_TIMESTAMP_FORMATTER);
             String deleteFilename = productId + "del" + timestamp + "." + fileExtension;
 

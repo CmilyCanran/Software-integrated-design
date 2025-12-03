@@ -1,6 +1,9 @@
 package com.cmliy.springweb.service;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -261,6 +264,38 @@ public abstract class BaseService {
         Sort.Direction direction = "DESC".equalsIgnoreCase(sortDirection) ?
             Sort.Direction.DESC : Sort.Direction.ASC;
         return PageRequest.of(page, size, Sort.by(direction, sortBy));
+    }
+
+    /**
+     * 📁 创建目录（如果不存在）
+     *
+     * 通用的目录创建工具方法，支持所有Service类使用。
+     *
+     * @param path 目录路径
+     * @throws IOException 如果创建目录失败
+     */
+    protected void createDirectoryIfNotExists(String path) throws IOException {
+        Path directoryPath = Paths.get(path);
+        if (!Files.exists(directoryPath)) {
+            Files.createDirectories(directoryPath);
+            log.info("创建目录: {}", directoryPath);
+        }
+    }
+
+    /**
+     * 📄 获取文件扩展名
+     *
+     * 通用的文件扩展名提取工具方法，支持自定义默认扩展名。
+     *
+     * @param filename 文件名
+     * @param defaultExtension 默认扩展名（当文件名无扩展名时使用）
+     * @return 文件扩展名（小写）
+     */
+    protected String getFileExtension(String filename, String defaultExtension) {
+        if (filename == null || filename.lastIndexOf('.') == -1) {
+            return defaultExtension != null ? defaultExtension : "jpg";
+        }
+        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
     }
 
     // ==================== 📋 函数式接口 ====================
