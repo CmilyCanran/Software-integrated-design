@@ -1,5 +1,9 @@
 <template>
-  <Header page-title="商品列表" />
+  <Header
+    page-title="商品列表"
+    :showCart="isUserRole"
+    :cartItemCount="cartItemCount"
+  />
   <div class="product-list">
     <!-- 页面标题 -->
     <div class="page-header">
@@ -225,6 +229,17 @@ const sortOptions = ref([
   { label: '库存最多', value: 'stock' }
 ])
 
+
+// 计算属性：判断是否为普通用户
+const isUserRole = computed(() => {
+  return authStore.userInfo?.role === 'USER'
+})
+
+// 计算属性：购物车商品数量（模拟数据，后续可接入真实的购物车状态管理）
+const cartItemCount = computed(() => {
+  // TODO: 后续接入真实的购物车状态管理
+  return 0
+})
 
 // 计算属性：筛选后的商品
 const filteredProducts = computed<Product[]>(() => {
