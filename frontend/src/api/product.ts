@@ -14,7 +14,7 @@ import type { Product, ProductCreateRequest, ProductUpdateRequest, ProductQueryP
  * 确保前端数据完全符合后端DTO格式要求，特别是动态规格系统
  *
  * 🔧 重要修正：扩展属性也是规格！但前端的预处理是数据格式标准化，不是业务逻辑合并
- * 后端会负责将 category、brand、color、size、extendedAttributes 都合并到统一的规格系统中
+ * 后端会负责将 brand、color、size、extendedAttributes 都合并到统一的规格系统中
  */
 function preprocessProductData(data: ProductCreateRequest | ProductUpdateRequest): ProductCreateRequest | ProductUpdateRequest {
   const processedData = { ...data }
@@ -104,8 +104,7 @@ function handleBackendValidationError(error: any): { field: string; message: str
           description: '商品描述',
           isAvailable: '上架状态',
           specifications: '商品规格',
-          category: '商品类别',
-          brand: '商品品牌',
+                    brand: '商品品牌',
           color: '商品颜色',
           size: '商品尺寸',
           mainImageUrl: '主图',
@@ -206,7 +205,7 @@ export const productAPI = {
   },
 
   // 商品上架/下架
-  toggleProductStatus: (id: number, isAvailable: boolean): Promise<Product> => {
+  toggleProductStatus: (id: number): Promise<void> => {
     return api.post(`/products/${id}/toggle-availability`)
   },
 
@@ -252,11 +251,7 @@ export const productAPI = {
     })
   },
 
-  // 按分类查询商品
-  getProductsByCategory: (category: string, params?: ProductQueryParams): Promise<PaginatedResponse<Product>> => {
-    return api.get(`/products/category/${category}`, { params })
-  },
-
+  
   // 获取热销商品
   getTopSellingProducts: (params?: ProductQueryParams): Promise<PaginatedResponse<Product>> => {
     return api.get('/products/top-selling', { params })

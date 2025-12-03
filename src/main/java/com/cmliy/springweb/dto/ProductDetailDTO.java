@@ -106,42 +106,6 @@ public class ProductDetailDTO {
     private Map<String, Object> specifications;
 
     /**
-     * 🏷️ 商品分类 - 商品所属分类
-     * 数据来源：Product实体的getCategory()方法
-     */
-    private String category;
-
-    /**
-     * 🏢 商品品牌 - 商品品牌
-     * 数据来源：Product实体的getBrand()方法
-     */
-    private String brand;
-
-    /**
-     * 🎨 商品颜色 - 商品颜色
-     * 数据来源：Product实体的getColor()方法
-     */
-    private String color;
-
-    /**
-     * 📏 商品尺寸 - 商品尺寸
-     * 数据来源：Product实体的getSize()方法
-     */
-    private String size;
-
-    /**
-     * 🔧 扩展属性 - 商品扩展属性
-     * 数据来源：Product实体的getAllExtendedAttributes()方法
-     */
-    private Map<String, Object> extendedAttributes;
-
-    /**
-     * 🎨 商品变体 - 商品变体列表
-     * 数据来源：Product实体的扩展属性中的variants字段
-     */
-    private List<String> variants;
-
-    /**
      * ✅ 是否可购买 - 商品是否可购买（上架且有库存）
      * 数据来源：后端根据isAvailable和stockQuantity计算得出
      */
