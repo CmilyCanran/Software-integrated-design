@@ -190,9 +190,6 @@ public class ProductConverter extends BaseConverter<Product, ProductResponseDTO>
             dto.setDiscountAmount(p.getDiscountAmount());
             dto.setStockStatus(p.getStockStatus());
 
-            // 变体信息
-            dto.setVariants(getVariantsFromProductData(p));
-
             // 时间戳
             dto.setCreatedAt(p.getCreatedAt());
             dto.setUpdatedAt(p.getUpdatedAt());
@@ -255,7 +252,6 @@ public class ProductConverter extends BaseConverter<Product, ProductResponseDTO>
         dto.setDiscount(product.getDiscount());
         dto.setSalesCount(product.getSalesCount());
         dto.setMainImageUrl(product.getMainImage());
-        dto.setCategory(product.getCategory());
         dto.setFormattedPrice(product.getFormattedPrice());
         dto.setFormattedDiscountedPrice(product.getFormattedDiscountedPrice());
         dto.setStockStatus(product.getStockStatus());
@@ -342,21 +338,7 @@ public class ProductConverter extends BaseConverter<Product, ProductResponseDTO>
             productDataService.updateSpecifications(product, requestDTO.getSpecifications());
         }
 
-        // 🔧 新架构：使用ProductDataService处理分类品牌等数据
-        // 这样可以确保所有productData的更新都是安全和可控的
-        if (requestDTO.getCategory() != null) {
-            productDataService.updateCategory(product, requestDTO.getCategory());
-        }
-        if (requestDTO.getBrand() != null) {
-            productDataService.updateBrand(product, requestDTO.getBrand());
-        }
-        if (requestDTO.getColor() != null) {
-            productDataService.updateColor(product, requestDTO.getColor());
-        }
-        if (requestDTO.getSize() != null) {
-            productDataService.updateSize(product, requestDTO.getSize());
-        }
-
+        
         return product;
     }
 
@@ -390,25 +372,7 @@ public class ProductConverter extends BaseConverter<Product, ProductResponseDTO>
 
     // ==================== 🔧 私有辅助方法 ====================
 
-    /**
-     * 📋 从Product数据中获取变体列表
-     */
-    @SuppressWarnings("unchecked")
-    private List<String> getVariantsFromProductData(Product product) {
-        try {
-            Map<String, Object> productData = product.getProductData();
-            if (productData != null) {
-                Object variantsObj = productData.get("variants");
-                if (variantsObj instanceof List) {
-                    return (List<String>) variantsObj;
-                }
-            }
-        } catch (Exception e) {
-            // 忽略异常，返回空列表
-        }
-        return List.of();
-    }
-
+    
     
     
 }

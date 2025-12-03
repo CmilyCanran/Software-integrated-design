@@ -325,44 +325,7 @@ public class Product {
         return "";
     }
 
-    // ==================== 🏷️ 分类相关便捷方法 ====================
-
-    /**
-     * 📂 获取商品分类
-     */
-    public String getCategory() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>());
-        return (String) specifications.get("category");
-    }
-
-    /**
-     * 🏷️ 获取商品品牌
-     */
-    public String getBrand() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>());
-        return (String) specifications.get("brand");
-    }
-
-    /**
-     * 🎨 获取商品颜色
-     */
-    public String getColor() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>());
-        return (String) specifications.get("color");
-    }
-
-    /**
-     * 📏 获取商品尺寸
-     */
-    public String getSize() {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> specifications = (Map<String, Object>) productData.getOrDefault("specifications", new java.util.HashMap<>());
-        return (String) specifications.get("size");
-    }
-
+    
     // ==================== 🔧 JSONB数据处理方法 ====================
 
     /**

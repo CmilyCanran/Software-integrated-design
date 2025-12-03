@@ -23,20 +23,7 @@
 
           <!-- 筛选器组 -->
           <div class="filter-group">
-            <el-select
-              v-model="categoryFilter"
-              placeholder="按分类筛选"
-              clearable
-              style="width: 150px"
-              @change="handleFilterChange"
-            >
-              <el-option label="全部" value="" />
-              <el-option label="服装" value="服装" />
-              <el-option label="鞋类" value="鞋类" />
-              <el-option label="配饰" value="配饰" />
-              <el-option label="箱包" value="箱包" />
-            </el-select>
-
+             
             <el-select
               v-model="statusFilter"
               placeholder="按状态筛选"
@@ -170,8 +157,7 @@
             <div v-else class="product-table">
               <el-table :data="products || []" stripe>
                 <el-table-column prop="productName" label="商品名称" width="200" />
-                <el-table-column prop="category" label="分类" width="100" />
-                <el-table-column prop="price" label="价格" width="120">
+                                 <el-table-column prop="price" label="价格" width="120">
                   <template #default="scope">
                     ¥{{ scope.row.price.toFixed(2) }}
                   </template>
@@ -253,6 +239,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProductStore } from '@/stores/product'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Grid, DataAnalysis, ShoppingCart, Money } from '@element-plus/icons-vue'
@@ -265,6 +252,9 @@ import dayjs from 'dayjs'
 import { useProductSearch } from '@/composables/useProductSearch'
 import { useProductPagination } from '@/composables/useProductPagination'
 import { useProductCrud } from '@/composables/useProductCrud'
+
+// 路由相关
+const router = useRouter()
 
 // 状态管理
 const productStore = useProductStore()
@@ -284,8 +274,7 @@ const loadProducts = async () => {
       keyword: searchQuery.value,
       isAvailable: statusFilter.value ?
         (statusFilter.value === 'available') : undefined,
-      category: categoryFilter.value || undefined
-    })
+          })
 
     // 更新分页组合式函数中的数据
     updatePaginationData({
@@ -317,8 +306,7 @@ const loadProductStats = async () => {
 // 使用组合式函数重构搜索和分页逻辑
 const {
   searchQuery,
-  categoryFilter,
-  statusFilter,
+    statusFilter,
   handleSearch,
   handleSearchClear,
   handleFilterChange
@@ -401,8 +389,11 @@ const formatDate = (date: string) => {
 
 // 查看商品详情
 const viewProductDetail = (product: Product) => {
-  console.log('查看商品详情:', product)
-  ElMessage.info(`查看商品: ${product.productName}`)
+  // 跳转到商家商品详情页面
+  router.push({
+    name: 'MerchantProductDetail',
+    params: { id: product.id }
+  })
 }
 
 // 处理表单保存 - 使用组合式函数重构

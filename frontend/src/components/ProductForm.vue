@@ -645,12 +645,7 @@ const handleSave = async () => {
     const specificationsData = buildSpecificationsData()
     const submitData = {
       ...formData,
-      specifications: specificationsData,
-      // 确保扩展字段正确处理
-      category: formData.category || undefined,
-      brand: formData.brand || undefined,
-      color: formData.color || undefined,
-      size: formData.size || undefined
+      specifications: specificationsData
     } as ProductCreateRequest | ProductUpdateRequest
 
     emit('save', submitData)
