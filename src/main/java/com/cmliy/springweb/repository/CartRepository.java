@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository; // 导入Spring Data JPA基础
 import com.cmliy.springweb.model.Cart;
 
 @Repository
-public interface CartRepository extends JpaRepository<Cart, Long>{
-    Optional<Cart> findByUserId(Long userId);
-    boolean existsByUserId(Long userId);
+public interface CartRepository extends JpaRepository<Cart, Long> {
+    Optional<Cart> findByUser_Id(Long userId);
+    boolean existsByUser_Id(Long userId);
 }
