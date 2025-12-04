@@ -3,7 +3,11 @@
   购物车页面组件 (Vue 3 + TypeScript + Element Plus)
   负责展示用户购物车内容、编辑数量、删除商品、结算等功能
   ============================================================================ -->
-  <div class="cart-container">
+  <div class="cart-page">
+    <!-- Header组件 -->
+    <Header page-title="购物车" />
+
+    <div class="cart-container">
     <!-- 页面标题 -->
     <div class="cart-header">
       <h1 class="cart-title">🛒 购物车</h1>
@@ -38,11 +42,12 @@
           <div class="item-info">
             <el-avatar
               :size="60"
-              :src="item.product?.productImage || item.product?.imageUrl || item.product?.mainImage || ''"
+              :src="getProductImage(item.product)"
               class="item-image"
               shape="square"
+              @error="handleImageError"
             >
-              {{ (item.product?.productName || item.product?.name || `商品${item.productId}`).charAt(0).toUpperCase() }}
+              {{ getProductInitial(item.product) }}
             </el-avatar>
             <div class="item-details">
               <h3 class="item-name">{{ item.product?.productName || item.product?.name || `商品${item.productId}` }}</h3>
@@ -137,6 +142,7 @@
       </el-skeleton>
     </div>
   </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -151,7 +157,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useCartStore } from '@/stores/cart'
 import { useProductStore } from '@/stores/product'
 import { CART_CONFIG } from '@/constants/cart'
+import { processImageUrl } from '@/utils/imageUtils'
 import type { CartItem } from '@/types'
+import Header from '@/components/Header.vue'
 
 // ============================================================================
 // 引入Pinia Store和Router
@@ -164,6 +172,9 @@ const router = useRouter()
 // 响应式数据
 // ============================================================================
 
+// 默认商品图片
+const DEFAULT_PRODUCT_IMAGE = CART_CONFIG.DEFAULT_PRODUCT_IMAGE
+
 // ============================================================================
 // 计算属性
 // ============================================================================
@@ -172,11 +183,24 @@ const router = useRouter()
 // 商品信息获取方法
 // ============================================================================
 
+// 处理商品图片URL - 使用正确的字段名mainImageUrl
+const getProductImage = (product: any): string => {
+  if (product?.mainImageUrl) {
+    return processImageUrl(product.mainImageUrl)
+  }
+  return DEFAULT_PRODUCT_IMAGE
+}
+
 // 获取商品名称首字母（用于占位符）
-const getProductInitial = (productId: number): string => {
-  const product = cartStore.getProductById(productId)
-  const name = product?.productName || product?.name || `商品${productId}`
+const getProductInitial = (product: any): string => {
+  const name = product?.productName || product?.name || '商品'
   return name.charAt(0).toUpperCase()
+}
+
+// 图片加载错误处理
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = DEFAULT_PRODUCT_IMAGE
 }
 
 // ============================================================================
@@ -300,11 +324,16 @@ onMounted(async () => {
 负责购物车页面的布局和视觉效果
 ============================================================================ */
 
+.cart-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
 .cart-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  min-height: calc(100vh - 120px);
+  min-height: calc(100vh - 180px);
 }
 
 .cart-header {
