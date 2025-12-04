@@ -1,6 +1,7 @@
 package com.cmliy.springweb.dto;
 
 import java.util.Map;
+import java.util.ArrayList;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,4 +17,5 @@ import lombok.NoArgsConstructor;
 public class CartResponseDTO {
     private Long userId;
     private Map<Long, Integer> productQuantities;
+    private ArrayList<ProductResponseDTO> products;
 }
