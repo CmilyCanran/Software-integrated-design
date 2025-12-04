@@ -13,6 +13,9 @@ export const CART_CONFIG = {
   MIN_QUANTITY: 1,
   MAX_QUANTITY: 999,
 
+  // 默认商品图片
+  DEFAULT_PRODUCT_IMAGE: '/images/placeholder-product.png',
+
   // 错误消息
   ERROR_MESSAGES: {
     FETCH_FAILED: '获取购物车失败',
