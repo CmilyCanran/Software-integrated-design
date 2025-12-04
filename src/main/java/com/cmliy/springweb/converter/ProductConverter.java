@@ -104,9 +104,6 @@ public class ProductConverter extends BaseConverter<Product, ProductResponseDTO>
     /**
      * 🔄 Product实体转ProductResponseDTO (BaseController优化版本)
      *
-     * 🚀 优化亮点：
-     * - 使用BaseConverter的safeConvert()方法确保空值安全和异常处理
-     * - 保持完整业务逻辑的同时增加安全性
      *
      * @param product 商品实体
      * @return ProductResponseDTO

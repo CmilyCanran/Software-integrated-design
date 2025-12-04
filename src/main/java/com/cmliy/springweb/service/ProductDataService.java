@@ -112,7 +112,7 @@ public class ProductDataService extends BaseService {
     }
 
     /**
-     * 🔧 新增方法：将任意类型转换为字符串列表
+     * 将任意类型转换为字符串列表
      */
     private List<String> convertToStringList(Object values) {
         if (values == null) {

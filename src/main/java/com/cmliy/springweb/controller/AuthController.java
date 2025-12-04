@@ -24,9 +24,11 @@ import com.cmliy.springweb.converter.UserConverter; // 导入Spring Security用�
 import com.cmliy.springweb.dto.LoginResponseDTO; // 导入密码编码器接口
 import com.cmliy.springweb.dto.RegisterResponseDTO;    // 导入Spring Web GET请求映射注解
 import com.cmliy.springweb.dto.UserDTO;   // 导入Spring Web POST请求映射注解
+import com.cmliy.springweb.exception.BusinessException; // 导入业务异常类
 import com.cmliy.springweb.model.User;   // 导入Spring Web请求体绑定注解
 import com.cmliy.springweb.repository.UserRepository; // 导入Spring Web REST控制器注解
 import com.cmliy.springweb.security.CustomUserDetailsService; // 导入Spring Web请求映射注解
+import com.cmliy.springweb.service.UserService;    // 导入用户服务
 import com.cmliy.springweb.util.DtoConverterUtils;  // 导入Java 8日期时间类，用于获取当前时间
 import com.cmliy.springweb.util.JwtUtil;           // 导入Java Map接口，用于处理请求参数
 
@@ -107,6 +109,7 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
                          AuthenticationManager authenticationManager,
                          PasswordEncoder passwordEncoder,
                          CustomUserDetailsService userDetailsService,
+                         UserService userService,
                          UserConverter userConverter,
                          DtoConverterUtils dtoConverter) {
         // 🚀 调用父类构造函数，传递基类需要的字段
@@ -116,6 +119,7 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
+        this.userService = userService;
         this.userConverter = userConverter;
         this.dtoConverter = dtoConverter;
     }
@@ -149,6 +153,13 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
      * 在认证过程中从数据库加载用户信息。
      */
     private final CustomUserDetailsService userDetailsService; // 🚀 Lombok会自动生成构造函数注入
+
+    /**
+     * 👤 用户服务
+     *
+     * 处理所有与用户相关的业务逻辑，包括注册、用户信息管理等。
+     */
+    private final UserService userService; // 🚀 用户业务服务
 
     /**
      * 🔄 用户转换器
@@ -216,51 +227,52 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
             String username = loginRequest.get("username");
             String password = loginRequest.get("password");
 
-            // 🔐 第二步：执行用户认证
+            // 🔍 第二步：使用UserService验证用户存在性和状态
+            if (!userService.existsByUsername(username)) {
+                return error(401, "用户名不存在");
+            }
+
+            // 👤 第三步：获取用户信息（使用UserService集成）
+            UserDTO userDTO = userService.getUserByUsername(username);
+
+            // 🔒 第四步：验证用户账户状态（启用/禁用）
+            if (!userDTO.isEnabled()) {
+                return error(401, "账户已被禁用");
+            }
+
+            // 🔐 第五步：执行用户认证（核心认证逻辑）
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
             );
 
-            // 🛡️ 第三步：设置安全上下文
+            // 🛡️ 第六步：设置安全上下文
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // 👤 第四步：获取完整用户信息
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            User user = userOpt.orElse(null);
-
-            // 👤 第五步：获取用户详情信息
+            // 👤 第七步：获取用户详情信息（用于JWT生成）
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            // 🎫 第六步：生成JWT访问令牌
-            String token = null;
-            if (user != null) {
-                token = jwtUtil.generateTokenWithUserId(userDetails, user.getId());
-            } else {
-                // 备用方案：如果用户信息获取失败，使用原来的方法
-                token = jwtUtil.generateToken(userDetails);
-            }
+            // 🎫 第八步：生成JWT访问令牌
+            String token = jwtUtil.generateTokenWithUserId(userDetails, userDTO.getId());
 
-            // 👤 第七步：使用UserConverter转换用户信息（替代手动DTO创建）
-            UserDTO userDTO = null;
-            if (user != null) {
-                userDTO = userConverter.toDTO(user);
-            }
-
-            // 📊 第八步：使用Builder模式创建LoginResponseDTO对象
+            // 📊 第九步：使用Builder模式创建LoginResponseDTO对象
             LoginResponseDTO loginResponseDTO = LoginResponseDTO.builder()
                 .token(token)
                 .tokenType("Bearer")
                 .expiresIn(jwtUtil.getExpiration())
-                .user(userDTO)
+                .user(userDTO)  // 使用UserService获取的完整用户信息
                 .timestamp(LocalDateTime.now().toString())
                 .build();
 
-            // 🚀 第九步：使用BaseController的success()方法 - 大幅简化！
+            // 🚀 第十步：使用BaseController的success()方法 - 大幅简化！
             return success(loginResponseDTO, "登录成功");
 
+        } catch (BusinessException e) {
+            // 🚨 业务异常处理：用户不存在或被禁用
+            log.warn("登录业务验证失败: {}", e.getMessage());
+            return error(401, e.getMessage());
         } catch (Exception e) {
-            // 🚨 异常处理：使用BaseController的error()方法 - 大幅简化！
-            log.warn("登录失败: {}", e.getMessage());
+            // 🚨 认证异常处理：用户名或密码错误
+            log.warn("登录认证失败: {}", e.getMessage());
             return error(401, "用户名或密码错误");
         }
     }
@@ -299,45 +311,25 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
             String email = registerRequest.get("email");
             String password = registerRequest.get("password");
 
-            // 🔍 第二步：检查用户名是否已存在
-            if (userRepository.existsByUsername(username)) {
-                // 🚨 使用BaseController的error()方法 - 一行搞定！
-                return error("用户名已存在");
-            }
-
-            // 🔍 第三步：检查邮箱是否已存在
-            if (userRepository.existsByEmail(email)) {
-                // 🚨 使用BaseController的error()方法 - 一行搞定！
-                return error("邮箱已存在");
-            }
-
-            // 👤 第四步：创建新用户实体
-            User user = new User();
-            user.setUsername(username);
-            user.setEmail(email);
-
-            // 🔒 第五步：加密用户密码
-            user.setPassword(passwordEncoder.encode(password));
-
-            // 👑 第六步：设置用户角色和状态
-            user.setRole("USER");
-            user.setEnabled(true);
-
-            // 💾 第七步：保存用户到数据库
-            userRepository.save(user);
+            // 🔍 第二步：使用UserService进行注册（包含所有业务逻辑）
+            User user = userService.registerUser(username, email, password);
 
             log.info("新用户注册成功: {}", username);
 
-            // 📊 第八步：创建RegisterResponseDTO对象
+            // 📊 第三步：创建RegisterResponseDTO对象
             RegisterResponseDTO registerResponseDTO = new RegisterResponseDTO(
                 LocalDateTime.now().toString()
             );
 
-            // 🚀 第九步：使用BaseController的success()方法 - 一行搞定！
+            // 🚀 第四步：使用BaseController的success()方法 - 一行搞定！
             return success(201, registerResponseDTO, "注册成功");
 
+        } catch (IllegalArgumentException e) {
+            // 🚨 业务异常处理：用户名或邮箱已存在
+            log.warn("注册业务验证失败: {}", e.getMessage());
+            return error(400, e.getMessage());
         } catch (Exception e) {
-            // 🚨 异常处理：使用BaseController的error()方法 - 一行搞定！
+            // 🚨 系统异常处理：使用BaseController的error()方法 - 一行搞定！
             log.error("注册失败: {}", e.getMessage(), e);
             return error(500, "注册失败: " + e.getMessage());
         }
@@ -368,34 +360,18 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
     @GetMapping("/userinfo")
     public ResponseEntity<ApiResponse<UserDTO>> getUserInfo() {
         try {
-            // 🔍 第一步：从安全上下文中获取当前认证信息
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            // 👤 使用UserService获取当前用户信息（包含所有业务逻辑）
+            UserDTO userDTO = userService.getCurrentUserInfo();
 
-            if (authentication == null || !authentication.isAuthenticated()) {
-                // 🚨 使用BaseController的error()方法 - 一行搞定！
-                return error(401, "未认证");
-            }
-
-            // 👤 第二步：获取当前用户名
-            String username = authentication.getName();
-
-            // 🗄️ 第三步：从数据库查询用户信息
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            if (!userOpt.isPresent()) {
-                // 🚨 使用BaseController的error()方法 - 一行搞定！
-                return error(404, "用户不存在");
-            }
-
-            User user = userOpt.get();
-
-            // 👤 第四步：使用UserConverter转换用户信息（替代手动DTO创建）
-            UserDTO userDTO = userConverter.toDTO(user);
-
-            // 🚀 第五步：使用BaseController的success()方法 - 一行搞定！
+            // 🚀 使用BaseController的success()方法 - 一行搞定！
             return success(userDTO, "获取用户信息成功");
 
+        } catch (BusinessException e) {
+            // 🚨 业务异常处理：未认证或用户不存在
+            log.warn("获取用户信息业务验证失败: {}", e.getMessage());
+            return error(401, e.getMessage());
         } catch (Exception e) {
-            // 🚨 异常处理：使用BaseController的error()方法 - 一行搞定！
+            // 🚨 系统异常处理：使用BaseController的error()方法 - 一行搞定！
             log.error("获取用户信息失败: {}", e.getMessage(), e);
             return error(500, "获取用户信息失败: " + e.getMessage());
         }
@@ -425,13 +401,16 @@ public class AuthController extends BaseController {  // 🚀 继承BaseControll
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
         try {
-            // 🔍 可选：验证当前用户是否已认证
+            // 🔍 获取当前认证信息
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = null;
+
             if (authentication != null && authentication.isAuthenticated()) {
-                // 👤 获取当前用户名（用于日志记录，可选）
-                String username = authentication.getName();
-                log.info("用户登出: {}", username);
+                username = authentication.getName();
             }
+
+            // 👤 使用UserService处理登出逻辑
+            userService.logoutUser(username);
 
             // 🚀 使用BaseController的success()方法 - 一行搞定！
             return success(null, "登出成功");
