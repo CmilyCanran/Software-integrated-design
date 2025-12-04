@@ -198,4 +198,49 @@ public abstract class BaseController {
     protected <T> ResponseEntity<ApiResponse<T>> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(ApiResponse.<T>error(message, status.value()));
     }
+
+    /**
+     * 🔄 执行带日志的操作（无参数）
+     *
+     * 执行操作并记录日志，如果发生异常则记录错误日志。
+     *
+     * @param operation 操作名称
+     * @param supplier 操作执行函数
+     * @param <T> 返回类型
+     * @return 操作结果
+     */
+    protected <T> T executeWithLog(String operation, java.util.function.Supplier<T> supplier) {
+        try {
+            logOperation(operation, "开始执行");
+            T result = supplier.get();
+            logOperation(operation, "执行成功");
+            return result;
+        } catch (Exception e) {
+            log.error("操作执行失败: {} | 错误: {}", operation, e.getMessage(), e);
+            throw new RuntimeException("操作失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 🔄 执行带日志的操作（带参数）
+     *
+     * 执行操作并记录日志，如果发生异常则记录错误日志。
+     *
+     * @param operation 操作名称
+     * @param supplier 操作执行函数
+     * @param params 操作参数（用于日志记录）
+     * @param <T> 返回类型
+     * @return 操作结果
+     */
+    protected <T> T executeWithLog(String operation, java.util.function.Supplier<T> supplier, Object... params) {
+        try {
+            logOperation(operation, "开始执行 | 参数: " + java.util.Arrays.toString(params));
+            T result = supplier.get();
+            logOperation(operation, "执行成功");
+            return result;
+        } catch (Exception e) {
+            log.error("操作执行失败: {} | 参数: {} | 错误: {}", operation, java.util.Arrays.toString(params), e.getMessage(), e);
+            throw new RuntimeException("操作失败: " + e.getMessage(), e);
+        }
+    }
 }

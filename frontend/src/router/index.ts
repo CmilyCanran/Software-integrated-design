@@ -110,6 +110,18 @@ const router = createRouter({
       } as RouteMeta
     },
 
+    // 管理员用户管理页面路由（管理员专用）
+    {
+      path: '/admin/users',
+      name: 'admin-users',
+      component: () => import('../views/admin/UserManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: ['ADMIN'],
+        title: '用户管理'
+      } as RouteMeta
+    },
+
     // 组件测试页面路由（隐藏页面，只能手动访问）
     {
       path: '/component-test',

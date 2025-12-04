@@ -60,8 +60,35 @@
 
         <!-- 根据角色显示不同的快速操作 -->
         <el-row :gutter="20" class="content-row">
+          <!-- 管理员用户的快速操作 -->
+          <el-col :span="16" v-if="isAdmin">
+            <el-card>
+              <template #header>
+                <h3>👨‍💼 管理员快速操作</h3>
+              </template>
+              <div class="quick-actions">
+                <el-button type="primary" size="large" @click="goToUserManagement">
+                  <el-icon><Avatar /></el-icon>
+                  用户管理
+                </el-button>
+                <el-button type="success" size="large" @click="goToProductManagement">
+                  <el-icon><Plus /></el-icon>
+                  商品管理
+                </el-button>
+                <el-button type="info" size="large" @click="handleViewOrders">
+                  <el-icon><Document /></el-icon>
+                  订单管理
+                </el-button>
+                <el-button type="warning" size="large" @click="handleViewStats">
+                  <el-icon><DataAnalysis /></el-icon>
+                  数据统计
+                </el-button>
+              </div>
+            </el-card>
+          </el-col>
+
           <!-- 商家用户的快速操作 -->
-          <el-col :span="16" v-if="isMerchant">
+          <el-col :span="16" v-else-if="isMerchant">
             <el-card>
               <template #header>
                 <h3>🏪 商家快速操作</h3>
@@ -136,7 +163,7 @@ import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import {
   User, ShoppingCart, Document, Money, Plus, Setting,
-  DataAnalysis, Star
+  DataAnalysis, Star, Avatar
 } from '@element-plus/icons-vue'
 import Header from '@/components/Header.vue'
 import dayjs from 'dayjs'
@@ -148,6 +175,11 @@ const router = useRouter()
 // 计算属性
 const isMerchant = computed(() => {
   return authStore.userInfo?.role === 'SHOPER' || authStore.userInfo?.role === 'ADMIN'
+})
+
+// 计算属性：判断是否为管理员
+const isAdmin = computed(() => {
+  return authStore.userInfo?.role === 'ADMIN'
 })
 
 // 计算属性：判断是否为普通用户
@@ -169,6 +201,11 @@ const formatDate = (date: Date) => {
 // 商家专用方法
 const goToProductManagement = () => {
   router.push('/merchant/products')
+}
+
+// 管理员专用方法
+const goToUserManagement = () => {
+  router.push('/admin/users')
 }
 
 // 通用方法

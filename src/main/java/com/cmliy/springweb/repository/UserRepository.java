@@ -3,7 +3,10 @@ package com.cmliy.springweb.repository;
 
 // import: 导入其他包中的类，以便在当前类中使用
 import com.cmliy.springweb.model.User;                    // 导入用户实体类
+import org.springframework.data.domain.Page;              // 导入Spring Data分页接口
+import org.springframework.data.domain.Pageable;          // 导入Spring Data分页参数接口
 import org.springframework.data.jpa.repository.JpaRepository; // 导入Spring Data JPA基础Repository接口
+import org.springframework.data.jpa.repository.Query;     // 导入自定义查询注解
 import org.springframework.stereotype.Repository;             // 导入Spring Repository注解
 
 import java.util.Optional;                                  // 导入Java 8 Optional容器类
@@ -110,6 +113,96 @@ public interface UserRepository extends JpaRepository<User, Long> { // extends: 
      * @return long: 启用的用户数量
      */
     long countByEnabledTrue(); // 统计启用的用户数量
+
+    /**
+     * 📊 统计禁用的用户数量
+     *
+     * 方法名解析：count + By + Enabled + False = 根据禁用状态统计数量
+     * Spring Data JPA会自动生成：SELECT COUNT(*) FROM users WHERE enabled = false
+     *
+     * @return long: 禁用的用户数量
+     */
+    long countByEnabledFalse(); // 统计禁用的用户数量
+
+    // ===== 分页查询方法 =====
+    // 支持用户管理的分页查询功能
+
+    /**
+     * 📄 分页查询指定角色的用户
+     *
+     * @param role: 用户角色，筛选条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByRole(String role, Pageable pageable);
+
+    /**
+     * 📄 分页查询指定启用状态的用户
+     *
+     * @param enabled: 启用状态，筛选条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByEnabled(Boolean enabled, Pageable pageable);
+
+    /**
+     * 📄 分页查询用户名包含指定字符串的用户（忽略大小写）
+     *
+     * @param username: 用户名关键词，搜索条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
+
+    /**
+     * 📄 分页查询邮箱包含指定字符串的用户（忽略大小写）
+     *
+     * @param email: 邮箱关键词，搜索条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByEmailContainingIgnoreCase(String email, Pageable pageable);
+
+    /**
+     * 📄 分页查询用户名包含指定字符串且属于指定角色的用户（忽略大小写）
+     *
+     * @param username: 用户名关键词，搜索条件
+     * @param role: 用户角色，筛选条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByUsernameContainingIgnoreCaseAndRole(String username, String role, Pageable pageable);
+
+    /**
+     * 📄 分页查询用户名包含指定字符串且指定启用状态的用户（忽略大小写）
+     *
+     * @param username: 用户名关键词，搜索条件
+     * @param enabled: 启用状态，筛选条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByUsernameContainingIgnoreCaseAndEnabled(String username, Boolean enabled, Pageable pageable);
+
+    /**
+     * 📄 分页查询指定角色和启用状态的用户
+     *
+     * @param role: 用户角色，筛选条件
+     * @param enabled: 启用状态，筛选条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByRoleAndEnabled(String role, Boolean enabled, Pageable pageable);
+
+    /**
+     * 📄 分页查询用户名包含指定字符串、指定角色和启用状态的用户（忽略大小写）
+     *
+     * @param username: 用户名关键词，搜索条件
+     * @param role: 用户角色，筛选条件
+     * @param enabled: 启用状态，筛选条件
+     * @param pageable: 分页参数（页码、页大小、排序）
+     * @return Page<User>: 分页的用户数据
+     */
+    Page<User> findByUsernameContainingIgnoreCaseAndRoleAndEnabled(String username, String role, Boolean enabled, Pageable pageable);
 
     // ===== 继承的方法 =====
     // 从JpaRepository<User, Long>继承的方法包括：
