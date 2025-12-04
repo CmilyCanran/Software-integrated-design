@@ -6,7 +6,7 @@ import java.util.Map;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-
+import jakarta.persistence.Id;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +30,10 @@ import lombok.NoArgsConstructor;
         })
 public class Cart {
 
-    @MapsId
+    @Id
+    private Long id;  // 与User的主键相同
+
+    @MapsId  // 表示这个主键同时作为外键关联到User
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

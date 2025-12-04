@@ -2,36 +2,35 @@
 package com.cmliy.springweb.controller;
 
 // import: 导入其他包中的类，以便在当前类中使用
-import com.cmliy.springweb.model.User;                      // 导入用户实体类
-import com.cmliy.springweb.repository.UserRepository;       // 导入用户数据访问层接口
-import com.cmliy.springweb.util.JwtUtil;                    // 导入JWT工具类
-import com.cmliy.springweb.common.ApiResponse;
-import com.cmliy.springweb.security.CustomUserDetailsService; // 导入自定义用户详情服务
-import com.cmliy.springweb.dto.LoginResponseDTO;            // 导入登录响应DTO
-import com.cmliy.springweb.dto.RegisterResponseDTO;         // 导入注册响应DTO
-import com.cmliy.springweb.dto.UserDTO;                     // 导入用户信息DTO
-import com.cmliy.springweb.converter.UserConverter;         // 导入用户转换器
-import com.cmliy.springweb.util.DtoConverterUtils;         // 导入DTO转换工具类
-import org.springframework.beans.factory.annotation.Autowired; // 导入Spring依赖注入注解
-import org.springframework.http.ResponseEntity;               // 导入Spring HTTP响应实体类
-import org.springframework.security.authentication.AuthenticationManager; // 导入Spring Security认证管理器
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken; // 导入用户名密码认证令牌
-import org.springframework.security.core.Authentication;      // 导入Spring Security认证接口
-import org.springframework.security.core.context.SecurityContextHolder; // 导入安全上下文持有者
-import org.springframework.security.core.userdetails.UserDetails; // 导入Spring Security用户详情接口
-import org.springframework.security.crypto.password.PasswordEncoder; // 导入密码编码器接口
-import org.springframework.web.bind.annotation.GetMapping;    // 导入Spring Web GET请求映射注解
-import org.springframework.web.bind.annotation.PostMapping;   // 导入Spring Web POST请求映射注解
-import org.springframework.web.bind.annotation.RequestBody;   // 导入Spring Web请求体绑定注解
-import org.springframework.web.bind.annotation.RestController; // 导入Spring Web REST控制器注解
-import org.springframework.web.bind.annotation.RequestMapping; // 导入Spring Web请求映射注解
-import java.time.LocalDateTime;  // 导入Java 8日期时间类，用于获取当前时间
-import java.util.Map;           // 导入Java Map接口，用于处理请求参数
-import java.util.Optional;      // 导入Java 8 Optional容器类，避免空指针异常
+import java.time.LocalDateTime;                      // 导入用户实体类
+import java.util.Map;       // 导入用户数据访问层接口
+import java.util.Optional;                    // 导入JWT工具类
 
-// 🚀 Lombok注解导入 - 大幅简化样板代码
-import lombok.extern.slf4j.Slf4j;        // @Slf4j: 自动生成Logger实例，替代手动创建
-import lombok.RequiredArgsConstructor;   // @RequiredArgsConstructor: 自动生成包含所有final字段的构造函数
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager; // 导入自定义用户详情服务
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;            // 导入登录响应DTO
+import org.springframework.security.core.Authentication;         // 导入注册响应DTO
+import org.springframework.security.core.context.SecurityContextHolder;                     // 导入用户信息DTO
+import org.springframework.security.core.userdetails.UserDetails;         // 导入用户转换器
+import org.springframework.security.crypto.password.PasswordEncoder;         // 导入DTO转换工具类
+import org.springframework.web.bind.annotation.GetMapping; // 导入Spring依赖注入注解
+import org.springframework.web.bind.annotation.PostMapping;               // 导入Spring HTTP响应实体类
+import org.springframework.web.bind.annotation.RequestBody; // 导入Spring Security认证管理器
+import org.springframework.web.bind.annotation.RequestMapping; // 导入用户名密码认证令牌
+import org.springframework.web.bind.annotation.RestController;      // 导入Spring Security认证接口
+
+import com.cmliy.springweb.common.ApiResponse; // 导入安全上下文持有者
+import com.cmliy.springweb.converter.UserConverter; // 导入Spring Security用户详情接口
+import com.cmliy.springweb.dto.LoginResponseDTO; // 导入密码编码器接口
+import com.cmliy.springweb.dto.RegisterResponseDTO;    // 导入Spring Web GET请求映射注解
+import com.cmliy.springweb.dto.UserDTO;   // 导入Spring Web POST请求映射注解
+import com.cmliy.springweb.model.User;   // 导入Spring Web请求体绑定注解
+import com.cmliy.springweb.repository.UserRepository; // 导入Spring Web REST控制器注解
+import com.cmliy.springweb.security.CustomUserDetailsService; // 导入Spring Web请求映射注解
+import com.cmliy.springweb.util.DtoConverterUtils;  // 导入Java 8日期时间类，用于获取当前时间
+import com.cmliy.springweb.util.JwtUtil;           // 导入Java Map接口，用于处理请求参数
+
+import lombok.extern.slf4j.Slf4j;      // 导入Java 8 Optional容器类，避免空指针异常
 
 /**
  * 🔐 认证控制器 (Lombok优化版本)
