@@ -35,6 +35,7 @@ public class UserConverter extends BaseConverter<User, UserDTO> {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .enabled(user.getEnabled())  // ✅ 添加enabled字段转换
                 .build();
     }
 
@@ -53,6 +54,7 @@ public class UserConverter extends BaseConverter<User, UserDTO> {
                 .username(userDTO.getUsername())
                 .email(userDTO.getEmail())
                 .role(userDTO.getRole())
+                .enabled(userDTO.isEnabled())  // ✅ 添加enabled字段反向转换
                 .build();
     }
 

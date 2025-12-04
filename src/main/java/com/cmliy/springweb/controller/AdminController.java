@@ -3,13 +3,17 @@ package com.cmliy.springweb.controller;
 
 // import: 导入其他包中的类，以便在当前类中使用
 import com.cmliy.springweb.common.ApiResponse;  // 导入统一API响应包装类
+import com.cmliy.springweb.dto.UserManagementDTO;  // 导入用户管理DTO
+import com.cmliy.springweb.dto.UserQueryRequestDTO;  // 导入用户查询请求DTO
+import com.cmliy.springweb.dto.UserStatisticsDTO;  // 导入用户统计DTO
+import com.cmliy.springweb.model.User;  // 导入用户实体
 import com.cmliy.springweb.repository.UserRepository;  // 导入用户数据访问层
+import com.cmliy.springweb.service.UserService;  // 导入用户服务
 import com.cmliy.springweb.util.JwtUtil;  // 导入JWT工具类
+import org.springframework.data.domain.Page;  // 导入Spring Data分页接口
 import org.springframework.http.ResponseEntity;  // 导入Spring HTTP响应实体类，用于构建HTTP响应
 import org.springframework.security.access.prepost.PreAuthorize; // 导入方法级安全注解
-import org.springframework.web.bind.annotation.GetMapping;  // 导入Spring Web GET请求映射注解
-import org.springframework.web.bind.annotation.RequestMapping;  // 导入Spring Web请求映射注解
-import org.springframework.web.bind.annotation.RestController;  // 导入Spring Web REST控制器注解
+import org.springframework.web.bind.annotation.*;  // 导入Spring Web请求映射注解
 
 import java.time.LocalDateTime;  // 导入Java 8日期时间类，用于获取当前时间
 
@@ -58,10 +62,14 @@ public class AdminController extends BaseController {  // 🚀 继承BaseControl
      *
      * @param userRepository 用户数据访问层（传递给基类）
      * @param jwtUtil JWT工具类（传递给基类）
+     * @param userService 用户服务（用于用户管理功能）
      */
-    public AdminController(UserRepository userRepository, JwtUtil jwtUtil) {
+    private final UserService userService;  // 用户服务
+
+    public AdminController(UserRepository userRepository, JwtUtil jwtUtil, UserService userService) {
         // 🚀 调用父类构造函数，传递基类需要的字段
         super(userRepository, jwtUtil);
+        this.userService = userService;
     }
 
     /**
@@ -145,5 +153,184 @@ public class AdminController extends BaseController {  // 🚀 继承BaseControl
             log.error("用户管理接口访问失败: {}", e.getMessage(), e);
             return error(500, "用户管理数据获取失败");
         }
+    }
+
+    /**
+     * 📄 获取用户列表（带分页和筛选）
+     *
+     * 这个接口返回分页的用户列表，支持多种筛选条件。
+     * 只有拥有ADMIN角色的用户才能访问。
+     *
+     * @GetMapping: Spring Web注解，将HTTP GET请求映射到这个方法
+     *              "/users/list": 这个方法处理 /admin/users/list 路径的请求
+     *
+     * @PreAuthorize: Spring Security注解，在方法执行前检查权限
+     *                "hasRole('ADMIN')": 要求用户拥有ADMIN角色
+     *
+     * @param query 查询条件DTO（自动从请求参数绑定）
+     * @return ResponseEntity<ApiResponse<Page<UserManagementDTO>>> 包含分页用户数据的HTTP响应
+     */
+    @GetMapping("/users/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Page<UserManagementDTO>>> getUserList(UserQueryRequestDTO query) {
+        return executeWithLog("获取用户列表", () -> {
+            // 获取当前管理员ID用于日志记录
+            Long adminId = getCurrentUserId();
+
+            // 调用服务层获取分页数据
+            Page<UserManagementDTO> userPage = userService.getUsers(query);
+
+            // 记录操作日志
+            logOperation("获取用户列表", adminId,
+                String.format("管理员ID: %d 查询了用户列表，页码: %d，页大小: %d，结果数: %d",
+                    adminId, query.getPage(), query.getSize(), userPage.getTotalElements()));
+
+            // 返回成功响应
+            return success(userPage, "用户列表获取成功");
+        });
+    }
+
+    /**
+     * 📊 获取用户统计信息
+     *
+     * 这个接口返回用户的统计信息，包括总用户数、启用/禁用用户数、各角色用户数。
+     * 只有拥有ADMIN角色的用户才能访问。
+     *
+     * @GetMapping: Spring Web注解，将HTTP GET请求映射到这个方法
+     *              "/users/statistics": 这个方法处理 /admin/users/statistics 路径的请求
+     *
+     * @PreAuthorize: Spring Security注解，在方法执行前检查权限
+     *                "hasRole('ADMIN')": 要求用户拥有ADMIN角色
+     *
+     * @return ResponseEntity<ApiResponse<UserStatisticsDTO>> 包含用户统计信息的HTTP响应
+     */
+    @GetMapping("/users/statistics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserStatisticsDTO>> getUserStatistics() {
+        return executeWithLog("获取用户统计信息", () -> {
+            // 获取当前管理员ID用于日志记录
+            Long adminId = getCurrentUserId();
+
+            // 调用服务层获取统计信息
+            UserStatisticsDTO statistics = userService.getUserStatistics();
+
+            // 记录操作日志
+            logOperation("获取用户统计信息", adminId,
+                String.format("管理员ID: %d 获取了用户统计信息，总用户数: %d",
+                    adminId, statistics.getTotalUsers()));
+
+            // 返回成功响应
+            return success(statistics, "用户统计信息获取成功");
+        });
+    }
+
+    /**
+     * 🔄 切换用户启用状态
+     *
+     * 这个接口用于切换用户的启用/禁用状态。
+     * 只有拥有ADMIN角色的用户才能访问。
+     *
+     * @PutMapping: Spring Web注解，将HTTP PUT请求映射到这个方法
+     *              "/users/{userId}/toggle-enabled": 这个方法处理 /admin/users/{userId}/toggle-enabled 路径的请求
+     *
+     * @PreAuthorize: Spring Security注解，在方法执行前检查权限
+     *                "hasRole('ADMIN')": 要求用户拥有ADMIN角色
+     *
+     * @PathVariable: Spring Web注解，将URL路径变量绑定到方法参数
+     *                "userId": 从URL路径 /admin/users/{userId}/toggle-enabled 中提取userId
+     *
+     * @param userId 要切换状态的用户ID
+     * @return ResponseEntity<ApiResponse<String>> 包含操作结果的HTTP响应
+     */
+    @PutMapping("/users/{userId}/toggle-enabled")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> toggleUserEnabled(@PathVariable Long userId) {
+        return executeWithLog("切换用户启用状态", () -> {
+            // 获取当前管理员ID
+            Long adminId = getCurrentUserId();
+
+            // 获取用户信息（用于操作日志）
+            try {
+                String userInfo = userRepository.findById(userId)
+                    .map(user -> user.getUsername() + "(" + user.getEmail() + ")")
+                    .orElse("ID:" + userId);
+
+                // 获取当前状态
+                boolean currentEnabled = userRepository.findById(userId)
+                    .map(user -> user.getEnabled())
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+                // 切换状态
+                userService.setUserEnabled(userId, !currentEnabled);
+
+                // 记录操作日志
+                logOperation("切换用户启用状态", userId,
+                    String.format("管理员ID: %d 将用户 %s 的状态切换为: %s",
+                        adminId, userInfo, !currentEnabled ? "启用" : "禁用"));
+
+                // 返回成功响应
+                return success(null, "用户状态切换成功");
+            } catch (Exception e) {
+                log.error("切换用户状态失败: userId={}, error={}", userId, e.getMessage());
+                throw new RuntimeException("切换用户状态失败: " + e.getMessage());
+            }
+        }, userId);
+    }
+
+    /**
+     * 🔄 更新用户角色
+     *
+     * 这个接口用于更新用户的角色。
+     * 只有拥有ADMIN角色的用户才能访问。
+     *
+     * @PutMapping: Spring Web注解，将HTTP PUT请求映射到这个方法
+     *              "/users/{userId}/role": 这个方法处理 /admin/users/{userId}/role 路径的请求
+     *
+     * @PreAuthorize: Spring Security注解，在方法执行前检查权限
+     *                "hasRole('ADMIN')": 要求用户拥有ADMIN角色
+     *
+     * @PathVariable: Spring Web注解，将URL路径变量绑定到方法参数
+     *                "userId": 从URL路径 /admin/users/{userId}/role 中提取userId
+     *
+     * @RequestBody: Spring Web注解，将请求体绑定到方法参数
+     *               "role": 从请求体中获取新的角色
+     *
+     * @param userId 要更新角色的用户ID
+     * @param role 新的角色
+     * @return ResponseEntity<ApiResponse<String>> 包含操作结果的HTTP响应
+     */
+    @PutMapping("/users/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> updateUserRole(@PathVariable Long userId, @RequestBody String role) {
+        return executeWithLog("更新用户角色", () -> {
+            // 获取当前管理员ID
+            Long adminId = getCurrentUserId();
+
+            // 获取用户信息（用于操作日志）
+            try {
+                String userInfo = userRepository.findById(userId)
+                    .map(user -> user.getUsername() + "(" + user.getEmail() + ")")
+                    .orElse("ID:" + userId);
+
+                // 获取当前角色
+                String currentRole = userRepository.findById(userId)
+                    .map(User::getRole)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+                // 更新角色
+                userService.updateUserRole(userId, role);
+
+                // 记录操作日志
+                logOperation("更新用户角色", userId,
+                    String.format("管理员ID: %d 将用户 %s 的角色从 %s 更新为: %s",
+                        adminId, userInfo, currentRole, role));
+
+                // 返回成功响应
+                return success(null, "用户角色更新成功");
+            } catch (Exception e) {
+                log.error("更新用户角色失败: userId={}, role={}, error={}", userId, role, e.getMessage());
+                throw new RuntimeException("更新用户角色失败: " + e.getMessage());
+            }
+        }, userId, role);
     }
 }
