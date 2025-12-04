@@ -40,18 +40,26 @@ public class Cart {
 
     @Column(name = "cart_data")
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<Long, Integer> cartData = new HashMap<>();
+    private Map<Long, Integer> cartData;
+
+    public Map<Long, Integer> getCartData() {
+        if (cartData == null) {
+            cartData = new HashMap<>();
+        }
+        return cartData;
+    }
 
     public void removeItem(Long productId) {
-        cartData.remove(productId);
+        getCartData().remove(productId);
     }
 
     public boolean updateItem(Long productId, Integer quantity) {
-        if (cartData.containsKey(productId)) {
+        Map<Long, Integer> cartMap = getCartData();
+        if (cartMap.containsKey(productId)) {
             // 商品已存在：数量累加 为负报错 为0删除
-            Integer theQuantity = cartData.get(productId) + quantity;
+            Integer theQuantity = cartMap.get(productId) + quantity;
             if (theQuantity > 0) {
-                cartData.put(productId, theQuantity);
+                cartMap.put(productId, theQuantity);
             } else if (theQuantity < 0) {
                 return false;
             } else {
@@ -59,7 +67,7 @@ public class Cart {
             }
         } else {
             if (quantity > 0) { // 商品不存在：直接放入
-                cartData.put(productId, quantity);
+                cartMap.put(productId, quantity);
             }
             return false;
         }
@@ -67,11 +75,11 @@ public class Cart {
     }
 
     public int getCartSize() {
-        return cartData.size();
+        return getCartData().size();
     }
 
     public void clearCart() {
-        cartData.clear();
+        getCartData().clear();
     }
 
 }
