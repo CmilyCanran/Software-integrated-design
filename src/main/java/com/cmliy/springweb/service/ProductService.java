@@ -337,6 +337,23 @@ public class ProductService extends BaseService {
     }
 
     /**
+     * 📦 根据ID列表获取商品列表
+     *
+     * @param productIds 商品ID列表
+     * @return 商品列表
+     */
+    public List<ProductListItemDTO> getProductsByIds(List<Long> productIds) {
+        log.info("根据ID列表获取商品: ids={}", productIds);
+
+        if (productIds == null || productIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Product> products = productRepository.findByIdIn(productIds);
+        return productConverter.toListItemDTOList(products);
+    }
+
+    /**
      * 📊 获取指定商家的商品统计信息
      *
      * @param merchantId 商家ID（可选，如果为null则返回全局统计）

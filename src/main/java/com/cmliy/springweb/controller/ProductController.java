@@ -532,6 +532,43 @@ public class ProductController extends BaseController {
     }
 
     /**
+     * 📦 根据商品ID列表获取商品详情
+     *
+     * @param request 包含商品ID列表的请求体
+     * @return 商品详情列表
+     */
+    @PostMapping("/by-ids")
+    public ResponseEntity<ApiResponse<List<ProductListItemDTO>>> getProductsByIds(
+            @RequestBody Map<String, List<Long>> request) {
+
+        List<Long> productIds = request.get("productIds");
+        if (productIds == null || productIds.isEmpty()) {
+            ApiResponse<List<ProductListItemDTO>> response = ApiResponse.success(
+                List.of(), "获取商品列表成功（空列表）"
+            );
+            return ResponseEntity.ok(response);
+        }
+
+        log.info("根据ID列表获取商品详情请求: productIds={}", productIds);
+
+        try {
+            List<ProductListItemDTO> products = productService.getProductsByIds(productIds);
+
+            ApiResponse<List<ProductListItemDTO>> response = ApiResponse.success(
+                products, "获取商品列表成功"
+            );
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            log.error("根据ID列表获取商品失败: {}", e.getMessage());
+            ApiResponse<List<ProductListItemDTO>> response = ApiResponse.error(
+                e.getMessage(), 400
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
      * 🔧 从URL中提取文件名
      *
      * @param imageUrl 图片URL

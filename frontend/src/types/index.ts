@@ -224,3 +224,59 @@ export type ID = string | number
 
 // 可选类型工具
 export type Optional<T> = T | null | undefined
+
+// ============================================================================
+// 购物车相关类型
+// ============================================================================
+
+// 购物车商品项类型
+export interface CartItem {
+  productId: number
+  quantity: number
+}
+
+// 购物车商品详情类型（包含商品信息）
+export interface CartItemDetail extends CartItem {
+  productName: string
+  price: number
+  description?: string
+  stockQuantity: number
+  discount?: number
+  productImage?: string
+}
+
+// 购物车响应类型（来自后端）
+export interface CartResponse {
+  userId: number
+  productQuantities: Record<string, number> // productId as string -> quantity (API returns string keys)
+  products?: CartItemDetail[] // 可选的商品详情数组
+}
+
+// 购物车状态类型
+export interface CartState {
+  items: CartItem[]
+  loading: boolean
+  error: string | null
+  totalItems: number
+  totalAmount: number
+}
+
+// 添加到购物车请求类型
+export interface AddToCartRequest {
+  productId: number
+  productQuantity: number
+}
+
+// 批量更新购物车请求类型
+export interface UpdateCartRequest {
+  productQuantities: Record<number, number>
+}
+
+// 购物车API响应类型
+export interface CartApiResponse<T = CartResponse> extends ApiResponse<T> {
+  success: boolean
+  data: T
+  message: string
+  code: number
+  timestamp: string
+}
