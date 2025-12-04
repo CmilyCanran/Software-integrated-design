@@ -1,6 +1,6 @@
 <template>
   <!-- 只在没有传入props时显示Header，避免重复显示 -->
-  <Header v-if="!props.product" page-title="商品详情" />
+  <Header v-if="!props.product" page-title="商品详情" :show-cart="true" />
   <div class="product-detail">
 
     <!-- 加载状态 -->
@@ -181,10 +181,15 @@ import type { Product } from '@/types/product'
 import Header from '@/components/Header.vue'
 import { productAPI } from '@/api/product'
 import { processImageUrl } from '@/utils/imageUtils'
+import { useCartStore } from '@/stores/cart'
+import { cartApi } from '@/api/cart'
 
 // 路由相关
 const route = useRoute()
 const router = useRouter()
+
+// Store相关
+const cartStore = useCartStore()
 
 // Props定义
 interface Props {
@@ -274,12 +279,20 @@ const handleAddToCart = async () => {
   addingToCart.value = true
 
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 添加商品到购物车
+    const success = await cartStore.addToCart({
+      productId: product.value!.id,
+      productQuantity: quantity.value
+    })
 
-    ElMessage.success(`已将 ${quantity.value} 件商品加入购物车`)
-    quantity.value = 1
+    if (success) {
+      ElMessage.success(`已将 ${quantity.value} 件商品加入购物车`)
+      quantity.value = 1
+    } else {
+      ElMessage.error('加入购物车失败')
+    }
   } catch (error) {
+    console.error('添加到购物车失败:', error)
     ElMessage.error('加入购物车失败')
   } finally {
     addingToCart.value = false

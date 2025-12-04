@@ -285,6 +285,19 @@ export const productAPI = {
   // 批量操作 - 批量删除
   batchDeleteProducts: (productIds: number[]): Promise<void> => {
     return api.post('/products/batch/delete', { productIds })
+  },
+
+  // 根据商品ID列表获取商品详情
+  getProductsByIds: (productIds: number[]): Promise<Product[]> => {
+    if (!productIds || productIds.length === 0) {
+      return Promise.resolve([])
+    }
+    // 调用后端专门的ID列表查询端点
+    return api.post('/products/by-ids', {
+      productIds: productIds.map(id => Number(id)) // 确保ID为数字类型
+    }).then((response: any) => {
+      return response.data || response || [];
+    });
   }
 }
 

@@ -570,4 +570,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      */
     @Query("SELECT COUNT(p) FROM Product p WHERE p.creator.id = :creatorId AND p.isAvailable = :isAvailable")
     long countByCreatorIdAndIsAvailable(@Param("creatorId") Long creatorId, @Param("isAvailable") Boolean isAvailable);
+
+    /**
+     * 📋 根据ID列表查找商品
+     *
+     * 根据商品ID列表查找商品，用于购物车等场景。
+     *
+     * @param ids 商品ID列表
+     * @return 商品列表
+     */
+    List<Product> findByIdIn(List<Long> ids);
 }

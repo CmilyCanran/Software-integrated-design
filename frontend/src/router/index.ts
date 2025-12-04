@@ -86,6 +86,17 @@ const router = createRouter({
       } as RouteMeta
     },
 
+    // 购物车页面路由
+    {
+      path: '/cart',
+      name: 'cart',
+      component: () => import('../views/Cart.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '购物车'
+      } as RouteMeta
+    },
+
     // 商家商品管理页面路由（商家专用）
     {
       path: '/merchant/products',
