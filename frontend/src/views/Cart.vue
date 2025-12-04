@@ -30,7 +30,7 @@
       <!-- 购物车商品列表 -->
       <el-card class="cart-list-card">
         <div
-          v-for="item in cartStore.items"
+          v-for="item in cartStore.cartItemsWithDetails"
           :key="item.productId"
           class="cart-item"
         >
@@ -38,15 +38,15 @@
           <div class="item-info">
             <el-avatar
               :size="60"
-              :src="getProductImage(item.productId)"
+              :src="item.product?.productImage || item.product?.imageUrl || item.product?.mainImage || ''"
               class="item-image"
               shape="square"
             >
-              {{ getProductInitial(item.productId) }}
+              {{ (item.product?.productName || item.product?.name || `商品${item.productId}`).charAt(0).toUpperCase() }}
             </el-avatar>
             <div class="item-details">
-              <h3 class="item-name">{{ getProductName(item.productId) }}</h3>
-              <p class="item-price">¥{{ typeof getProductPrice(item.productId) === 'number' ? getProductPrice(item.productId).toFixed(2) : '0.00' }}</p>
+              <h3 class="item-name">{{ item.product?.productName || item.product?.name || `商品${item.productId}` }}</h3>
+              <p class="item-price">¥{{ ((item.product?.price || item.product?.unitPrice || 0)).toFixed(2) }}</p>
             </div>
           </div>
 
@@ -55,7 +55,7 @@
             <el-input-number
               v-model="item.quantity"
               :min="1"
-              :max="getProductStock(item.productId)"
+              :max="item.product?.stockQuantity || item.product?.quantity || CART_CONFIG.DEFAULT_STOCK"
               @change="handleQuantityChange(item.productId, $event)"
               size="small"
             />
@@ -64,7 +64,7 @@
 
           <!-- 商品小计 -->
           <div class="item-subtotal">
-            <span class="subtotal-text">¥{{ typeof calculateSubtotal(item) === 'number' ? calculateSubtotal(item).toFixed(2) : '0.00' }}</span>
+            <span class="subtotal-text">¥{{ item.subtotal?.toFixed(2) || '0.00' }}</span>
           </div>
 
           <!-- 删除按钮 -->
@@ -74,7 +74,7 @@
               size="small"
               icon="Delete"
               @click="handleRemoveItem(item.productId)"
-              :loading="removingItems.has(item.productId)"
+              :loading="cartStore.loadingStates.remove"
             >
               删除
             </el-button>
@@ -86,20 +86,20 @@
       <el-card class="cart-actions-card">
         <div class="cart-actions">
           <div class="actions-left">
-            <el-button @click="handleClearCart" :disabled="cartStore.loading">
+            <el-button @click="handleClearCart" :loading="cartStore.loadingStates.clear">
               清空购物车
             </el-button>
           </div>
           <div class="actions-right">
             <div class="total-info">
               <span class="total-label">总计:</span>
-              <span class="total-amount">¥{{ typeof calculateTotalAmount === 'number' ? calculateTotalAmount.toFixed(2) : '0.00' }}</span>
+              <span class="total-amount">¥{{ cartStore.totalAmount.toFixed(2) }}</span>
             </div>
             <el-button
               type="primary"
               size="large"
               @click="handleCheckout"
-              :disabled="cartStore.loading || cartStore.isEmpty"
+              :disabled="cartStore.loadingStates.fetch || cartStore.isEmpty"
             >
               去结算
             </el-button>
@@ -150,6 +150,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useCartStore } from '@/stores/cart'
 import { useProductStore } from '@/stores/product'
+import { CART_CONFIG } from '@/constants/cart'
 import type { CartItem } from '@/types'
 
 // ============================================================================
@@ -162,85 +163,19 @@ const router = useRouter()
 // ============================================================================
 // 响应式数据
 // ============================================================================
-// 正在删除的商品ID集合
-const removingItems = ref<Set<number>>(new Set())
 
 // ============================================================================
 // 计算属性
 // ============================================================================
 
-// 计算商品小计
-const calculateSubtotal = (item: CartItem): number => {
-  if (!item || typeof item.quantity !== 'number' || item.quantity <= 0) {
-    return 0
-  }
-  const price = getProductPrice(item.productId)
-  return (price || 0) * item.quantity
-}
-
-// 计算购物车总金额
-const calculateTotalAmount = computed((): number => {
-  if (!cartStore.items || !Array.isArray(cartStore.items)) {
-    return 0
-  }
-  // 强制依赖 productStore.products，确保价格变化能触发重新计算
-  const products = productStore.products;
-  return cartStore.items.reduce((total, item) => {
-    const subtotal = calculateSubtotal(item)
-    return total + (typeof subtotal === 'number' ? subtotal : 0)
-  }, 0)
-})
-
 // ============================================================================
 // 商品信息获取方法
 // ============================================================================
 
-// 获取商品名称
-const getProductName = (productId: number): string => {
-  if (!productId || typeof productId !== 'number') {
-    return `商品${productId || '未知'}`
-  }
-  const product = productStore.products.find(p => p.id === productId)
-  // 兼容Product和ProductListItemDTO类型
-  return product?.productName || product?.name || `商品${productId}`
-}
-
-// 获取商品价格
-const getProductPrice = (productId: number): number => {
-  if (!productId || typeof productId !== 'number') {
-    return 0
-  }
-  const product = productStore.products.find(p => p.id === productId)
-  // 兼容Product和ProductListItemDTO类型
-  return product?.price || product?.unitPrice || 0
-}
-
-// 获取商品库存
-const getProductStock = (productId: number): number => {
-  if (!productId || typeof productId !== 'number') {
-    return 999 // 默认库存
-  }
-  const product = productStore.products.find(p => p.id === productId)
-  // 兼容Product和ProductListItemDTO类型
-  return product?.stockQuantity || product?.quantity || 999 // 默认库存999
-}
-
-// 获取商品图片
-const getProductImage = (productId: number): string => {
-  if (!productId || typeof productId !== 'number') {
-    return ''
-  }
-  const product = productStore.products.find(p => p.id === productId)
-  // 兼容Product和ProductListItemDTO类型
-  return product?.productImage || product?.imageUrl || product?.mainImage || ''
-}
-
 // 获取商品名称首字母（用于占位符）
 const getProductInitial = (productId: number): string => {
-  if (!productId || typeof productId !== 'number') {
-    return '?'
-  }
-  const name = getProductName(productId)
+  const product = cartStore.getProductById(productId)
+  const name = product?.productName || product?.name || `商品${productId}`
   return name.charAt(0).toUpperCase()
 }
 
@@ -263,36 +198,30 @@ const handleQuantityChange = async (productId: number, newQuantity: number) => {
     const success = await cartStore.updateCart(request)
 
     if (success) {
-      ElMessage.success('购物车更新成功')
+      ElMessage.success(CART_CONFIG.SUCCESS_MESSAGES.UPDATE_SUCCESS)
     } else {
-      ElMessage.error('更新购物车失败')
+      ElMessage.error(CART_CONFIG.ERROR_MESSAGES.UPDATE_FAILED)
     }
   } catch (error) {
     console.error('更新商品数量失败:', error)
-    ElMessage.error('更新商品数量失败')
+    ElMessage.error(CART_CONFIG.ERROR_MESSAGES.UPDATE_FAILED)
   }
 }
 
 // 处理删除商品
 const handleRemoveItem = async (productId: number) => {
   try {
-    // 添加到正在删除的集合
-    removingItems.value.add(productId)
-
     // 从购物车中删除商品
     const success = await cartStore.removeFromCart(productId)
 
     if (success) {
-      ElMessage.success('商品已从购物车中删除')
+      ElMessage.success(CART_CONFIG.SUCCESS_MESSAGES.REMOVE_SUCCESS)
     } else {
-      ElMessage.error('删除商品失败')
+      ElMessage.error(CART_CONFIG.ERROR_MESSAGES.REMOVE_FAILED)
     }
   } catch (error) {
     console.error('删除商品失败:', error)
-    ElMessage.error('删除商品失败')
-  } finally {
-    // 从正在删除的集合中移除
-    removingItems.value.delete(productId)
+    ElMessage.error(CART_CONFIG.ERROR_MESSAGES.REMOVE_FAILED)
   }
 }
 
@@ -301,7 +230,7 @@ const handleClearCart = async () => {
   try {
     // 确认清空操作
     await ElMessageBox.confirm(
-      '确定要清空购物车吗？此操作不可撤销。',
+      CART_CONFIG.CONFIRM_MESSAGES.CLEAR_CART,
       '清空购物车',
       {
         confirmButtonText: '确定',
@@ -314,15 +243,15 @@ const handleClearCart = async () => {
     const success = await cartStore.clearCart()
 
     if (success) {
-      ElMessage.success('购物车已清空')
+      ElMessage.success(CART_CONFIG.SUCCESS_MESSAGES.CLEAR_SUCCESS)
     } else {
-      ElMessage.error('清空购物车失败')
+      ElMessage.error(CART_CONFIG.ERROR_MESSAGES.CLEAR_FAILED)
     }
   } catch (error) {
     // 用户取消操作或出现错误
     if (error !== 'cancel') {
       console.error('清空购物车失败:', error)
-      ElMessage.error('清空购物车失败')
+      ElMessage.error(CART_CONFIG.ERROR_MESSAGES.CLEAR_FAILED)
     }
   }
 }
