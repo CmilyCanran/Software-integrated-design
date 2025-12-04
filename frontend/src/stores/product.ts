@@ -362,6 +362,30 @@ export const useProductStore = defineStore('product', () => {
     }
   }
 
+  // 获取商品列表（公共商品列表，用于购物车等场景）
+  const fetchProducts = async (params?: ProductQueryParams) => {
+    try {
+      setLoading(true)
+
+      const response = await productAPI.getProducts(params)
+
+      setProducts(response.data, {
+        total: response.total,
+        totalPages: response.totalPages,
+        page: response.page,
+        size: response.size
+      })
+
+      return response
+    } catch (error) {
+      console.error('❌ 获取商品列表失败:', error)
+      ElMessage.error('获取商品列表失败，请重试')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // 按分类查询商品
   const fetchProductsByCategory = async (category: string, params?: ProductQueryParams) => {
     try {
@@ -380,6 +404,37 @@ export const useProductStore = defineStore('product', () => {
     } catch (error) {
       console.error('❌ 按分类查询失败:', error)
       ElMessage.error('按分类查询商品失败，请重试')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 根据商品ID列表获取商品详情
+  const fetchProductsByIds = async (productIds: number[]): Promise<Product[]> => {
+    try {
+      setLoading(true)
+
+      // 调用API获取指定ID的商品列表
+      const fetchedProducts = await productAPI.getProductsByIds(productIds)
+
+      // 可选择性地更新本地产品列表，或仅返回获取的商品
+      // 如果需要同时更新本地状态，可以合并到现有产品列表
+      if (fetchedProducts && fetchedProducts.length > 0) {
+        // 合并新获取的商品到现有产品列表，避免重复
+        const existingProductIds = new Set((products.value || []).map(p => p.id));
+        const newProducts = fetchedProducts.filter(newProduct =>
+          newProduct && newProduct.id && !existingProductIds.has(newProduct.id)
+        );
+        if (newProducts.length > 0) {
+          products.value = [...newProducts, ...(products.value || [])];
+        }
+      }
+
+      return fetchedProducts
+    } catch (error) {
+      console.error('❌ 按ID列表获取商品失败:', error)
+      ElMessage.error('按ID列表获取商品失败，请重试')
       throw error
     } finally {
       setLoading(false)
@@ -420,6 +475,7 @@ export const useProductStore = defineStore('product', () => {
     setProducts,
     setCurrentProduct,
     fetchMerchantProducts,
+    fetchProducts,
     fetchProduct,
     createProduct,
     updateProduct,
@@ -429,6 +485,7 @@ export const useProductStore = defineStore('product', () => {
     fetchProductStats,
     searchProducts,
     fetchProductsByCategory,
+    fetchProductsByIds,
     clearProducts
   }
 })

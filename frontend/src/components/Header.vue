@@ -27,7 +27,7 @@
       <!-- 右侧：用户信息和操作 -->
       <div class="header-right">
         <!-- 购物车图标 -->
-        <el-badge v-if="showCart" :value="cartItemCount" class="right-badge">
+        <el-badge v-if="showCart" :value="actualCartItemCount" class="right-badge">
           <el-button circle icon="ShoppingCart" @click="handleCart" />
         </el-badge>
 
@@ -78,6 +78,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 import { ElMessage } from 'element-plus'
 import {
   HomeFilled,
@@ -108,6 +109,7 @@ const pageTitle = props.pageTitle
 // 状态管理
 const router = useRouter()
 const authStore = useAuthStore()
+const cartStore = useCartStore()
 
 // 计算属性
 const username = computed(() => authStore.userInfo?.username || '未知用户')
@@ -115,6 +117,9 @@ const isMerchant = computed(() => {
   return authStore.userInfo?.role === 'SHOPER' || authStore.userInfo?.role === 'ADMIN'
 })
 const UserIcon = User
+
+// 购物车相关计算属性
+const actualCartItemCount = computed(() => cartStore.totalItems)
 
 const handleBack = () => {
   router.back()
@@ -140,8 +145,18 @@ const handleCommand = (command: string) => {
   }
 }
 
-const handleCart = () => {
-  ElMessage.info('购物车功能开发中...')
+const handleCart = async () => {
+  try {
+    // 尝试获取最新的购物车数据
+    await cartStore.fetchCart()
+    // 跳转到购物车页面
+    router.push('/cart')
+  } catch (error) {
+    console.error('获取购物车数据失败:', error)
+    ElMessage.error('获取购物车数据失败')
+    // 仍然跳转到购物车页面，即使获取数据失败
+    router.push('/cart')
+  }
 }
 </script>
 
