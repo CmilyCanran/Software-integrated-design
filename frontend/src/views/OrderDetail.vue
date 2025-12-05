@@ -78,6 +78,7 @@
           :user-role="currentUserRole"
           @cancel-order="handleCancelOrder"
           @pay-order="handlePayOrder"
+          @update-status="handleUpdateStatus"
           @view-detail="handleViewDetail"
         />
       </div>
@@ -184,6 +185,20 @@ const handleCancelOrder = async () => {
   if (success) {
     // 重新加载订单详情
     await loadOrderDetail()
+  }
+}
+
+/**
+ * 更新订单状态
+ */
+const handleUpdateStatus = async (status: string) => {
+  const success = await orderStore.updateOrderStatus(orderId.value, status as any)
+  if (success) {
+    // 重新加载订单详情
+    await loadOrderDetail()
+    ElMessage.success('订单状态更新成功')
+  } else {
+    ElMessage.error('订单状态更新失败')
   }
 }
 
