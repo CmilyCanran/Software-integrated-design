@@ -243,7 +243,7 @@ class OrderApi {
     const response = await request.put<ApiResponse<Order>>(`/orders/${orderId}/status`, null, {
       params: { newStatus }
     })
-    return response
+    return response.data
   }
 
   /**
@@ -253,7 +253,7 @@ class OrderApi {
    */
   async cancelOrder(orderId: number): Promise<Order> {
     const response = await request.put<ApiResponse<Order>>(`/orders/${orderId}/cancel`)
-    return response
+    return response.data
   }
 
   // ==================== 📊 订单统计 ====================

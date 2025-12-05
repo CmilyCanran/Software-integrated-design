@@ -2,7 +2,7 @@
     <div class="login-container">
         <div class="login-form">
             <div class="login-header">
-                <h2>服装销售系统</h2>
+                <h2>服装购物商城</h2>
                 <p>欢迎登录</p>
             </div>
 
@@ -145,7 +145,7 @@ const handleLoginSuccess = (response: LoginResponse): void => {
 
     // 显示成功消息并跳转
     ElMessage.success('登录成功')
-    router.push('/dashboard')
+    router.push('/home')
 }
 
 /**
