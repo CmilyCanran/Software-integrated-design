@@ -143,6 +143,27 @@ const router = createRouter({
         title: '组件测试',
         hidden: true  // 标记为隐藏页面，不在导航中显示
       } as RouteMeta
+    },
+
+    // 订单相关路由
+    {
+      path: '/orders',
+      name: 'OrderList',
+      component: () => import('../views/OrderList.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '我的订单'
+      } as RouteMeta
+    },
+
+    {
+      path: '/orders/:id',
+      name: 'OrderDetail',
+      component: () => import('../views/OrderDetail.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '订单详情'
+      } as RouteMeta
     }
   ] as RouteRecordRaw[]
 })

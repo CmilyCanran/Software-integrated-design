@@ -2,6 +2,7 @@
 package com.cmliy.springweb.model;
 
 // import: 导入其他包中的类，以便在当前类中使用
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;                           // 导入JPA（Jakarta Persistence API）所有注解
 import org.hibernate.annotations.CreationTimestamp;    // 导入Hibernate创建时间戳注解
 import org.hibernate.annotations.UpdateTimestamp;      // 导入Hibernate更新时间戳注解
@@ -41,6 +42,7 @@ import java.time.LocalDateTime;                         // 导入Java 8日期时
 @Data                                      // @Data注解：Lombok自动生成getter、setter、toString、equals、hashCode
 @Builder                                   // @Builder注解：Lombok支持Builder模式创建对象
 @NoArgsConstructor                         // @NoArgsConstructor注解：Lombok生成无参构造函数
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @AllArgsConstructor                        // @AllArgsConstructor注解：Lombok生成全参构造函数
 @Entity // @Entity注解：声明这是一个JPA实体类，Hibernate会自动管理其数据库映射
 @Table(name = "users", indexes = { // @Table注解：定义数据库表的元数据

@@ -60,6 +60,12 @@
                 </el-icon>
                 商品管理
               </el-dropdown-item>
+              <el-dropdown-item command="orders">
+                <el-icon>
+                  <Document />
+                </el-icon>
+                我的订单
+              </el-dropdown-item>
               <el-dropdown-item divided command="logout">
                 <el-icon>
                   <SwitchButton />
@@ -86,7 +92,8 @@ import {
   ArrowDown,
   House,
   ShoppingCart,
-  SwitchButton
+  SwitchButton,
+  Document
 } from '@element-plus/icons-vue'
 
 // Props 定义
@@ -137,6 +144,9 @@ const handleCommand = (command: string) => {
       break
     case 'products':
       router.push('/merchant/products')
+      break
+    case 'orders':
+      router.push('/orders')
       break
     case 'logout':
       authStore.logout()

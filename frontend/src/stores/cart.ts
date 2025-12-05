@@ -6,9 +6,12 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { cartApi } from '@/api/cart'
+import { orderApi } from '@/api/order'
 import { executeAsyncOperation, executeGranularAsyncOperation } from '@/utils/asyncOperation'
 import { toNumber, toString } from '@/utils/typeConversion'
+import { isJwtTokenValid } from '@/utils/jwtUtils'
 import { useProductStore } from '@/stores/product'
+import { useAuthStore } from '@/stores/auth'
 import { CART_CONFIG } from '@/constants/cart'
 import type {
   CartItem,
@@ -258,6 +261,22 @@ export const useCartStore = defineStore('cart', () => {
    * @description 将购物车中的商品创建为订单
    */
   const createOrder = async (): Promise<boolean> => {
+    // 检查用户是否已登录
+    const authStore = useAuthStore()
+    if (!authStore.isLoggedIn) {
+      error.value = '请先登录后再创建订单'
+      ElMessage.error('请先登录后再创建订单')
+      return false
+    }
+
+    // 额外验证JWT token是否有效（检查是否过期）
+    if (!isJwtTokenValid(authStore.token)) {
+      error.value = '登录已过期，请重新登录'
+      ElMessage.error('登录已过期，请重新登录')
+      authStore.logout()
+      return false
+    }
+
     // 先检查购物车是否为空
     const cartItems = items.value
     if (cartItems.length === 0) {
@@ -265,24 +284,47 @@ export const useCartStore = defineStore('cart', () => {
       return false
     }
 
-    // 创建订单请求数据
-    const orderData = {
-      items: cartItems.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity
-      })),
-      totalAmount: 0 // 实际的总额应该在前端计算或由后端计算
-    }
+    try {
+      // 调用订单API创建订单
+      const orders = await orderApi.createOrdersFromCart()
 
-    // 这里需要调用订单API，但目前没有订单API
-    // 作为临时方案，我们清空购物车并显示成功消息
-    // 实际应用中需要调用订单创建API
-    const success = await clearCart()
-    if (success) {
-      ElMessage.success(CART_CONFIG.SUCCESS_MESSAGES.CREATE_ORDER_SUCCESS)
-      return true
-    } else {
-      error.value = CART_CONFIG.ERROR_MESSAGES.CREATE_ORDER_FAILED
+      // 明确检查是否为 undefined，并提供更详细的错误信息
+      if (orders === undefined || orders === null) {
+        error.value = '订单创建失败：API响应无效，请检查登录状态'
+        console.error('订单API返回undefined或null:', orders)
+        return false
+      }
+
+      // 检查订单数组 - 使用更灵活的验证
+      if (Array.isArray(orders)) {
+        if (orders.length > 0) {
+          ElMessage.success(`订单创建成功！共创建 ${orders.length} 个订单`)
+          // 购物车会在后端自动清空，我们只需要刷新本地状态
+          await fetchCart()
+          return true
+        } else {
+          // 数组存在但为空
+          error.value = '订单创建失败：购物车中没有商品或创建了空订单'
+          return false
+        }
+      } else {
+        // orders不是数组
+        error.value = '订单创建失败：返回的数据格式不正确'
+        console.error('订单API返回非数组格式:', typeof orders, orders)
+        return false
+      }
+    } catch (error: any) {
+      console.error('创建订单失败:', error)
+      // 检查是否是认证相关的错误
+      if (error?.response?.status === 401) {
+        error.value = '登录已过期，请重新登录'
+        authStore.logout() // 登出用户
+        // 不在这里重定向，让响应拦截器处理
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || CART_CONFIG.ERROR_MESSAGES.CREATE_ORDER_FAILED
+        error.value = errorMessage
+      }
+      ElMessage.error(error.value)
       return false
     }
   }
