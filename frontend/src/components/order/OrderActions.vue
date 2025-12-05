@@ -2,8 +2,17 @@
   <div class="order-actions">
     <!-- 买家操作 -->
     <template v-if="userRole === 'USER'">
-      <!-- 待处理状态 - 可以取消订单 -->
+      <!-- 待处理状态 - 可以支付或取消订单 -->
       <template v-if="order.status === 'PENDING'">
+        <el-button
+          type="primary"
+          size="small"
+          @click="handlePayOrder"
+          :loading="loading"
+        >
+          <el-icon><Money /></el-icon>
+          确认支付
+        </el-button>
         <el-button
           type="danger"
           size="small"
@@ -176,6 +185,7 @@ const props = defineProps<Props>()
 // Emits定义
 const emit = defineEmits<{
   cancelOrder: [orderId: number]
+  payOrder: [orderId: number]
   confirmReceipt: [orderId: number]
   updateStatus: [orderId: number, status: OrderStatus]
   review: [orderId: number]
@@ -189,6 +199,30 @@ const emit = defineEmits<{
 const loading = ref(false)
 
 // 方法
+const handlePayOrder = async () => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要支付 ¥${props.order.totalAmount.toFixed(2)} 订单吗？支付后订单将进入处理流程。`,
+      '确认支付',
+      {
+        confirmButtonText: '确定支付',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    loading.value = true
+    emit('payOrder', props.order.id)
+    ElMessage.success('订单支付成功')
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('订单支付失败')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
 const handleCancelOrder = async () => {
   try {
     await ElMessageBox.confirm(

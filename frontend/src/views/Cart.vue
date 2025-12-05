@@ -183,10 +183,17 @@ const DEFAULT_PRODUCT_IMAGE = CART_CONFIG.DEFAULT_PRODUCT_IMAGE
 // 商品信息获取方法
 // ============================================================================
 
-// 处理商品图片URL - 使用正确的字段名mainImageUrl
+// 处理商品图片URL - 适配后端可能返回的不同字段名
 const getProductImage = (product: any): string => {
-  if (product?.mainImageUrl) {
-    return processImageUrl(product.mainImageUrl)
+  // 尝试多个可能的字段名以适配后端返回的数据
+  const imageUrl = product?.mainImageUrl ||  // 商品详情中的字段
+                  product?.main_image ||    // 从productData中提取的字段
+                  product?.productImage ||  // 订单中的字段
+                  product?.image ||         // 其他可能的字段
+                  null
+
+  if (imageUrl) {
+    return processImageUrl(imageUrl)
   }
   return DEFAULT_PRODUCT_IMAGE
 }

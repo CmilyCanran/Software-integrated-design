@@ -210,7 +210,7 @@ public class OrderController extends BaseController {
             }
 
             // 使用OrderSecurityService进行权限验证
-            if (!orderSecurityService.canUpdateOrderStatus(userId, orderId)) {
+            if (!orderSecurityService.canUpdateOrderStatus(userId, orderId, newStatus)) {
                 return ResponseEntity.status(403)
                         .body(ApiResponse.error("无权修改此订单状态", 403));
             }
