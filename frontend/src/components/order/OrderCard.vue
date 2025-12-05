@@ -48,16 +48,6 @@
         <span class="seller-name">{{ order.sellerName }}</span>
       </div>
       <div class="order-actions">
-        <!-- 默认操作按钮 -->
-        <el-button
-          v-if="showDetailButton"
-          type="primary"
-          link
-          size="small"
-          @click.stop="handleViewDetail"
-        >
-          查看详情
-        </el-button>
         <!-- 插槽：自定义操作 -->
         <slot name="actions"></slot>
       </div>
