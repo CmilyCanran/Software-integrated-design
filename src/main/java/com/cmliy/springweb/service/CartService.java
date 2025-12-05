@@ -108,25 +108,6 @@ public class CartService extends BaseService {
         },userId);
     }
 
-    public boolean updateCart(CartUpdateDTO cartDto){
-        if(cartDto == null){
-            return false;
-        }
-
-        return executeWithLog("更新购物车",()->{
-            Cart cart = getOrCreateCart(userRepository
-                                .findById(
-                                    cartDto
-                                    .getUserId()
-                                ).orElseGet(null)
-                            );
-            if(cart == null){
-                return false;
-            }
-            updateEntity(cart,cartDto);
-            return true;
-        });
-    }
     /**
      * ➕ 添加商品到购物车
      *
@@ -172,9 +153,7 @@ public class CartService extends BaseService {
             if (request == null || request.getProductQuantities() == null) {
                 throw new BusinessException("请求参数不完整");
             }
-            if (!request.getUserId().equals(userId)) {
-                throw new BusinessException("用户ID不匹配");
-            }
+            // 用户ID验证已由Controller从JWT获取，这里直接使用即可
 
             // 获取用户购物车
             User user = validateExists(userRepository.findById(userId), "用户", userId);
@@ -259,16 +238,16 @@ public class CartService extends BaseService {
      * @param userId 用户ID
      * @return 购物车统计信息（暂时返回与获取购物车相同的信息）
      */
-    public CartResponseDTO getCartStatistics(Long userId) {
-        return executeWithLog("获取购物车统计", () -> {
-            // 获取用户购物车
-            User user = validateExists(userRepository.findById(userId), "用户", userId);
-            Cart cart = getOrCreateCart(user);
+    // TODO: 此API已从前端移除，如需使用请重新实现真正的统计功能
+    // public CartResponseDTO getCartStatistics(Long userId) {
+    //     return executeWithLog("获取购物车统计", () -> {
+    //         // 获取用户购物车
+    //         User user = validateExists(userRepository.findById(userId), "用户", userId);
+    //         Cart cart = getOrCreateCart(user);
 
-            // 暂时返回与获取购物车相同的信息
-            // 后续可根据需要添加统计功能，如总商品数、总价值等
-            return buildCartResponseDTO(cart);
-        });
-    }
+    //         // 实现真正的统计功能，如总商品数、总价值等
+    //         return buildCartResponseDTO(cart);
+    //     });
+    // }
 
 }

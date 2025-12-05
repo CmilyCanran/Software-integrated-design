@@ -150,6 +150,9 @@ import PriceDisplay from './PriceDisplay.vue'
 import StockIndicator from './StockIndicator.vue'
 import type { Product } from '@/types/product'
 import { processImageUrl } from '@/utils/imageUtils'
+import { cartApi } from '@/api/cart'
+import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 
 // 快速操作事件类型
 type QuickActionEvent = 'add-to-cart' | 'quick-view' | 'edit' | 'delete'
@@ -317,11 +320,47 @@ const handleNameClick = (): void => {
 
 
 // 通用快速操作处理方法
-const handleQuickAction = (action: QuickAction): void => {
+const handleQuickAction = async (action: QuickAction): Promise<void> => {
   // 如果是购物车操作，执行库存检查
   if (action.event === 'add-to-cart') {
     if (props.product.stockQuantity === 0) {
       ElMessage.warning('商品库存不足')
+      return
+    }
+
+    // 检查用户是否已登录
+    const authStore = useAuthStore()
+    if (!authStore.isLoggedIn) {
+      ElMessage.warning('请先登录后再添加商品到购物车')
+      // 可以在这里添加跳转到登录页面的逻辑
+      return
+    }
+
+    try {
+      // 显示加载状态
+      const cartStore = useCartStore()
+
+      // 调用API添加到购物车
+      await cartStore.addToCart({
+        productId: props.product.id,
+        productQuantity: 1
+      })
+
+      // 显示成功消息
+      ElMessage.success(`${props.product.productName} 已添加到购物车`)
+
+      // 注意：不再触发父组件事件，避免重复处理
+
+    } catch (error: any) {
+      // 处理错误
+      if (error.response?.status === 401) {
+        ElMessage.error('请先登录')
+      } else if (error.response?.data?.message) {
+        ElMessage.error(error.response.data.message)
+      } else {
+        ElMessage.error('添加商品到购物车失败，请稍后重试')
+      }
+      console.error('添加商品到购物车失败:', error)
       return
     }
   }
@@ -332,7 +371,7 @@ const handleQuickAction = (action: QuickAction): void => {
   // 类型安全的事件触发
   switch (action.event) {
     case 'add-to-cart':
-      emit('add-to-cart', eventData)
+      // 购物车操作已在上面处理
       break
     case 'quick-view':
       emit('quick-view', eventData)

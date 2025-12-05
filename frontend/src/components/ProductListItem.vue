@@ -59,6 +59,17 @@
         查看详情
       </el-button>
 
+      <!-- 加入购物车按钮 -->
+      <el-button
+        v-if="showAddToCartButton && product.stockQuantity > 0"
+        type="success"
+        :size="buttonSize"
+        @click.stop="handleAddToCart"
+      >
+        <el-icon><ShoppingCart /></el-icon>
+        加入购物车
+      </el-button>
+
       <el-button
         v-if="showEditButton"
         type="default"
@@ -82,12 +93,16 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { ShoppingCart } from '@element-plus/icons-vue'
 import ImageLoader from './ImageLoader.vue'
 import StatusTag from './StatusTag.vue'
 import PriceDisplay from './PriceDisplay.vue'
 import StockIndicator from './StockIndicator.vue'
 import type { Product } from '@/types/product'
 import { processImageUrl } from '@/utils/imageUtils'
+import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 
 // 定义props接口
 interface Props {
@@ -97,6 +112,7 @@ interface Props {
   showStockCount?: boolean              // 是否显示库存数量
   showEditButton?: boolean              // 是否显示编辑按钮
   showDeleteButton?: boolean            // 是否显示删除按钮
+  showAddToCartButton?: boolean          // 是否显示加入购物车按钮
   defaultImage?: string                 // 默认图片
   clickable?: boolean                   // 是否可点击
 }
@@ -107,6 +123,7 @@ interface Emits {
   (e: 'view-details', product: Product): void
   (e: 'edit', product: Product): void
   (e: 'delete', product: Product): void
+  (e: 'add-to-cart', product: Product): void
 }
 
 // 使用withDefaults设置默认值
@@ -116,6 +133,7 @@ const props = withDefaults(defineProps<Props>(), {
   showStockCount: true,
   showEditButton: false,
   showDeleteButton: false,
+  showAddToCartButton: false,
   defaultImage: '/images/placeholder-product.png',
   clickable: true
 })
@@ -165,6 +183,40 @@ const handleClick = (): void => {
 
 const handleViewDetails = (): void => {
   emit('view-details', props.product)
+}
+
+const handleAddToCart = async (): Promise<void> => {
+  // 检查用户是否已登录
+  const authStore = useAuthStore()
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning('请先登录后再添加商品到购物车')
+    return
+  }
+
+  try {
+    // 获取购物车store
+    const cartStore = useCartStore()
+
+    // 调用API添加到购物车
+    await cartStore.addToCart({
+      productId: props.product.id,
+      productQuantity: 1
+    })
+
+    // 显示成功消息
+    ElMessage.success(`"${props.product.productName}" 已加入购物车`)
+
+  } catch (error: any) {
+    // 处理错误
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录')
+    } else if (error.response?.data?.message) {
+      ElMessage.error(error.response.data.message)
+    } else {
+      ElMessage.error('添加商品到购物车失败，请稍后重试')
+    }
+    console.error('添加商品到购物车失败:', error)
+  }
 }
 
 const handleEdit = (): void => {
