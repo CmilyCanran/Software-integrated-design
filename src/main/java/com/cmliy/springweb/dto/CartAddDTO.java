@@ -12,12 +12,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CartAddDTO {
 
-    private Long userId;
     private Long productId;
     private Integer productQuantity;
 
-    public CartAddDTO(Long uID, Long pID) {
-        userId = uID;
+    public CartAddDTO(Long pID) {
         productId = pID;
         productQuantity = 1;
     }

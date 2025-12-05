@@ -59,12 +59,13 @@ class CartApi {
   }
 
   /**
-   * 获取购物车统计信息
+   * 获取购物车统计信息（当前未使用）
    * @returns 购物车统计数据
+   * @deprecated 此API当前未在前端使用，如需使用请先确认后端已实现
    */
-  async getCartStatistics(): Promise<CartResponse> {
-    return api.get<CartResponse>('/cart/statistics')
-  }
+  // async getCartStatistics(): Promise<CartResponse> {
+  //   return api.get<CartResponse>('/cart/statistics')
+  // }
 }
 
 // ============================================================================

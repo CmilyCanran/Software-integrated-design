@@ -125,24 +125,5 @@ public class CartController extends BaseController {
         }
     }
 
-    /**
-     * 📊 获取购物车统计信息
-     * GET /api/cart/statistics
-     */
-    @GetMapping("/statistics")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<CartResponseDTO>> getCartStatistics() {
-        try {
-            Long userId = getCurrentUserId();
-            CartResponseDTO statistics = cartService.getCartStatistics(userId);
-            return success(statistics, "获取购物车统计成功");
-        } catch (BusinessException e) {
-            log.warn("获取购物车统计失败: {}", e.getMessage());
-            return error(400, e.getMessage());
-        } catch (Exception e) {
-            log.error("获取购物车统计失败: {}", e.getMessage(), e);
-            return error(500, "获取购物车统计失败");
-        }
-    }
-
 }
+
