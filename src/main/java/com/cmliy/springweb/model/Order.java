@@ -2,18 +2,15 @@ package com.cmliy.springweb.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
-
-import com.cmliy.springweb.enums.OrderStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -25,168 +22,191 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 🛒 订单实体
+ * 📋 订单实体
  *
- * 订单系统核心实体，管理用户的购买订单信息
- * 主键设计：用户ID + "-" + 时间戳 (如：1234567890-1701234567890)
+ * 采用"一个商品一个订单"的设计模式，每个订单只包含一个商品
+ * 支持完整的订单生命周期管理
  */
-@Data                                      // @Data注解：Lombok自动生成getter、setter、toString、equals、hashCode
-@Builder                                   // @Builder注解：Lombok支持Builder模式创建对象
-@NoArgsConstructor                         // @NoArgsConstructor注解：Lombok生成无参构造函数
-@AllArgsConstructor                        // @AllArgsConstructor注解：Lombok生成全参构造函数
-@Entity                                    // @Entity注解：声明这是一个JPA实体类，Hibernate会自动管理其数据库映射
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Entity
 @Table(name = "orders", indexes = {
-    @Index(name = "idx_order_user_id", columnList = "user_id"),
-    @Index(name = "idx_order_number", columnList = "order_number"),
-    @Index(name = "idx_order_status", columnList = "status"),
-    @Index(name = "idx_order_created_at", columnList = "created_at"),
-    @Index(name = "idx_order_user_created", columnList = "user_id, created_at")
+    @Index(name = "idx_user_id", columnList = "user_id"),
+    @Index(name = "idx_product_id", columnList = "product_id"),
+    @Index(name = "idx_seller_id", columnList = "seller_id"),
+    @Index(name = "idx_status", columnList = "status"),
+    @Index(name = "idx_created_at", columnList = "created_at")
 })
 public class Order {
 
     /**
-     * 🔑 订单主键ID
-     * 格式：用户ID + "-" + 时间戳 (如：1234567890-1701234567890)
+     * 🆔 订单唯一标识符
      */
     @Id
-    @Column(name = "order_number", length = 50)
-    private String orderNumber;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     /**
-     * 👤 订单所属用户
+     * 👤 买家用户
      */
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     /**
-     * 📊 订单状态
+     * 📦 订单商品
      */
-    @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     /**
-     * 💰 订单总价
+     * 🏪 商家用户（商品创建者）
+     */
+    @ManyToOne
+    @JoinColumn(name = "seller_id", nullable = false)
+    private User seller;
+
+    /**
+     * 🔢 购买数量
+     */
+    @Column(nullable = false)
+    private Integer quantity;
+
+    /**
+     * 💰 下单时的商品单价（价格快照）
+     * 避免商品价格变动影响历史订单
+     */
+    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal unitPrice;
+
+    /**
+     * 💵 订单总金额（数量 × 单价）
      */
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
     /**
-     * 📦 商品列表 - JSONB格式
-     * 存储格式：Map<Long, Integer> (商品ID → 数量)
+     * 📊 订单状态
      */
-    @Column(name = "order_items")
-    @JdbcTypeCode(SqlTypes.JSON)
-    private Map<Long, Integer> orderItems;
+    @Column(nullable = false, length = 20)
+    private String status = OrderStatus.PENDING;
 
     /**
-     * 📝 订单备注
-     */
-    @Column(name = "remarks", length = 500)
-    private String remarks;
-
-    /**
-     * ⏰ 创建时间
+     * ⏰ 创建时间戳
      */
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     /**
-     * 🔄 更新时间
+     * 🔄 更新时间戳
      */
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // ==================== 💼 业务逻辑方法 ====================
+    // ==================== 💰 业务逻辑方法 ====================
 
     /**
-     * 🛒 获取商品列表
-     * 确保orderItems不为null
+     * 📊 计算订单总金额
      */
-    public Map<Long, Integer> getOrderItems() {
-        if (orderItems == null) {
-            orderItems = new HashMap<>();
+    public void calculateTotalAmount() {
+        if (quantity != null && unitPrice != null) {
+            this.totalAmount = unitPrice.multiply(BigDecimal.valueOf(quantity));
         }
-        return orderItems;
     }
 
     /**
-     * 📊 获取订单商品总数
-     * @return 订单中所有商品的数量总和
+     * 🔄 更新订单状态
      */
-    public int getTotalItemCount() {
-        return getOrderItems().values().stream().mapToInt(Integer::intValue).sum();
+    public void updateStatus(String newStatus) {
+        if (OrderStatus.isValidStatus(newStatus)) {
+            this.status = newStatus;
+        } else {
+            throw new IllegalArgumentException("无效的订单状态: " + newStatus);
+        }
     }
 
     /**
-     * 🔍 检查订单状态
-     * @param status 要检查的状态
-     * @return true如果订单状态匹配
-     */
-    public boolean isStatus(OrderStatus status) {
-        return this.status.equals(status.name());
-    }
-
-    /**
-     * 📈 更新订单状态
-     * @param newStatus 新的订单状态
-     */
-    public void updateStatus(OrderStatus newStatus) {
-        this.status = newStatus.name();
-    }
-
-    /**
-     * 🔍 检查是否可以取消
-     * @return true如果订单可以取消
+     * ✅ 检查订单是否可以取消
      */
     public boolean canCancel() {
-        OrderStatus currentStatus = OrderStatus.valueOf(this.status);
-        return currentStatus.canCancel();
+        return OrderStatus.PENDING.equals(this.status);
     }
 
     /**
-     * 🔍 检查是否已完成
-     * @return true如果订单已完成（包括完成、取消、退款等终态）
+     * ✅ 检查订单是否已完成
      */
     public boolean isCompleted() {
-        OrderStatus currentStatus = OrderStatus.valueOf(this.status);
-        return currentStatus.isFinalStatus();
+        return OrderStatus.COMPLETED.equals(this.status);
     }
 
     /**
-     * 🔍 检查是否可以支付
-     * @return true如果订单可以支付
+     * 📊 获取状态描述
      */
-    public boolean canPay() {
-        return OrderStatus.PENDING.name().equals(this.status);
+    public String getStatusDescription() {
+        return OrderStatus.getDescription(this.status);
     }
 
     /**
-     * 🔍 检查是否可以发货
-     * @return true如果订单可以发货
+     * 🔍 检查订单是否属于指定用户
      */
-    public boolean canShip() {
-        OrderStatus currentStatus = OrderStatus.valueOf(this.status);
-        return currentStatus.canShip();
+    public boolean belongsToUser(Long userId) {
+        return this.user != null && this.user.getId().equals(userId);
     }
 
     /**
-     * 🔍 检查是否可以完成
-     * @return true如果订单可以完成
+     * 🔍 检查订单是否属于指定商家
      */
-    public boolean canComplete() {
-        OrderStatus currentStatus = OrderStatus.valueOf(this.status);
-        return currentStatus.canComplete();
+    public boolean belongsToSeller(Long sellerId) {
+        return this.seller != null && this.seller.getId().equals(sellerId);
     }
 
+    // ==================== 📋 订单状态常量 ====================
+
     /**
-     * 🔍 检查是否可以退款
-     * @return true如果订单可以退款
+     * 📋 订单状态常量定义
      */
-    public boolean canRefund() {
-        OrderStatus currentStatus = OrderStatus.valueOf(this.status);
-        return currentStatus.canRefund();
+    public static class OrderStatus {
+        public static final String PENDING = "PENDING";      // 待处理
+        public static final String PAID = "PAID";            // 已支付
+        public static final String SHIPPED = "SHIPPED";      // 已发货
+        public static final String COMPLETED = "COMPLETED";  // 已完成
+        public static final String CANCELLED = "CANCELLED";  // 已取消
+
+        /**
+         * ✅ 验证订单状态是否有效
+         */
+        public static boolean isValidStatus(String status) {
+            return PENDING.equals(status) ||
+                   PAID.equals(status) ||
+                   SHIPPED.equals(status) ||
+                   COMPLETED.equals(status) ||
+                   CANCELLED.equals(status);
+        }
+
+        /**
+         * 📊 获取状态描述
+         */
+        public static String getDescription(String status) {
+            switch (status) {
+                case PENDING:
+                    return "待处理";
+                case PAID:
+                    return "已支付";
+                case SHIPPED:
+                    return "已发货";
+                case COMPLETED:
+                    return "已完成";
+                case CANCELLED:
+                    return "已取消";
+                default:
+                    return "未知状态";
+            }
+        }
     }
 }
