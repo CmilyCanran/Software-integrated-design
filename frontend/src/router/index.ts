@@ -28,19 +28,20 @@ const router = createRouter({
     // 根路径重定向路由
     {
       path: '/',
-      redirect: '/dashboard'
+      redirect: '/home'
     },
 
-    // 仪表板路由（需要认证）
+    // 主页路由（需要认证）
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('../views/Dashboard.vue'),
+      path: '/home',
+      name: 'home',
+      component: () => import('../views/Home.vue'),
       meta: {
         requiresAuth: true,
-        title: '仪表板'
+        title: '首页'
       } as RouteMeta
     },
+
 
     // 登录页面路由（访客专用）
     {
@@ -194,7 +195,7 @@ router.beforeEach((to, from, next) => {
 
   // 第二层权限检查：访客专用页面
   if (to.meta.guest && authStore.isLoggedIn) {
-    next('/dashboard')
+    next('/home')
     return
   }
 
@@ -205,7 +206,7 @@ router.beforeEach((to, from, next) => {
 
     if (!userRole || !requiredRoles.includes(userRole)) {
       ElMessage.error('您没有权限访问此页面')
-      next('/dashboard')
+      next('/home')
       return
     }
   }

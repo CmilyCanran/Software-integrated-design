@@ -68,8 +68,8 @@ public class OrderSecurityService {
         else if ("PENDING".equals(currentStatus) && "CANCELLED".equals(newStatus)) {
             return order.belongsToUser(userId);
         }
-        // PAID/SHIPPED → CANCELLED: 允许买家取消订单（在发货前）
-        else if (("PAID".equals(currentStatus) || "SHIPPED".equals(currentStatus)) && "CANCELLED".equals(newStatus)) {
+        // PAID → CANCELLED: 允许买家取消订单（在发货前）
+        else if ("PAID".equals(currentStatus) && "CANCELLED".equals(newStatus)) {
             return order.belongsToUser(userId);
         }
         // 其他情况（如管理员操作）可以保留原有逻辑

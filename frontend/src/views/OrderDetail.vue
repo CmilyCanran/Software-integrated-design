@@ -191,8 +191,8 @@ const handleCancelOrder = async () => {
 /**
  * 更新订单状态
  */
-const handleUpdateStatus = async (status: string) => {
-  const success = await orderStore.updateOrderStatus(orderId.value, status as any)
+const handleUpdateStatus = async (orderId: number, status: string) => {
+  const success = await orderStore.updateOrderStatus(orderId, status as any)
   if (success) {
     // 重新加载订单详情
     await loadOrderDetail()

@@ -7,11 +7,11 @@
           <el-button type="default" circle icon="ArrowLeft" @click="handleBack"/>
         </div>
         <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ path: '/dashboard' }">
+          <el-breadcrumb-item :to="{ path: '/home' }">
             <el-icon>
               <HomeFilled />
             </el-icon>
-            仪表板
+            首页
           </el-breadcrumb-item>
           <el-breadcrumb-item v-if="pageTitle">
             {{ pageTitle }}
@@ -26,10 +26,70 @@
 
       <!-- 右侧：用户信息和操作 -->
       <div class="header-right">
-        <!-- 购物车图标 -->
-        <el-badge v-if="showCart" :value="actualCartItemCount" class="right-badge">
-          <el-button circle icon="ShoppingCart" @click="handleCart" />
-        </el-badge>
+        <!-- 快捷操作按钮 -->
+        <div v-if="isUser || isShoper || isAdmin" class="quick-actions">
+          <!-- USER: Browse Products -->
+          <el-button
+            v-if="isUser"
+            type="default"
+            size="small"
+            @click="handleBrowseProducts"
+          >
+            <el-icon><Document /></el-icon>
+            浏览商品
+          </el-button>
+          <!-- USER: My Orders -->
+          <el-button
+            v-if="isUser"
+            type="default"
+            size="small"
+            @click="handleMyOrders"
+          >
+            <el-icon><Document /></el-icon>
+            我的订单
+          </el-button>
+          <!-- USER: Cart -->
+          <el-badge v-if="isUser && shouldShowCart" :value="actualCartItemCount" class="cart-badge">
+            <el-button
+              type="default"
+              size="small"
+              @click="handleCart"
+            >
+              <el-icon><ShoppingCart /></el-icon>
+              购物车
+            </el-button>
+          </el-badge>
+          <!-- SHOPER: Product Management -->
+          <el-button
+            v-if="isShoper"
+            type="primary"
+            size="small"
+            @click="handleProductManagement"
+          >
+            <el-icon><ShoppingCart /></el-icon>
+            商品管理
+          </el-button>
+          <!-- SHOPER: Order Management -->
+          <el-button
+            v-if="isShoper"
+            type="success"
+            size="small"
+            @click="handleOrderManagement"
+          >
+            <el-icon><Document /></el-icon>
+            订单管理
+          </el-button>
+          <!-- ADMIN: User Management -->
+          <el-button
+            v-if="isAdmin"
+            type="warning"
+            size="small"
+            @click="handleUserManagement"
+          >
+            <el-icon><User /></el-icon>
+            用户管理
+          </el-button>
+        </div>
 
         <!-- 用户信息下拉菜单 -->
         <el-dropdown trigger="click" @command="handleCommand" placement="bottom-end">
@@ -48,24 +108,61 @@
                 </el-icon>
                 个人资料
               </el-dropdown-item>
-              <el-dropdown-item v-if="isMerchant" command="dashboard">
+
+              <!-- USER specific -->
+              <el-dropdown-item v-if="isUser" command="products">
                 <el-icon>
-                  <House />
+                  <Document />
                 </el-icon>
-                仪表板
+                浏览商品
               </el-dropdown-item>
-              <el-dropdown-item v-if="isMerchant" command="products">
+              <el-dropdown-item v-if="isUser" command="cart">
                 <el-icon>
                   <ShoppingCart />
                 </el-icon>
-                商品管理
+                购物车
               </el-dropdown-item>
-              <el-dropdown-item command="orders">
+              <el-dropdown-item v-if="isUser" command="orders">
                 <el-icon>
                   <Document />
                 </el-icon>
                 我的订单
               </el-dropdown-item>
+
+              <el-dropdown-item v-if="isShoper" command="products">
+                <el-icon>
+                  <ShoppingCart />
+                </el-icon>
+                商品管理
+              </el-dropdown-item>
+              <el-dropdown-item v-if="isShoper" command="seller-orders">
+                <el-icon>
+                  <Document />
+                </el-icon>
+                订单管理
+              </el-dropdown-item>
+
+              <!-- ADMIN specific -->
+              <el-dropdown-item v-if="isAdmin" command="products">
+                <el-icon>
+                  <ShoppingCart />
+                </el-icon>
+                商品管理
+              </el-dropdown-item>
+              <el-dropdown-item v-if="isAdmin" command="seller-orders">
+                <el-icon>
+                  <Document />
+                </el-icon>
+                订单管理
+              </el-dropdown-item>
+              <el-dropdown-item v-if="isAdmin" command="users">
+                <el-icon>
+                  <User />
+                </el-icon>
+                用户管理
+              </el-dropdown-item>
+
+              <!-- Common -->
               <el-dropdown-item divided command="logout">
                 <el-icon>
                   <SwitchButton />
@@ -120,13 +217,16 @@ const cartStore = useCartStore()
 
 // 计算属性
 const username = computed(() => authStore.userInfo?.username || '未知用户')
-const isMerchant = computed(() => {
-  return authStore.userInfo?.role === 'SHOPER' || authStore.userInfo?.role === 'ADMIN'
-})
+const isUser = computed(() => authStore.userInfo?.role === 'USER')
+const isShoper = computed(() => authStore.userInfo?.role === 'SHOPER')
+const isAdmin = computed(() => authStore.userInfo?.role === 'ADMIN')
 const UserIcon = User
 
 // 购物车相关计算属性
 const actualCartItemCount = computed(() => cartStore.totalItems)
+const shouldShowCart = computed(() => {
+  return props.showCart || isUser.value
+})
 
 const handleBack = () => {
   router.back()
@@ -139,20 +239,46 @@ const handleCommand = (command: string) => {
       // TODO: 跳转到个人资料页面
       ElMessage.info('个人资料功能开发中...')
       break
-    case 'dashboard':
-      router.push('/dashboard')
-      break
     case 'products':
-      router.push('/merchant/products')
+      router.push('/products')
       break
     case 'orders':
       router.push('/orders')
+      break
+    case 'cart':
+      router.push('/cart')
+      break
+    case 'seller-orders':
+      router.push('/seller-orders')
+      break
+    case 'users':
+      router.push('/admin/users')
       break
     case 'logout':
       authStore.logout()
       router.push('/login')
       break
   }
+}
+
+const handleProductManagement = () => {
+  router.push('/merchant/products')
+}
+
+const handleOrderManagement = () => {
+  router.push('/seller-orders')
+}
+
+const handleUserManagement = () => {
+  router.push('/admin/users')
+}
+
+const handleBrowseProducts = () => {
+  router.push('/products')
+}
+
+const handleMyOrders = () => {
+  router.push('/orders')
 }
 
 const handleCart = async () => {
@@ -182,21 +308,31 @@ const handleCart = async () => {
 .header-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 100%;
   padding: 0 20px;
+  position: relative;
 }
 
 .header-left {
   display: flex;
   align-items: center;
+  z-index: 2;
 }
 
 .header-center {
-  flex: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  padding: 0 20px;
+  z-index: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  z-index: 2;
 }
 
 .header-center h2 {
@@ -212,12 +348,33 @@ const handleCart = async () => {
   gap: 16px;
 }
 
-.right-badge {
-  margin-right: 8px;
-}
-
 .back-button {
   margin-right: 16px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 8px;
+  margin-right: 16px;
+}
+
+/* Normalize spacing for badge-wrapped buttons */
+.cart-badge {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  margin: 0;
+  flex-shrink: 0;  /* Prevents flex item from shrinking */
+}
+
+/* Ensure the badge content doesn't affect alignment */
+.cart-badge .el-badge__content {
+  z-index: 10;
+}
+
+/* Ensure consistent sizing with regular buttons */
+.cart-badge .el-button {
+  margin: 0;
 }
 
 .user-dropdown {
@@ -268,6 +425,9 @@ const handleCart = async () => {
     display: none;
   }
 
+  .quick-actions {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {

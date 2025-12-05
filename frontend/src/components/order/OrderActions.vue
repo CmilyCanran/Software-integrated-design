@@ -54,7 +54,66 @@
 
     <!-- 商家操作 -->
     <template v-else-if="userRole === 'SELLER'">
+      <!-- 订单待处理 - 商家无法操作（等待买家支付） -->
+      <template v-if="order.status === 'PENDING'">
+        <el-button
+          type="info"
+          size="small"
+          :disabled="true"
+        >
+          <el-icon><Clock /></el-icon>
+          等待买家支付
+        </el-button>
+      </template>
 
+      <!-- 订单已支付 - 商家可以发货 -->
+      <template v-else-if="order.status === 'PAID'">
+        <el-button
+          type="success"
+          size="small"
+          @click="handleShipOrder"
+          :loading="loading"
+        >
+          <el-icon><Document /></el-icon>
+          确认发货
+        </el-button>
+      </template>
+
+      <!-- 订单已发货 - 商家无法操作（等待买家确认收货） -->
+      <template v-else-if="order.status === 'SHIPPED'">
+        <el-button
+          type="info"
+          size="small"
+          :disabled="true"
+        >
+          <el-icon><Document /></el-icon>
+          已发货待确认
+        </el-button>
+      </template>
+
+      <!-- 订单已完成 - 商家无法操作 -->
+      <template v-else-if="order.status === 'COMPLETED'">
+        <el-button
+          type="success"
+          size="small"
+          :disabled="true"
+        >
+          <el-icon><CircleCheck /></el-icon>
+          订单已完成
+        </el-button>
+      </template>
+
+      <!-- 订单已取消 - 商家无法操作 -->
+      <template v-else-if="order.status === 'CANCELLED'">
+        <el-button
+          type="danger"
+          size="small"
+          :disabled="true"
+        >
+          <el-icon><CircleClose /></el-icon>
+          订单已取消
+        </el-button>
+      </template>
     </template>
 
     <!-- 管理员操作 -->
@@ -175,10 +234,9 @@ const handlePayOrder = async () => {
 
     loading.value = true
     emit('payOrder', props.order.id)
-    ElMessage.success('订单支付成功')
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('订单支付失败')
+      ElMessage.error('订单支付取消')
     }
   } finally {
     loading.value = false
@@ -199,10 +257,9 @@ const handleCancelOrder = async () => {
 
     loading.value = true
     emit('cancelOrder', props.order.id)
-    ElMessage.success('订单取消成功')
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('订单取消失败')
+      ElMessage.error('订单取消操作失败')
     }
   } finally {
     loading.value = false
@@ -232,7 +289,6 @@ const handleStatusUpdate = (command: OrderStatus) => {
   ).then(() => {
     loading.value = true
     emit('updateStatus', props.order.id, command)
-    ElMessage.success('订单状态更新成功')
   }).catch(() => {
     // 用户取消
   }).finally(() => {
@@ -242,6 +298,29 @@ const handleStatusUpdate = (command: OrderStatus) => {
 
 const handleViewDetail = () => {
   emit('viewDetail', props.order.id)
+}
+
+const handleShipOrder = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要将订单标记为已发货吗？发货后买家将收到通知并可以确认收货。',
+      '确认发货',
+      {
+        confirmButtonText: '确定发货',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    loading.value = true
+    emit('updateStatus', props.order.id, 'SHIPPED')
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('订单发货取消')
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
