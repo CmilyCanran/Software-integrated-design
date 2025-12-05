@@ -218,7 +218,7 @@ const goToProducts = () => {
 }
 
 const handleViewOrders = () => {
-  ElMessage.info('订单功能开发中...')
+  router.push('/orders')
 }
 
 const handleViewStats = () => {
