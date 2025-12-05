@@ -3,7 +3,7 @@
     <!-- 商品图片 -->
     <div class="item-image" @click="handleImageClick">
       <el-image
-        :src="item.productImage || '/placeholder/product.png'"
+        :src="item.productImage || '/images/placeholder-product.png'"
         :alt="item.productName"
         fit="cover"
         class="product-image"

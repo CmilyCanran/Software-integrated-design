@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cmliy.springweb.common.ApiResponse;
 import com.cmliy.springweb.model.Order;
 import com.cmliy.springweb.service.OrderService;
+import com.cmliy.springweb.service.OrderSecurityService;
 import com.cmliy.springweb.repository.UserRepository;
 import com.cmliy.springweb.util.JwtUtil;
 
@@ -39,10 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderController extends BaseController {
 
     private final OrderService orderService;
+    private final OrderSecurityService orderSecurityService;
 
-    public OrderController(UserRepository userRepository, JwtUtil jwtUtil, OrderService orderService) {
+    public OrderController(UserRepository userRepository, JwtUtil jwtUtil, OrderService orderService, OrderSecurityService orderSecurityService) {
         super(userRepository, jwtUtil);
         this.orderService = orderService;
+        this.orderSecurityService = orderSecurityService;
     }
 
     /**
@@ -87,7 +90,6 @@ public class OrderController extends BaseController {
      * 🔍 获取订单详情
      */
     @GetMapping("/{orderId}")
-    @PreAuthorize("@orderSecurityService.canViewOrder(authentication.principal.id, #orderId)")
     public ResponseEntity<ApiResponse<Order>> getOrder(@PathVariable Long orderId) {
 
         try {
@@ -97,9 +99,8 @@ public class OrderController extends BaseController {
                 return ResponseEntity.notFound().build();
             }
 
-            // 验证权限：只有订单的买家或商家可以查看
-            if (!order.belongsToUser(userId) &&
-                !order.belongsToSeller(userId)) {
+            // 使用OrderSecurityService进行权限验证
+            if (!orderSecurityService.canViewOrder(userId, orderId)) {
                 return ResponseEntity.status(403)
                         .body(ApiResponse.error("无权查看此订单", 403));
             }
@@ -197,7 +198,6 @@ public class OrderController extends BaseController {
      * 🔄 更新订单状态
      */
     @PutMapping("/{orderId}/status")
-    @PreAuthorize("@orderSecurityService.canUpdateOrderStatus(authentication.principal.id, #orderId)")
     public ResponseEntity<ApiResponse<Order>> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam String newStatus) {
@@ -209,10 +209,8 @@ public class OrderController extends BaseController {
                 return ResponseEntity.notFound().build();
             }
 
-            // 验证权限：只有订单的商家可以更新状态
-            var user = userRepository.findById(userId).orElse(null);
-            if (!order.belongsToSeller(userId) &&
-                (user == null || !"ADMIN".equals(user.getRole()))) {
+            // 使用OrderSecurityService进行权限验证
+            if (!orderSecurityService.canUpdateOrderStatus(userId, orderId)) {
                 return ResponseEntity.status(403)
                         .body(ApiResponse.error("无权修改此订单状态", 403));
             }
@@ -230,11 +228,16 @@ public class OrderController extends BaseController {
      * ❌ 取消订单
      */
     @PutMapping("/{orderId}/cancel")
-    @PreAuthorize("@orderSecurityService.canCancelOrder(authentication.principal.id, #orderId)")
     public ResponseEntity<ApiResponse<Order>> cancelOrder(@PathVariable Long orderId) {
 
         try {
             Long userId = getCurrentUserId();
+            // 使用OrderSecurityService进行权限验证
+            if (!orderSecurityService.canCancelOrder(userId, orderId)) {
+                return ResponseEntity.status(403)
+                        .body(ApiResponse.error("无权取消此订单", 403));
+            }
+
             Order cancelledOrder = orderService.cancelOrder(orderId, userId);
             return ResponseEntity.ok(ApiResponse.success(cancelledOrder, "订单取消成功"));
         } catch (Exception e) {
