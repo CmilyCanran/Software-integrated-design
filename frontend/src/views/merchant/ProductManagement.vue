@@ -96,15 +96,15 @@
             </div>
           </el-card>
 
-          <el-card class="stat-card">
-            <div class="stat-content">
+          <!-- <el-card class="stat-card">
+            <!-- <div class="stat-content">
               <el-icon class="stat-icon"><Money /></el-icon>
               <div class="stat-info">
                 <h3>总销售额</h3>
                 <span class="stat-value">¥{{ productStats.totalRevenue?.toLocaleString() || 0 }}</span>
               </div>
-            </div>
-          </el-card>
+            </div> -->
+          <!-- </el-card> -->
         </div>
 
         <!-- 商品展示区域 -->
