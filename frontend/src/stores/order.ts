@@ -5,7 +5,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { orderApi } from '@/api/order'
+import { orderApi, ORDER_STATUS_DESCRIPTIONS } from '@/api/order'
 import type {
   Order,
   OrderStatus,

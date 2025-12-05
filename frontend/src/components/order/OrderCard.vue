@@ -16,13 +16,11 @@
         :key="index"
         class="item-preview"
       >
-        <el-image
-          :src="item.productImage || '/placeholder/product.png'"
-          :alt="item.productName"
-          fit="cover"
-          class="preview-image"
-          :preview-src-list="[item.productImage || '/placeholder/product.png']"
-          :z-index="2000"
+        <ProductDisplay
+          :product="item"
+          :showQuantity="true"
+          :readonly="true"
+          @click.stop
         />
       </div>
       <div v-if="remainingItemsCount > 0" class="remaining-count">
@@ -68,8 +66,10 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Shop } from '@element-plus/icons-vue'
+import { processImageUrl } from '@/utils/imageUtils'
 import type { Order } from '@/types/order'
 import OrderStatus from './OrderStatus.vue'
+import ProductDisplay from '@/components/ProductDisplay.vue'
 
 // Props定义
 interface Props {
@@ -97,10 +97,13 @@ const router = useRouter()
 const previewItems = computed(() => {
   // 对于单商品订单，创建一个商品预览项
   if (props.order) {
+    const order = props.order;
+    const product = order.product; // 订单中嵌套的商品对象
+
     return [{
-      productImage: props.order.productImage,
-      productName: props.order.productName,
-      quantity: props.order.quantity
+      productImage: processImageUrl(order.productImage || product?.mainImage || product?.productData?.image_data?.main_image || '/images/placeholder-product.png'),
+      productName: order.productName || product?.productName || `商品${order.productId || product?.id}`,
+      quantity: order.quantity
     }]
   }
   return []
@@ -213,25 +216,48 @@ const formatDate = (dateString: string) => {
 }
 
 .item-preview {
-  width: 48px;
-  height: 48px;
+  width: 80px;
+  height: 80px;
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid #e4e7ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.preview-image {
+.item-preview :deep(.product-display) {
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  border: none;
+  box-shadow: none;
+  background: none;
+  gap: 0;
+}
+
+.item-preview :deep(.product-image-wrapper) {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+}
+
+.item-preview :deep(.product-image) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.item-preview :deep(.product-info) {
+  display: none;
 }
 
 .remaining-count {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 80px;
+  height: 80px;
   background-color: #f5f7fa;
   border-radius: 4px;
   font-size: 12px;

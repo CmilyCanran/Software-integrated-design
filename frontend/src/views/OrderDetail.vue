@@ -66,6 +66,7 @@
             :key="item.productId"
             :item="item"
             readonly
+            :simplified="true"
           />
         </div>
       </el-card>
@@ -75,8 +76,9 @@
         <OrderActions
           :order="currentOrder"
           :user-role="currentUserRole"
-          @cancel="handleCancelOrder"
-          @viewDetail="handleViewDetail"
+          @cancel-order="handleCancelOrder"
+          @pay-order="handlePayOrder"
+          @view-detail="handleViewDetail"
         />
       </div>
     </div>
@@ -103,6 +105,7 @@ import OrderItemCard from '@/components/order/OrderItemCard.vue'
 import OrderActions from '@/components/order/OrderActions.vue'
 import { Shop } from '@element-plus/icons-vue'
 import type { OrderItem } from '@/types/order'
+import { ORDER_STATUS_DESCRIPTIONS } from '@/types/order'
 import { useAuthStore } from '@/stores/auth'
 
 // 路由
@@ -131,14 +134,18 @@ const orderItems = computed<OrderItem[]>(() => {
 
   // 从订单数据中提取商品信息
   // 一个订单可能包含多个商品，但当前实现是一个订单只对应一个商品
+  // 注意：后端返回的订单数据中，商品图片字段为mainImage，商品名称字段为product.productName
+  const order = currentOrder.value;
+  const product = order.product; // 订单中嵌套的商品对象
+
   return [
     {
-      productId: currentOrder.value.productId,
-      productName: currentOrder.value.productName,
-      productImage: currentOrder.value.productImage,
-      quantity: currentOrder.value.quantity,
-      unitPrice: currentOrder.value.unitPrice,
-      subtotal: currentOrder.value.unitPrice * currentOrder.value.quantity  // 正确计算小计
+      productId: order.productId || product?.id,
+      productName: order.productName || product?.productName,
+      productImage: order.productImage || product?.mainImage || product?.productData?.image_data?.main_image,
+      quantity: order.quantity,
+      unitPrice: order.unitPrice,
+      subtotal: order.totalAmount // 使用订单总金额/数量或单价*数量
     }
   ]
 })
@@ -154,6 +161,18 @@ const loadOrderDetail = async () => {
     setTimeout(() => {
       router.push('/orders')
     }, 2000)
+  }
+}
+
+/**
+ * 支付订单
+ */
+const handlePayOrder = async () => {
+  // 调用更新订单状态为PAID的方法
+  const success = await orderStore.updateOrderStatus(orderId.value, 'PAID')
+  if (success) {
+    // 重新加载订单详情
+    await loadOrderDetail()
   }
 }
 
