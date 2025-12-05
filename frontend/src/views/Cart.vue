@@ -281,10 +281,43 @@ const handleClearCart = async () => {
 }
 
 // 处理结算
-const handleCheckout = () => {
-  // TODO: 实现结算逻辑
-  ElMessage.success('结算功能开发中...')
-  console.log('结算购物车:', cartStore.cartData)
+const handleCheckout = async () => {
+  try {
+    // 验证购物车是否为空
+    if (cartStore.isEmpty) {
+      ElMessage.warning('购物车为空，无法结算')
+      return
+    }
+
+    // 显示确认对话框
+    const confirmed = await ElMessageBox.confirm(
+      `确定要创建包含 ${cartStore.totalItems} 件商品的订单吗？
+      订单总额：¥${cartStore.totalAmount.toFixed(2)}`,
+      '确认结算',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info',
+        dangerouslyUseHTMLString: true
+      }
+    )
+
+    if (confirmed) {
+      // 调用订单创建
+      const success = await cartStore.createOrder()
+
+      if (success) {
+        // 跳转到订单列表页面
+        router.push('/orders')
+      }
+    }
+  } catch (error: any) {
+    // 用户取消
+    if (error !== 'cancel') {
+      console.error('结算失败:', error)
+      ElMessage.error('结算失败：' + (error.message || '未知错误'))
+    }
+  }
 }
 
 // 去逛逛
