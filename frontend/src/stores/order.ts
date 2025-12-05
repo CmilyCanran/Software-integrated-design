@@ -91,7 +91,7 @@ export const useOrderStore = defineStore('order', () => {
 // ============================================================================
 
   /**
-   * 获取订单列表
+   * 获取订单列表（用户订单）
    */
   const fetchOrders = async (params?: OrderQueryParams): Promise<OrderPageResult | null> => {
     loading.value = true
@@ -121,6 +121,44 @@ export const useOrderStore = defineStore('order', () => {
       return response
     } catch (err: any) {
       error.value = err.message || '获取订单列表失败'
+      ElMessage.error(error.value)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 获取商家订单列表
+   */
+  const fetchSellerOrders = async (params?: OrderQueryParams): Promise<OrderPageResult | null> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await orderApi.getSellerOrders({
+        page: params?.page ?? currentPage.value - 1,
+        size: params?.size ?? pageSize.value,
+        status: params?.status ?? selectedStatus.value
+      })
+
+      // 更新订单列表 (添加更全面的防御性检查)
+      if (response && typeof response === 'object') {
+        orders.value = response.orders || []
+        totalElements.value = response.totalElements || 0
+        totalPages.value = response.totalPages || 0
+        currentPage.value = (response.currentPage || 0) + 1
+      } else {
+        // 如果响应无效，重置为默认值
+        orders.value = []
+        totalElements.value = 0
+        totalPages.value = 0
+        currentPage.value = 1
+      }
+
+      return response
+    } catch (err: any) {
+      error.value = err.message || '获取商家订单列表失败'
       ElMessage.error(error.value)
       return null
     } finally {
@@ -311,6 +349,7 @@ export const useOrderStore = defineStore('order', () => {
 
     // 方法
     fetchOrders,
+    fetchSellerOrders,
     fetchOrderDetail,
     fetchStatistics,
     cancelOrder,

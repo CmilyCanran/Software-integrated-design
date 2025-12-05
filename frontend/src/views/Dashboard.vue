@@ -8,7 +8,7 @@
     <el-container>
       <el-main>
         <!-- 统计卡片 -->
-        <el-row :gutter="20" class="stats-row">
+        <!-- <el-row :gutter="20" class="stats-row">
           <el-col :span="6">
             <el-card class="stats-card">
               <div class="stats-content">
@@ -56,7 +56,7 @@
               </div>
             </el-card>
           </el-col>
-        </el-row>
+        </el-row> -->
 
         <!-- 根据角色显示不同的快速操作 -->
         <el-row :gutter="20" class="content-row">
@@ -75,10 +75,10 @@
                   <el-icon><Plus /></el-icon>
                   商品管理
                 </el-button>
-                <el-button type="info" size="large" @click="handleViewOrders">
+                <!-- <el-button type="info" size="large" @click="handleViewOrders">
                   <el-icon><Document /></el-icon>
                   订单管理
-                </el-button>
+                </el-button> -->
                 <el-button type="warning" size="large" @click="handleViewStats">
                   <el-icon><DataAnalysis /></el-icon>
                   数据统计
@@ -98,18 +98,18 @@
                   <el-icon><Plus /></el-icon>
                   商品管理
                 </el-button>
-                <el-button type="success" size="large" @click="goToProducts">
-                  <el-icon><ShoppingCart /></el-icon>
+                <!-- <el-button type="success" size="large" @click="goToProducts">
+                  <!-- <el-icon><ShoppingCart /></el-icon>
                   查看商品
-                </el-button>
+                </el-button> --> 
                 <el-button type="info" size="large" @click="handleViewOrders">
                   <el-icon><Document /></el-icon>
                   订单管理
                 </el-button>
-                <el-button type="warning" size="large" @click="handleViewStats">
+                <!-- <el-button type="warning" size="large" @click="handleViewStats">
                   <el-icon><DataAnalysis /></el-icon>
                   数据统计
-                </el-button>
+                </el-button> -->
               </div>
             </el-card>
           </el-col>
@@ -138,7 +138,7 @@
           </el-col>
 
           <!-- 系统信息 -->
-          <el-col :span="8">
+          <!-- <el-col :span="8">
             <el-card>
               <template #header>
                 <h3>系统信息</h3>
@@ -149,7 +149,7 @@
                 <p><strong>最后更新:</strong> {{ formatDate(new Date()) }}</p>
               </div>
             </el-card>
-          </el-col>
+          </el-col> -->
         </el-row>
       </el-main>
     </el-container>
@@ -218,7 +218,11 @@ const goToProducts = () => {
 }
 
 const handleViewOrders = () => {
-  router.push('/orders')
+  if (isMerchant.value) {
+    router.push('/seller-orders')
+  } else {
+    router.push('/orders')
+  }
 }
 
 const handleViewStats = () => {

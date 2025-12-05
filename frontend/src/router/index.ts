@@ -164,6 +164,18 @@ const router = createRouter({
         requiresAuth: true,
         title: '订单详情'
       } as RouteMeta
+    },
+
+    // 商家订单管理页面路由（商家专用）
+    {
+      path: '/seller-orders',
+      name: 'SellerOrderList',
+      component: () => import('../views/SellerOrderList.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: ['SHOPER', 'ADMIN'],
+        title: '商家订单管理'
+      } as RouteMeta
     }
   ] as RouteRecordRaw[]
 })

@@ -30,20 +30,6 @@
         </div>
       </el-timeline-item>
 
-      <!-- 订单发货 -->
-      <el-timeline-item
-        v-if="['SHIPPED', 'COMPLETED'].includes(order.status)"
-        :timestamp="order.updatedAt ? formatDateTime(order.updatedAt) : formatDateTime(order.createdAt)"
-        :type="getStatusType('SHIPPED')"
-        :icon="getStatusIcon('SHIPPED')"
-        hollow
-      >
-        <div class="timeline-item">
-          <h4>订单发货</h4>
-          <p class="status-desc">商品已发出，等待买家收货</p>
-          <p class="order-info" v-if="order.shippingInfo">物流信息: {{ order.shippingInfo }}</p>
-        </div>
-      </el-timeline-item>
 
       <!-- 订单完成 -->
       <el-timeline-item
