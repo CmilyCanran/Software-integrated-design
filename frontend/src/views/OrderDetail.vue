@@ -98,6 +98,7 @@ import { ElMessage } from 'element-plus'
 import Header from '@/components/Header.vue'
 import { useOrderStore } from '@/stores/order'
 import OrderStatus from '@/components/order/OrderStatus.vue'
+import OrderTimeline from '@/components/order/OrderTimeline.vue'
 import OrderItemCard from '@/components/order/OrderItemCard.vue'
 import OrderActions from '@/components/order/OrderActions.vue'
 import { Shop } from '@element-plus/icons-vue'
@@ -124,12 +125,12 @@ const currentOrder = computed(() => {
   return orderStore.currentOrder
 })
 
-// 模拟订单商品数据（实际应该从后端获取）
+// 订单商品数据（从订单中提取商品信息）
 const orderItems = computed<OrderItem[]>(() => {
   if (!currentOrder.value) return []
 
-  // 这里模拟订单包含的商品数据
-  // 实际项目中，订单接口应该返回商品列表
+  // 从订单数据中提取商品信息
+  // 一个订单可能包含多个商品，但当前实现是一个订单只对应一个商品
   return [
     {
       productId: currentOrder.value.productId,
@@ -137,7 +138,7 @@ const orderItems = computed<OrderItem[]>(() => {
       productImage: currentOrder.value.productImage,
       quantity: currentOrder.value.quantity,
       unitPrice: currentOrder.value.unitPrice,
-      subtotal: currentOrder.value.totalAmount
+      subtotal: currentOrder.value.unitPrice * currentOrder.value.quantity  // 正确计算小计
     }
   ]
 })

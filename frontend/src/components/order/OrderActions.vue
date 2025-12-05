@@ -139,17 +139,6 @@
         <el-icon><View /></el-icon>
         查看详情
       </el-button>
-
-      <!-- 联系客服 -->
-      <el-button
-        type="primary"
-        plain
-        size="small"
-        @click="handleContactSupport"
-      >
-        <el-icon><ChatDotRound /></el-icon>
-        联系客服
-      </el-button>
     </div>
 
     <!-- 加载遮罩 -->
@@ -171,11 +160,10 @@ import {
   ArrowDown,
   Clock,
   Money,
-  View,
-  ChatDotRound
+  View
 } from '@element-plus/icons-vue'
 import type { Order, OrderStatus } from '@/types/order'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 
 // Props定义
 interface Props {
@@ -195,7 +183,6 @@ const emit = defineEmits<{
   markAsShipped: [orderId: number]
   viewShipping: [orderId: number]
   viewDetail: [orderId: number]
-  contactSupport: [orderId: number]
 }>()
 
 // 状态
@@ -311,11 +298,6 @@ const handleStatusUpdate = (command: OrderStatus) => {
 
 const handleViewDetail = () => {
   emit('viewDetail', props.order.id)
-}
-
-const handleContactSupport = () => {
-  emit('contactSupport', props.order.id)
-  ElMessage.info('客服功能开发中...')
 }
 </script>
 
