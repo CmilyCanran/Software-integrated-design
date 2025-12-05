@@ -143,9 +143,11 @@
           :product="product"
           :show-edit-button="authStore.canManageProducts"
           :show-delete-button="authStore.canManageProducts"
+          :show-add-to-cart-button="!authStore.canManageProducts && product.stockQuantity > 0"
           @click="handleProductClick"
           @view-details="handleViewDetails"
           @edit="handleEditProduct"
+          @add-to-cart="handleAddToCart"
         />
       </div>
 
@@ -191,6 +193,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Grid, List, Close } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 import SearchBox from '@/components/SearchBox.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import ProductListItem from '@/components/ProductListItem.vue'
@@ -202,6 +205,7 @@ import { productAPI } from '@/api/product'
 // 响应式数据
 const router = useRouter()
 const authStore = useAuthStore()
+const cartStore = useCartStore()
 
 const loading = ref<boolean>(false)
 const products = ref<Product[]>([])
@@ -235,10 +239,9 @@ const isUserRole = computed(() => {
   return authStore.userInfo?.role === 'USER'
 })
 
-// 计算属性：购物车商品数量（模拟数据，后续可接入真实的购物车状态管理）
+// 计算属性：购物车商品数量
 const cartItemCount = computed(() => {
-  // TODO: 后续接入真实的购物车状态管理
-  return 0
+  return cartStore.totalItems
 })
 
 // 计算属性：筛选后的商品
@@ -334,12 +337,45 @@ const handleEditProduct = (product: Product): void => {
   router.push(`/products/${product.id}/edit`)
 }
 
-const handleAddToCart = (product: Product): void => {
+const handleAddToCart = async (product: Product): Promise<void> => {
   if (product.stockQuantity === 0) {
     ElMessage.warning('商品库存不足')
     return
   }
-  ElMessage.success(`"${product.productName}" 已加入购物车`)
+
+  // 检查用户是否已登录
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning('请先登录后再添加商品到购物车')
+    // 可以在这里添加跳转到登录页面的逻辑
+    return
+  }
+
+  try {
+    // 获取购物车store
+    const cartStore = useCartStore()
+
+    // 调用API添加到购物车
+    await cartStore.addToCart({
+      productId: product.id,
+      productQuantity: 1
+    })
+
+    // 显示成功消息
+    ElMessage.success(`"${product.productName}" 已加入购物车`)
+
+    // 注意：不再触发父组件事件，因为ProductCard已经实现了完整功能
+
+  } catch (error: any) {
+    // 处理错误
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录')
+    } else if (error.response?.data?.message) {
+      ElMessage.error(error.response.data.message)
+    } else {
+      ElMessage.error('添加商品到购物车失败，请稍后重试')
+    }
+    console.error('添加商品到购物车失败:', error)
+  }
 }
 
 const handleQuickView = (product: Product): void => {
